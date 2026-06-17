@@ -1,11 +1,9 @@
 # Metal C++ Examples
 
-### Get Started
-
  Go to the Respective branch 
  
-`make && make run
-`
+ `make && make run
+ `
 
 ### Prerequistes
 
