@@ -1,289 +1,203 @@
 #include "Renderer.hpp"
+#include "VertexData.hpp"
+#include "Shader.h"
 
 
-
-Renderer::Renderer( MTL::Device* pDevice )
-: _pDevice( pDevice->retain() )
+Renderer::Renderer(MTL::Device* pDevice)
+: _pDevice(pDevice->retain())
 {
+    __builtin_printf("Step 1: creating command queue\n");
     _pCommandQueue = _pDevice->newCommandQueue();
-    CreateCubeAndLight();
-    createLightSourceRenderPipeline();
+
+    __builtin_printf("Step 2: createDefaultLibrary\n");
+    createDefaultLibrary(pDevice);
+
+    __builtin_printf("Step 3: buildShaders\n");
     buildShaders();
-    createBuffers();
+
+    __builtin_printf("Step 4: createSquare\n");
+    createSquare();
+
+    __builtin_printf("Step 5: constructor done\n");
 }
 
 Renderer::~Renderer()
 {
-    cubeVertexBuffer->release();
-    lightVertexBuffer->release();
+    squareVertexBuffer->release();
+    delete grassTexture;
     _pPSO->release();
-    metalRenderPSO->release();          // ← if you're using metalRenderPSO
-    metalLightSourceRenderPSO->release(); // ← add this
-    depthStencilState->release();        // ← add this too
-    cubeTransformationBuffer->release(); // ← add this
-    lightTransformationBuffer->release();// ← add this
     _pCommandQueue->release();
     _pDevice->release();
 }
-void Renderer::CreateCubeAndLight(){
-   
-    // Cube for use in a right-handed coordinate system with triangle faces
-    // specified with a Counter-Clockwise winding order.
-    VertexData cubeVertices[] = {
-        // Front face            // Normals
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        
-        // Back face
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
 
-        // Top face
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+void Renderer::createDefaultLibrary(MTL::Device* pDevice) {
+    using NS::StringEncoding::UTF8StringEncoding;
 
-        // Bottom face
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+    // Step 1: Check working directory
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    __builtin_printf("CWD: %s\n", cwd);
 
-        // Left face
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+    // Step 2: Check shader source loaded
+    Shader sh;
+    const char* shadersrc = sh.GetShader("shaders/square.metal");
+    if (!shadersrc) {
+        __builtin_printf("ERROR: GetShader returned null — file not found\n");
+        assert(false);
+    }
+    __builtin_printf("Shader source loaded, first 100 chars:\n%.100s\n", shadersrc);
 
-        // Right face
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-    };
-    
-    cubeVertexBuffer = _pDevice->newBuffer(&cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared);
-    
-    VertexData lightSource[] = {
-        // Front face            // Normals
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        
-        // Back face
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+    // Step 3: Compile
+    NS::Error* pError = nullptr;
+    metallibrary = pDevice->newLibrary(
+        NS::String::string(shadersrc, UTF8StringEncoding), nullptr, &pError
+    );
 
-        // Top face
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+    if (!metallibrary) {
+        __builtin_printf("Compile FAILED: %s\n",
+            pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+    __builtin_printf("Library compiled OK\n");
 
-        // Bottom face
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-
-        // Left face
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-
-        // Right face
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-    };
-    
-    lightVertexBuffer = _pDevice->newBuffer(&lightSource, sizeof(lightSource), MTL::ResourceStorageModeShared);
+    // Step 4: List all functions in the library
+    NS::Array* fnames = metallibrary->functionNames();
+    __builtin_printf("Function count: %lu\n", fnames->count());
+    for (uint32_t i = 0; i < fnames->count(); ++i) {
+        __builtin_printf("  fn: %s\n", ((NS::String*)fnames->object(i))->utf8String());
+    }
 }
-
-void Renderer::createBuffers() {
-    cubeTransformationBuffer = _pDevice->newBuffer(sizeof(TransformationData), MTL::ResourceStorageModeShared);
-    lightTransformationBuffer = _pDevice->newBuffer(sizeof(TransformationData), MTL::ResourceStorageModeShared);
-}
-
 void Renderer::buildShaders()
 {
     using NS::StringEncoding::UTF8StringEncoding;
 
-    Shader sh;
     NS::Error* pError = nullptr;
 
-    MTL::Library* pLibrary = _pDevice->newLibrary( NS::String::string(sh.GetShader("shaders/shaders.metal"), UTF8StringEncoding), nullptr, &pError );
-    
-    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
-    assert(vertexShader);
-    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
-    assert(fragmentShader);
-    
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
-    renderPipelineDescriptor->setVertexFunction(vertexShader);
-    renderPipelineDescriptor->setFragmentFunction(fragmentShader);
-    assert(renderPipelineDescriptor);
-    MTL::PixelFormat pixelFormat = (MTL::PixelFormat) MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB;
-    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
-    renderPipelineDescriptor->setSampleCount(4);
-    renderPipelineDescriptor->setLabel(NS::String::string("Cube Render Pipeline", NS::ASCIIStringEncoding));
-    renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    renderPipelineDescriptor->setTessellationOutputWindingOrder(MTL::WindingClockwise);
-    
-    NS::Error* error;
-    metalRenderPSO =_pDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    
-    assert(metalRenderPSO != nil);
-    
-    MTL::DepthStencilDescriptor* depthStencilDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
-    depthStencilDescriptor->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
-    depthStencilDescriptor->setDepthWriteEnabled(true);
-    depthStencilState = _pDevice->newDepthStencilState(depthStencilDescriptor);
-    
-    renderPipelineDescriptor->release();
-    vertexShader->release();
+    MTL::Function* vertexShader = metallibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
+    if (!vertexShader)
+    {
+        __builtin_printf("ERROR: vertex function 'vertexShader' not found in library.\n");
+        NS::Array* fnames = metallibrary->functionNames();
+        if (fnames)
+        {
+            for (uint32_t i = 0; i < fnames->count(); ++i)
+            {
+                NS::String* n = (NS::String*)fnames->object(i);
+                __builtin_printf(" available: %s\n", n->utf8String());
+            }
+        }
+        assert(false);
+    }
+    MTL::Function* fragmentShader = metallibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+    if (!fragmentShader)
+    {
+        __builtin_printf("ERROR: fragment function 'fragmentShader' not found in library.\n");
+        NS::Array* fnames = metallibrary->functionNames();
+        if (fnames)
+        {
+            for (uint32_t i = 0; i < fnames->count(); ++i)
+            {
+                NS::String* n = (NS::String*)fnames->object(i);
+                __builtin_printf(" available: %s\n", n->utf8String());
+            }
+        }
+        assert(false);
+    }
+
+    MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+    pDesc->setVertexFunction( vertexShader );
+    pDesc->setFragmentFunction( fragmentShader);
+    pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+
+
+    _pPSO = _pDevice->newRenderPipelineState( pDesc, &pError );
+    if ( !_pPSO )
+    {
+        __builtin_printf( "%s", pError->localizedDescription()->utf8String() );
+        assert( false );
+    }
+
+    UniformBuffer =_pDevice->newBuffer(sizeof(Uniforms),MTL::ResourceStorageModeShared);
+    Uniform1Buffer =_pDevice->newBuffer(sizeof(Uniforms),MTL::ResourceStorageModeShared);
+
     fragmentShader->release();
+    vertexShader->release();
+    pDesc->release();
+    
 }
 
-void Renderer::createLightSourceRenderPipeline() {
-    using NS::StringEncoding::UTF8StringEncoding;
-    Shader sh;
-    NS::Error* pError = nullptr;  // ← add this
+void Renderer::createSquare() {
 
-    MTL::Library* pLibrary = _pDevice->newLibrary(NS::String::string(sh.GetShader("shaders/light.metal"), UTF8StringEncoding), nullptr, &pError);
-    // assert(pLibrary);            
-
-    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("lightVertexShader", NS::ASCIIStringEncoding));
-    assert(vertexShader);
-    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("lightFragmentShader", NS::ASCIIStringEncoding));
-    assert(fragmentShader);
-
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
-    renderPipelineDescriptor->setVertexFunction(vertexShader);
-    renderPipelineDescriptor->setFragmentFunction(fragmentShader);
-    assert(renderPipelineDescriptor);
-
-    MTL::PixelFormat pixelFormat = MTL::PixelFormatBGRA8Unorm_sRGB;
-    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
-    renderPipelineDescriptor->setSampleCount(4);
-    renderPipelineDescriptor->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
-    renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    renderPipelineDescriptor->setTessellationOutputWindingOrder(MTL::WindingClockwise);
-
-    NS::Error* error = nullptr;   // ← initialize to nullptr
-    metalLightSourceRenderPSO = _pDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    assert(metalLightSourceRenderPSO);
-
-    // ← release everything
-    renderPipelineDescriptor->release();
-    vertexShader->release();
-    fragmentShader->release();
-    pLibrary->release();
+    VertexData squareVertices[] {
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 1.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 0.0f}}
+    };
+    
+    squareVertexBuffer = _pDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
+     __builtin_printf("squareVertexBuffer: %p\n", squareVertexBuffer);
+    grassTexture = new Texture("assets/mc_grass.jpeg", _pDevice);
+    __builtin_printf("grassTexture ptr: %p\n", grassTexture);
+    __builtin_printf("grassTexture->texture: %p\n", grassTexture->texture);
 }
-
-void Renderer::draw( MTK::View* pView )
+void Renderer::draw(MTK::View* pView)
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
+    Uniforms uniforms;
+    Uniforms1 uniforms1;
+
+
+
+
+    uniforms.time = {0.1f,0.3f};
+    uniforms1.intAsBool = 1;
+
+    memcpy(UniformBuffer->contents(),&uniforms,sizeof(Uniforms));
+    memcpy(Uniform1Buffer->contents(),&uniforms1,sizeof(Uniforms1));
+
+    
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
+    if (!pCmd) {
+        __builtin_printf("ERROR: commandBuffer is nil\n");
+        pPool->release();
+        return;
+    }
+
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
-    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
+    if (!pRpd) {
+        __builtin_printf("ERROR: currentRenderPassDescriptor is nil\n");
+        pCmd->commit();
+        pPool->release();
+        return;
+    }
 
-    matrix_float4x4 translationMatrix = matrix4x4_translation(0.0f, -0.9f, 0.0f);
+    MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder(pRpd);
+    if (!pEnc) {
+        __builtin_printf("ERROR: renderCommandEncoder is nil\n");
+        pCmd->commit();
+        pPool->release();
+        return;
+    }
 
-    matrix_float4x4 modelMatrix = translationMatrix;
-    
-    float time = rand()%(30);
-    float oscillation = sin(time);  // oscillates between -1 and 1
-    float zPosition = 1.5 + 1.5 * oscillation;  // maps oscillation to range [0, 3]
+    __builtin_printf("draw OK — encoder created\n");
 
-    matrix_float4x4 viewMatrix = matrix_look_at_right_hand(0.0f, 0.0f, 1.0f,
-                                                           0.0f, 0.0f, 0.0f,
-                                                           0.0f, 1.0f, 0.0f);
 
-    CGSize drawableSize = pView->drawableSize();
-    float aspectRatio = static_cast<float>(drawableSize.width / drawableSize.height);
-    float fov = 90 * (M_PI / 180.0f);
-    float nearZ = 0.1f;
-    float farZ = 100.0f;
-    
-    matrix_float4x4 perspectiveMatrix = matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
-    TransformationData transformationData = { modelMatrix, viewMatrix, perspectiveMatrix };
-    memcpy(cubeTransformationBuffer->contents(), &transformationData, sizeof(transformationData));
-    simd_float4 cubeColor = simd_make_float4(0.5, 0.9, 0.7, 1.0);
-    simd_float4 lightColor = simd_make_float4(1.0, 1.0, 1.0, 1.0);
-    simd_float4 lightPosition = simd_make_float4(0 - 3*cos(time/1.0), 1.2,-4 + sin(time/1.0), 1);
-    simd_float4 cameraPosition = simd_make_float4(0.0f, 0.0f, 1.0f, 1.0f);
+    pEnc->setVertexBuffer(UniformBuffer,0,1);   // index 1
+    pEnc->setVertexBuffer(Uniform1Buffer,0,2);   // index 1
 
-    pEnc->setFragmentBytes(&cubeColor, sizeof(cubeColor), 0);
-    pEnc->setFragmentBytes(&lightColor, sizeof(lightColor), 1);
-    pEnc->setFragmentBytes(&lightPosition, sizeof(lightPosition), 2);
-    pEnc->setFragmentBytes(&cameraPosition, sizeof(cameraPosition), 3);
-    
-    pEnc->setFrontFacingWinding(MTL::WindingCounterClockwise);
-    pEnc->setCullMode(MTL::CullModeBack);
-    // pEnc->setTriangleFillMode(MTL::TriangleFillModeLines);
-    pEnc->setRenderPipelineState(metalRenderPSO);
-    pEnc->setDepthStencilState(depthStencilState);
-    pEnc->setVertexBuffer(cubeVertexBuffer, 0, 0);
-    pEnc->setVertexBuffer(cubeTransformationBuffer, 0, 1);
-    MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
-    NS::UInteger vertexStart = 0;
-    NS::UInteger vertexCount = 36;
 
-    pEnc->drawPrimitives(typeTriangle, vertexStart, vertexCount);
+    pEnc->setRenderPipelineState(_pPSO);
+    pEnc->setVertexBuffer(squareVertexBuffer, 0, 0);
+    pEnc->setFragmentTexture(grassTexture->texture, 0);
+    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
-    
-    matrix_float4x4 scaleMatrix = matrix4x4_scale(0.5f, 0.5f, 0.5f);
-    translationMatrix = matrix4x4_translation(lightPosition[0], lightPosition[1], lightPosition[2]);
-    
-    modelMatrix = simd_mul(translationMatrix, scaleMatrix);
-        
-    pEnc->setRenderPipelineState(metalLightSourceRenderPSO);
-
-    transformationData = { modelMatrix, viewMatrix, perspectiveMatrix };
-    memcpy(lightTransformationBuffer->contents(), &transformationData, sizeof(transformationData));
-    pEnc->setVertexBuffer(lightVertexBuffer, 0, 0);
-    pEnc->setVertexBuffer(lightTransformationBuffer, 0, 1);
-    pEnc->setFragmentBytes(&lightColor, sizeof(lightColor), 0);
-    pEnc->drawPrimitives(typeTriangle, vertexStart, vertexCount);
     pEnc->endEncoding();
-    pCmd->presentDrawable( pView->currentDrawable() );
+    pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
+
     pPool->release();
 }
-
