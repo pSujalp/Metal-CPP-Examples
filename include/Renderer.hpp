@@ -5,7 +5,7 @@
 #include <MetalKit/MetalKit.hpp>
 #include "AAPLMathUtilities.h"
 #include "simd/simd.h"
-#include "mesh.hpp"
+#include "model.hpp"
 #include "VertexData.hpp"
 
 class Renderer
@@ -28,7 +28,7 @@ class Renderer
         MTL::Buffer* _pVertexPositionsBuffer;
         MTL::Buffer* _pVertexColorsBuffer;
         MTL::Buffer * lightVertexBuffer ;
-        Mesh* mesh;
+        Model * model;
         MTL::DepthStencilState* depthStencilState;
         MTL::RenderPipelineState* metalLightSourceRenderPSO;
 };

@@ -1,15 +1,15 @@
 CXX := clang++
 CC := clang
 
+ASSIMP_PREFIX := $(shell brew --prefix assimp)
+
 # External libraries
 EXTERNAL := external
-
 CPPFLAGS := \
     -I./include \
     -I$(EXTERNAL)/metal-cpp \
     -I$(EXTERNAL)/metal-cpp-extensions \
-
-
+    -I$(ASSIMP_PREFIX)/include
 
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
@@ -21,32 +21,39 @@ LDFLAGS := \
     -framework CoreGraphics \
     -framework MetalKit \
     -framework ModelIO \
-    -framework MetalPerformanceShaders
+    -framework MetalPerformanceShaders \
+    -L$(ASSIMP_PREFIX)/lib
+
+LDLIBS := -lassimp
 
 TARGET := build/metal
-
-SRC_C := $(wildcard src/*.c)
+SRC_C   := $(wildcard src/*.c)
 SRC_CPP := $(wildcard src/*.cpp)
-SRC_MM := $(wildcard src/*.mm)
-
+SRC_MM  := $(wildcard src/*.mm)
 OBJ := \
     $(patsubst src/%.c,build/%.c.o,$(SRC_C)) \
     $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
     $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
 
-.DEFAULT_GOAL := all
+SHADERS := $(patsubst shaders/%,build/shaders/%,$(wildcard shaders/*))
+ASSETS  := $(patsubst assets/%,build/assets/%,$(wildcard assets/*))
 
+.DEFAULT_GOAL := all
 .PHONY: all clean run
 .SECONDARY:
 
-all: $(TARGET)
+all: $(TARGET) $(SHADERS) $(ASSETS)
 
-build/shaders/shaders.metal: shaders/shaders.metal
+build/shaders/%: shaders/%
 	mkdir -p $(dir $@)
 	cp $< $@
 
-$(TARGET): $(OBJ) | build/shaders/shaders.metal
-	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+build/assets/%: assets/%
+	mkdir -p $(dir $@)
+	cp $< $@
+
+$(TARGET): $(OBJ) $(SHADERS) $(ASSETS)
+	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 build/%.c.o: src/%.c
 	mkdir -p $(dir $@)
@@ -60,7 +67,7 @@ build/%.mm.o: src/%.mm
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-run: $(TARGET)
+run: all
 	./$(TARGET)
 
 clean:
