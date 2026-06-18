@@ -4,6 +4,8 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 #include "simd/simd.h"
+#include "mesh.hpp"
+#include "VertexData.hpp"
 
 class Renderer
 {
@@ -14,11 +16,18 @@ class Renderer
     
         void buildBuffers();
         void buildShaders();
+        void createRenderPipeline();
+        void createLightSourceRenderPipeline();
+        void loadMeshes();
 
     private:
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
-        MTL::RenderPipelineState* _pPSO;
+        MTL::RenderPipelineState* metalRenderPSO;
         MTL::Buffer* _pVertexPositionsBuffer;
         MTL::Buffer* _pVertexColorsBuffer;
+        MTL::Buffer * lightVertexBuffer ;
+        Mesh* mesh;
+        MTL::DepthStencilState* depthStencilState;
+        MTL::RenderPipelineState* metalLightSourceRenderPSO;
 };

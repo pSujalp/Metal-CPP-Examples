@@ -4,34 +4,30 @@
 //
 
 #include <metal_stdlib>
-
 using namespace metal;
 
 
-
-struct LightVertexData{
+struct VertexData
+{
+    // The [[position]] attribute of this member indicates that this value
+    // is the clip space position of the vertex when this structure is
+    // returned from the vertex function.
     float4 position [[position]];
     float4 normal;
 };
 
-
-struct TransformationData {
-    float4x4 modelMatrix;
-    float4x4 viewMatrix;
-    float4x4 perspectiveMatrix;
-};
-
-vertex LightVertexData lightVertexShader(uint vertexID [[vertex_id]],
-             constant LightVertexData* vertexData [[ buffer(0) ]],
-             constant TransformationData* transformationData[[ buffer(1) ]])
+vertex VertexData lightVertexShader(uint vertexID [[vertex_id]],
+             constant VertexData* vertexData,
+             constant float4x4& modelMatrix,
+             constant float4x4& perspectiveMatrix)
 {
-    LightVertexData out = vertexData[vertexID];
+    VertexData out = vertexData[vertexID];
     
-    out.position = transformationData->perspectiveMatrix * transformationData->viewMatrix * transformationData->modelMatrix * vertexData[vertexID].position;
+    out.position = perspectiveMatrix * modelMatrix * vertexData[vertexID].position;
     return out;
 }
 
-fragment float4 lightFragmentShader(LightVertexData in [[stage_in]],
+fragment float4 lightFragmentShader(VertexData in [[stage_in]],
                                     constant float4& lightColor [[ buffer(0) ]]) {
     return lightColor;
 }

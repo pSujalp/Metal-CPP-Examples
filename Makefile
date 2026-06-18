@@ -1,18 +1,38 @@
-
-
 CXX := clang++
 CC := clang
-CPPFLAGS := -I./metal-cpp -I./metal-cpp-extensions -I./include
+
+# External libraries
+EXTERNAL := external
+
+CPPFLAGS := \
+    -I./include \
+    -I$(EXTERNAL)/metal-cpp \
+    -I$(EXTERNAL)/metal-cpp-extensions \
+
+
+
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
-LDFLAGS := -framework Metal -framework Foundation -framework Cocoa -framework CoreGraphics -framework MetalKit
+
+LDFLAGS := \
+    -framework Metal \
+    -framework Foundation \
+    -framework Cocoa \
+    -framework CoreGraphics \
+    -framework MetalKit \
+    -framework ModelIO \
+    -framework MetalPerformanceShaders
 
 TARGET := build/metal
 
 SRC_C := $(wildcard src/*.c)
 SRC_CPP := $(wildcard src/*.cpp)
 SRC_MM := $(wildcard src/*.mm)
-OBJ := $(patsubst src/%.c,build/%.c.o,$(SRC_C)) $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
+
+OBJ := \
+    $(patsubst src/%.c,build/%.c.o,$(SRC_C)) \
+    $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
+    $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
 
 .DEFAULT_GOAL := all
 
@@ -45,6 +65,3 @@ run: $(TARGET)
 
 clean:
 	rm -rf build
-
-
-
