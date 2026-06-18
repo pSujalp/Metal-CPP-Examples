@@ -3,6 +3,7 @@
 #include <Metal/Metal.hpp>
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
+#include "AAPLMathUtilities.h"
 #include "simd/simd.h"
 #include "mesh.hpp"
 #include "VertexData.hpp"
