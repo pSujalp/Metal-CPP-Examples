@@ -43,8 +43,8 @@ void Renderer::buildShaders()
     pDesc->setFragmentFunction( pFragFn );
     pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
 
-    _pPSO = _pDevice->newRenderPipelineState( pDesc, &pError );
-    if ( !_pPSO )
+    metalRenderPSO = _pDevice->newRenderPipelineState( pDesc, &pError );
+    if ( !metalRenderPSO )
     {
         __builtin_printf( "%s", pError->localizedDescription()->utf8String() );
         assert( false );
@@ -169,7 +169,7 @@ void Renderer::createRenderPipeline() {
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
     assert(renderPipelineDescriptor);
-    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
+    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB;
     renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
     renderPipelineDescriptor->setSampleCount(4);
     renderPipelineDescriptor->setLabel(NS::String::string("Model Render Pipeline", NS::ASCIIStringEncoding));
@@ -204,7 +204,7 @@ void Renderer::createLightSourceRenderPipeline() {
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
     assert(renderPipelineDescriptor);
-    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
+    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB;
     renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
     renderPipelineDescriptor->setSampleCount(4);
     renderPipelineDescriptor->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
