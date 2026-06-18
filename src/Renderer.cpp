@@ -95,6 +95,8 @@ void Renderer::draw( MTK::View* pView )
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
+    matrix_float4x4 translationMatrix = matrix4x4_translation(0.0f, -0.9f, -10.0f);
+
     pEnc->setFrontFacingWinding(MTL::WindingCounterClockwise);
     pEnc->setCullMode(MTL::CullModeBack);
     // If you want to render in wire-frame mode, you can uncomment this line!
@@ -102,8 +104,8 @@ void Renderer::draw( MTK::View* pView )
     pEnc->setRenderPipelineState(metalRenderPSO);
     pEnc->setDepthStencilState(depthStencilState);
     pEnc->setVertexBuffer(mesh->vertexBuffer, 0, 0);
-    matrix_float4x4 rotationMatrix = matrix4x4_rotation(-125 * (M_PI / 180.0f), 0.0, 1.0, 0.0);
-    matrix_float4x4 modelMatrix = matrix4x4_translation(0.0f, 0.0f, -3.2f) * rotationMatrix;
+    matrix_float4x4 rotationMatrix = matrix4x4_rotation(45 * (M_PI / 180.0f), 0.0, 1.0, 0.0);
+    matrix_float4x4 modelMatrix = matrix4x4_translation(0.0f, 0.0f, -15.2f) * rotationMatrix;
     // Aspect ratio should match the ratio between the window width and height,
     // otherwise the image will look stretched.
     auto drawableSize = pView->drawableSize();
@@ -127,7 +129,7 @@ void Renderer::draw( MTK::View* pView )
     pEnc->drawIndexedPrimitives(typeTriangle, mesh->indexCount, MTL::IndexTypeUInt32, mesh->indexBuffer, 0);
 
     matrix_float4x4 scaleMatrix = matrix4x4_scale(0.3f, 0.3f, 0.3f);
-    matrix_float4x4 translationMatrix = matrix4x4_translation(lightPosition.xyz);
+    translationMatrix = matrix4x4_translation(lightPosition[0], lightPosition[1], lightPosition[2]);
     
     modelMatrix = matrix_identity_float4x4;
     modelMatrix = matrix_multiply(scaleMatrix, modelMatrix);
@@ -152,7 +154,7 @@ void Renderer::draw( MTK::View* pView )
 
 
 void Renderer::loadMeshes() {
-    mesh = new Mesh("assets/box.obj", _pDevice);
+    mesh = new Mesh("assets/backpack/backpack.obj", _pDevice);
     VertexData lightSource[] = {
         // Front face               // Normals
          {{ 0.5, -0.5, -0.5, 1.0f}, {0.0, 0.0,-1.0, 1.0}},// bottom-right 2
@@ -258,7 +260,7 @@ void Renderer::createLightSourceRenderPipeline() {
      using NS::StringEncoding::UTF8StringEncoding;
 
     Shader sh;
-    const char * shadersrc = sh.GetShader("shaders/shaders.metal");
+    const char * shadersrc = sh.GetShader("shaders/light.metal");
 
     NS::Error* pError = nullptr;
     MTL::Library* pLibrary = _pDevice->newLibrary( NS::String::string(shadersrc, UTF8StringEncoding), nullptr, &pError );
