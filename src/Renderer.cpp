@@ -47,8 +47,6 @@ void Renderer::draw(MTK::View* pView)
 
     pCmd->commit();
     pCmd->waitUntilCompleted();
-
-
     verifyResult();
 
     pPool->release();
@@ -126,7 +124,7 @@ void Renderer::makePipeline()
 
             VertexOut out;
             out.position = float4(positions[vid], 0.0, 1.0);
-            out.color    = float4(0.2, 0.4, 0.8, 1.0); // solid blue
+            out.color    = float4(1.0, 1.0, 1.0, 1.0); // solid blue
             return out;
         }
 
@@ -145,7 +143,6 @@ void Renderer::makePipeline()
         __builtin_printf("Compute library error: %s\n", pError->localizedDescription()->utf8String());
         assert(false);
     }
-
     MTL::Function* computeFn = pComputeLib->newFunction(
         NS::String::string("add_arrays", UTF8StringEncoding));
     assert(computeFn && "Failed to find kernel add_arrays");
@@ -212,6 +209,8 @@ void Renderer::verifyResult()
                              i, a[i], b[i], a[i] + b[i], r[i]);
             return;
         }
+        __builtin_printf("PASSED at index %zu: %.6f + %.6f = %.6f, got %.6f\n",
+                         i, a[i], b[i], a[i] + b[i], r[i]);
     }
     __builtin_printf("Success\n");
 }
