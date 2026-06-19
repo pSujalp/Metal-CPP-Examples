@@ -1,7 +1,7 @@
-//
-//  model.cpp
-//  Metal-Tutorial
-//
+
+
+
+
 
 #include "model.hpp"
 
@@ -9,7 +9,7 @@
 
 Model::Model(std::string filePath, MTL::Device* metalDevice) {
     device = metalDevice;
-    baseDirectory = filePath.substr(0, filePath.find_last_of("/\\") + 1); // Base directory for the model
+    baseDirectory = filePath.substr(0, filePath.find_last_of("/\\") + 1); 
     loadModel(filePath);
 }
 
@@ -30,7 +30,7 @@ void Model::loadModel(std::string& filePath) {
         std::cerr << "Error: " << assimpImporter.GetErrorString() << std::endl;
         
     }
-    // Load Textures
+    
     loadTextures(scene);
     processNode(scene->mRootNode, scene);
 }
@@ -58,7 +58,7 @@ void Model::mapTextureIndices(aiTextureType textureType, aiMaterial* material, i
         aiString textureFileName;
         if (material->GetTexture(textureType, j, &textureFileName) == AI_SUCCESS) {
             std::string key = textureFileName.C_Str();
-            // Skip if already mapped
+            
             if (textureIndexMap.count(key) == 0) {
                 std::string textureFilePath = baseDirectory + key;
                 std::cout << textureIndex + 1 << ".) " << textureFilePath << std::endl;
@@ -87,7 +87,7 @@ Mesh* Model::processMesh(aiMesh* aiMesh, const aiScene* scene) {
     aiString diffuseName, specularName, normalName, emissiveName;
     aiMaterial* material = scene->mMaterials[aiMesh->mMaterialIndex];
 
-    // Only fetch if the slot actually has a texture
+    
     if (material->GetTextureCount(aiTextureType_DIFFUSE)  > 0)
         material->GetTexture(aiTextureType_DIFFUSE,  0, &diffuseName);
     if (material->GetTextureCount(aiTextureType_SPECULAR) > 0)
@@ -97,7 +97,7 @@ Mesh* Model::processMesh(aiMesh* aiMesh, const aiScene* scene) {
     if (material->GetTextureCount(aiTextureType_EMISSIVE) > 0)
         material->GetTexture(aiTextureType_EMISSIVE, 0, &emissiveName);
 
-    // Resolve to index or NO_TEXTURE sentinel
+    
     uint32_t diffuseIdx  = resolveTextureIndex(diffuseName);
     uint32_t specularIdx = resolveTextureIndex(specularName);
     uint32_t normalIdx   = resolveTextureIndex(normalName);
@@ -113,7 +113,7 @@ Mesh* Model::processMesh(aiMesh* aiMesh, const aiScene* scene) {
             vertex.normal            = { aiMesh->mNormals[vi].x,   aiMesh->mNormals[vi].y,   aiMesh->mNormals[vi].z   };
             vertex.textureCoordinate = { aiMesh->mTextureCoords[0][vi].x, aiMesh->mTextureCoords[0][vi].y };
             vertex.tangent           = { aiMesh->mTangents[vi].x,  aiMesh->mTangents[vi].y,  aiMesh->mTangents[vi].z  };
-            vertex.bitangent         = { aiMesh->mBitangents[vi].x, aiMesh->mBitangents[vi].y, aiMesh->mBitangents[vi].z }; // ← was mTangents
+            vertex.bitangent         = { aiMesh->mBitangents[vi].x, aiMesh->mBitangents[vi].y, aiMesh->mBitangents[vi].z }; 
 
             vertex.diffuseTextureIndex  = diffuseIdx;
             vertex.specularTextureIndex = specularIdx;
@@ -131,7 +131,7 @@ Mesh* Model::processMesh(aiMesh* aiMesh, const aiScene* scene) {
 }
 
 
-// Helper at the top of the file (or in model.hpp)
+
 static constexpr uint32_t NO_TEXTURE = UINT32_MAX;
 
 uint32_t Model::resolveTextureIndex(const aiString& name) {

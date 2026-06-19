@@ -41,7 +41,7 @@ void Renderer::draw( MTK::View* pView )
     matrix_float4x4 rotationMatrix = matrix4x4_rotation(60 * (M_PI / 180.0f), 0.0, 1.0, 0.0);
     matrix_float4x4 scaleMatrix    = matrix4x4_scale(12.01f, 12.01f, 12.01f);
 
-    matrix_float4x4 modelMatrix    = matrix4x4_translation(0.0f, 0.0f, -125.0f) * rotationMatrix * scaleMatrix;
+    matrix_float4x4 modelMatrix    = matrix4x4_translation(0.0f, -0.5f, -5.0f) * rotationMatrix * scaleMatrix;
 
     // Fixed view matrix — replace eye/center when you add a camera
     matrix_float4x4 viewMatrix = matrix_look_at_right_hand(
@@ -106,7 +106,7 @@ void Renderer::draw( MTK::View* pView )
 
 void Renderer::loadMeshes()
 {
-    std::string modelPath = "build/assets/SMG/smg.obj";
+    std::string modelPath = "build/assets/gift_bag/gift_bag.dae";
     model = new Model(modelPath, _pDevice);
 
     VertexData lightSource[] = {
