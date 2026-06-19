@@ -26,5 +26,7 @@ class Renderer
         MTL::Buffer *__MBufferResult;
         const size_t arraylenght = 32;
         const size_t bufferSize = arraylenght * sizeof(float); // correct
+        // In Renderer.hpp private section
+        MTL::RenderPipelineState* _pRPSO;
         
 };
