@@ -4,8 +4,12 @@
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
 #include "simd/simd.h"
+#include <vector>
 #include "VertexData.hpp"
 #include "Texture.hpp"
+#include <thread>
+#include <chrono>
+
 
 class Renderer
 {
@@ -27,4 +31,7 @@ class Renderer
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* Uniform1Buffer;
         MTL::Library * metallibrary;
+        std::vector<Texture*> textures;
+        uint8_t frameCount = 0;
+
 };

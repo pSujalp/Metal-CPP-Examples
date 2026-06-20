@@ -19,6 +19,7 @@ Texture::Texture(const char* filepath, MTL::Device* metalDevice) {
     textureDescriptor->setHeight(height);
     textureDescriptor->setUsage(MTL::TextureUsageShaderRead);
     textureDescriptor->setStorageMode(MTL::StorageModeShared);
+    textureDescriptor->allowGPUOptimizedContents();
 
     texture = device->newTexture(textureDescriptor);
     MTL::Region region = MTL::Region(0, 0, 0, width, height, 1);

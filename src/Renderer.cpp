@@ -24,7 +24,7 @@ Renderer::Renderer(MTL::Device* pDevice)
 Renderer::~Renderer()
 {
     squareVertexBuffer->release();
-    delete grassTexture;
+
     _pPSO->release();
     _pCommandQueue->release();
     _pDevice->release();
@@ -139,9 +139,12 @@ void Renderer::createSquare() {
     
     squareVertexBuffer = _pDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
      __builtin_printf("squareVertexBuffer: %p\n", squareVertexBuffer);
-    grassTexture = new Texture("assets/grass.png", _pDevice);
-    __builtin_printf("grassTexture ptr: %p\n", grassTexture);
-    __builtin_printf("grassTexture->texture: %p\n", grassTexture->texture);
+
+     grassTexture = new Texture("assets/grass.png", _pDevice);
+
+    textures.emplace_back(new Texture("assets/captain/Attack 2 01.png", _pDevice));
+    textures.emplace_back(new Texture("assets/captain/Attack 2 02.png", _pDevice));
+    textures.emplace_back(new Texture("assets/captain/Attack 2 03.png", _pDevice));
 }
 void Renderer::draw(MTK::View* pView)
 {
@@ -149,10 +152,6 @@ void Renderer::draw(MTK::View* pView)
 
     Uniforms uniforms;
     Uniforms1 uniforms1;
-
-
-
-
     uniforms.time = {0.1f,0.3f};
     uniforms1.intAsBool = 1;
 
@@ -192,7 +191,14 @@ void Renderer::draw(MTK::View* pView)
 
     pEnc->setRenderPipelineState(_pPSO);
     pEnc->setVertexBuffer(squareVertexBuffer, 0, 0);
-    pEnc->setFragmentTexture(grassTexture->texture, 0);
+
+
+    pEnc->setFragmentTexture(textures[(++frameCount)%3]->texture, 0);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+  
+
+
     pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
     pEnc->endEncoding();

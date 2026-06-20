@@ -50,8 +50,8 @@ build/%.mm.o: src/%.mm
 run: $(TARGET)
 	cd build && ./metal
 
-clean:
-	rm -rf build
+#clean:
+#rm -rf build
 
 
 

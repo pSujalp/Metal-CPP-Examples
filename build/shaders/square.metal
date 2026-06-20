@@ -53,8 +53,8 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> colorTexture [[texture(0)]]) {
-    constexpr sampler textureSampler (mag_filter::linear,
-                                      min_filter::linear);
+    constexpr sampler textureSampler (mag_filter::nearest,
+                                      min_filter::nearest);
 
     const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
     if(colorSample.a < 0.1) {
