@@ -22,31 +22,29 @@ struct Uniforms1
     int intAsBool;
 };
 
+struct MVP{
+    matrix_float4x4 MVP;
+};
+
 
 
 struct VertexOut {
-    // The [[position]] attribute of this member indicates that this value
-    // is the clip space position of the vertex when this structure is
-    // returned from the vertex function.
     float4 position [[position]];
-
-    // Since this member does not have a special attribute, the rasterizer
-    // interpolates its value with the values of the other triangle vertices
-    // and then passes the interpolated value to the fragment shader for each
-    // fragment in the triangle.
     float2 textureCoordinate;
 };
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData,
                               constant Uniforms& uniforms [[buffer(1)]],
-                               constant Uniforms1& uniforms1 [[buffer(2)]]) {
+                               constant Uniforms1& uniforms1 [[buffer(2)]],
+                               constant MVP& mvp [[buffer(3)]]) {
     VertexOut out;
     if(uniforms1.intAsBool){
         out.position = vertexData[vertexID].position + float4(uniforms.time,0,0);
     }
     else out.position = vertexData[vertexID].position ;
-    
+
+    out.position = mvp.MVP * out.position;
     out.textureCoordinate = vertexData[vertexID].textureCoordinate;
     return out;
 }
@@ -56,7 +54,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
 
-    const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
+    float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
+
     if(colorSample.a < 0.1) {
         discard_fragment();
     }

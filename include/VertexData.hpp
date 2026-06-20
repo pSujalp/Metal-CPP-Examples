@@ -25,3 +25,7 @@ struct Uniforms1
 {
     int intAsBool;
 };
+
+struct MVP{
+    matrix_float4x4 MVP;
+};

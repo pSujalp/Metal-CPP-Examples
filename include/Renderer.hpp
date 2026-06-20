@@ -6,6 +6,13 @@
 #include "simd/simd.h"
 #include "VertexData.hpp"
 #include "Texture.hpp"
+#include "Time.hpp"
+#include <vector>
+
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class Renderer
 {
@@ -27,4 +34,9 @@ class Renderer
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* Uniform1Buffer;
         MTL::Library * metallibrary;
+        MTL::DepthStencilState* depthState;
+
+        MTL::Buffer* transformationBuffer;
+
+        std::vector<Texture*> textures;
 };
