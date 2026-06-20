@@ -139,7 +139,7 @@ void Renderer::createSquare() {
     
     squareVertexBuffer = _pDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
      __builtin_printf("squareVertexBuffer: %p\n", squareVertexBuffer);
-    grassTexture = new Texture("assets/mc_grass.jpeg", _pDevice);
+    grassTexture = new Texture("assets/grass.png", _pDevice);
     __builtin_printf("grassTexture ptr: %p\n", grassTexture);
     __builtin_printf("grassTexture->texture: %p\n", grassTexture->texture);
 }
