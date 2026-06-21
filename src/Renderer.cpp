@@ -148,7 +148,6 @@ void Renderer::buildShaders()
     depthStencilDesc->setDepthWriteEnabled(true);
     depthStencilState = _pDevice->newDepthStencilState(depthStencilDesc);
     depthStencilDesc->release();
-
     transformationBuffer = _pDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
 
     

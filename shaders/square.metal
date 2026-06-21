@@ -50,9 +50,13 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
             
     float4 result = colorTexture.sample(textureSampler, in.textureCoordinate);
+
+    
+    float average = (result[0] + result[1] + result[2]) / 3.0;
+    result = float4(average, average, average, 1.0);
   
 
-    return 1.0f - result ;
+    return  result ;
 }
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData [[buffer(0)]],
