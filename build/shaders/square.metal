@@ -12,6 +12,7 @@ struct MVP {
     matrix_float4x4 modelViewProjection;
 };
 
+
 struct Uniforms {
     float aspectRatio;
 };
