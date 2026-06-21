@@ -15,8 +15,8 @@ Renderer::~Renderer()
 {
     cubeVertexBuffer->release();
     delete grassTexture;
+    REnderPassPSO->release();
     _pPSO->release();
-    FR_REnderpass->release();
     _renderTexture->release();
     _offscreenDepthTexture->release();
     _renderToTextureRenderPassDescriptor->release();
@@ -137,8 +137,8 @@ void Renderer::buildShaders()
     pDesc1->setFragmentFunction(fragmentFn);
     pDesc1->colorAttachments()->object(0)->setPixelFormat(_renderTexture->pixelFormat());
     pDesc1->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    FR_REnderpass = _pDevice->newRenderPipelineState(pDesc1, &pError);
-    assert(FR_REnderpass);
+    _pPSO = _pDevice->newRenderPipelineState(pDesc1, &pError);
+    assert(_pPSO);
     vertexFn->release();
     fragmentFn->release();
     pDesc1->release();
@@ -160,8 +160,8 @@ void Renderer::buildShaders()
     pDesc2->setVertexFunction(vertexRPFn);
     pDesc2->setFragmentFunction(fragmentRPFn);
     pDesc2->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
-    _pPSO = _pDevice->newRenderPipelineState(pDesc2, &pError);
-    assert(_pPSO);
+    REnderPassPSO = _pDevice->newRenderPipelineState(pDesc2, &pError);
+    assert(REnderPassPSO);
     vertexRPFn->release();
     fragmentRPFn->release();
     pDesc2->release();
@@ -176,7 +176,7 @@ void Renderer::draw(MTK::View* pView)
     {
         MTL::RenderPassDescriptor* pRpd2 = pView->currentRenderPassDescriptor();
         MTL::RenderCommandEncoder* pEnc2 = pCmd->renderCommandEncoder(pRpd2);
-        pEnc2->setRenderPipelineState(_pPSO);
+        pEnc2->setRenderPipelineState(REnderPassPSO);
 
         static const AAPLVertex quadVertices[] = {
             {{-1.0, -1.0}, {0.0, 0.0, 0.0, 1.0}, {0.0, 1.0}},
@@ -226,7 +226,7 @@ memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
         memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
 
         MTL::RenderCommandEncoder* pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
-        pEnc1->setRenderPipelineState(FR_REnderpass);
+        pEnc1->setRenderPipelineState(_pPSO);
         pEnc1->setDepthStencilState(depthStencilState);
         pEnc1->setVertexBuffer(cubeVertexBuffer,    0, 0);
         pEnc1->setVertexBuffer(transformationBuffer, 0, 1);
