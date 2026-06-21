@@ -183,9 +183,10 @@ void Renderer::createRenderPipeline()
     rpd->setVertexFunction(vertexShader);
     rpd->setFragmentFunction(fragmentShader);
     rpd->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
-    rpd->setSampleCount(4);
+    rpd->setSampleCount(MSAASampleCount);
     rpd->setLabel(NS::String::string("Model Render Pipeline", NS::ASCIIStringEncoding));
     rpd->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+    rpd->setTessellationOutputWindingOrder(MTL::WindingCounterClockwise);
 
     NS::Error* error = nullptr;
     metalRenderPSO = _pDevice->newRenderPipelineState(rpd, &error);
@@ -231,7 +232,6 @@ void Renderer::createLightSourceRenderPipeline()
     rpd->setVertexFunction(vertexShader);
     rpd->setFragmentFunction(fragmentShader);
     rpd->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
-    rpd->setSampleCount(4);
     rpd->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
     rpd->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
 

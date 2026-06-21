@@ -31,4 +31,6 @@ class Renderer
         Model * model;
         MTL::DepthStencilState* depthStencilState;
         MTL::RenderPipelineState* metalLightSourceRenderPSO;
+
+        uint8_t MSAASampleCount = 4;
 };
