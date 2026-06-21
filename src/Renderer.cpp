@@ -120,7 +120,7 @@ void Renderer::buildShaders()
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setTexture(_renderTexture);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setStoreAction(MTL::StoreActionStore);
-    _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(0.1, 0.1, 0.1, 1.0));
+    _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
     _renderToTextureRenderPassDescriptor->depthAttachment()->setTexture(_offscreenDepthTexture);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setStoreAction(MTL::StoreActionDontCare);

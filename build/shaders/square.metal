@@ -71,9 +71,9 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     };
 
     const int kernels[9] = {
-        1,2,1,
-        2,4,2,
-        1,2,1
+        1,1,1,
+        1,8,1,
+        1,1,1
     };
     float3 sampleTex[9];
 
@@ -82,7 +82,7 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     }
     float3 col = float3(0.0);
     for(int i = 0; i < 9; i++)
-        col += sampleTex[i] * (kernels[i]/16.0f);
+        col += sampleTex[i] * (kernels[i]/1.0f);
 
     return  float4(col, 1.0); ;
 }
