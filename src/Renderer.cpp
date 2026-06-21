@@ -16,7 +16,7 @@ Renderer::~Renderer()
     cubeVertexBuffer->release();
     delete grassTexture;
     _pPSO->release();
-    _renderToTexturePipelineState->release();
+    FR_REnderpass->release();
     _renderTexture->release();
     _offscreenDepthTexture->release();
     _renderToTextureRenderPassDescriptor->release();
@@ -137,8 +137,8 @@ void Renderer::buildShaders()
     pDesc1->setFragmentFunction(fragmentFn);
     pDesc1->colorAttachments()->object(0)->setPixelFormat(_renderTexture->pixelFormat());
     pDesc1->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    _renderToTexturePipelineState = _pDevice->newRenderPipelineState(pDesc1, &pError);
-    assert(_renderToTexturePipelineState);
+    FR_REnderpass = _pDevice->newRenderPipelineState(pDesc1, &pError);
+    assert(FR_REnderpass);
     vertexFn->release();
     fragmentFn->release();
     pDesc1->release();
@@ -226,7 +226,7 @@ memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
         memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
 
         MTL::RenderCommandEncoder* pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
-        pEnc1->setRenderPipelineState(_renderToTexturePipelineState);
+        pEnc1->setRenderPipelineState(FR_REnderpass);
         pEnc1->setDepthStencilState(depthStencilState);
         pEnc1->setVertexBuffer(cubeVertexBuffer,    0, 0);
         pEnc1->setVertexBuffer(transformationBuffer, 0, 1);

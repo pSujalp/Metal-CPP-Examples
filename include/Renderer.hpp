@@ -46,5 +46,5 @@ class Renderer
         MTL::RenderPassDescriptor* _renderToTextureRenderPassDescriptor;
         float _aspectRatio;
         MTL::Texture * _offscreenDepthTexture;
-        MTL::RenderPipelineState* _renderToTexturePipelineState;
+        MTL::RenderPipelineState* FR_REnderpass;
 };
