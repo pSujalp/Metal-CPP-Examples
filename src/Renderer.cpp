@@ -194,15 +194,15 @@ void Renderer::draw(MTK::View* pView)
 
         glm::mat4 perspectiveMatrix = glm::perspective(glm::radians(60.0f), 16.0f/9.0f, 0.1f, 1000.0f);
         glm::mat4 MVP_GLM = perspectiveMatrix * viewMatrix * model;
-        glm::mat4 MVP_T = glm::transpose(MVP_GLM);
 
-        MVP mvp1;
-        mvp1.modelViewProjection = matrix_float4x4({
-            simd::float4{ MVP_T[0][0], MVP_T[0][1], MVP_T[0][2], MVP_T[0][3] },
-            simd::float4{ MVP_T[1][0], MVP_T[1][1], MVP_T[1][2], MVP_T[1][3] },
-            simd::float4{ MVP_T[2][0], MVP_T[2][1], MVP_T[2][2], MVP_T[2][3] },
-            simd::float4{ MVP_T[3][0], MVP_T[3][1], MVP_T[3][2], MVP_T[3][3] },
-        });
+MVP mvp1;
+mvp1.modelViewProjection = matrix_float4x4({
+    simd::float4{ MVP_GLM[0][0], MVP_GLM[0][1], MVP_GLM[0][2], MVP_GLM[0][3] },
+    simd::float4{ MVP_GLM[1][0], MVP_GLM[1][1], MVP_GLM[1][2], MVP_GLM[1][3] },
+    simd::float4{ MVP_GLM[2][0], MVP_GLM[2][1], MVP_GLM[2][2], MVP_GLM[2][3] },
+    simd::float4{ MVP_GLM[3][0], MVP_GLM[3][1], MVP_GLM[3][2], MVP_GLM[3][3] },
+});
+memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
         memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
 
         MTL::RenderCommandEncoder* pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
