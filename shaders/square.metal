@@ -16,12 +16,10 @@ struct Uniforms {
     float aspectRatio;
 };
 
-
-
-
 struct AAPLVertex {
     float2 position;
     float4 color;
+    float2 textureCoordinate;
    
 };
 
@@ -31,26 +29,31 @@ struct VertexOut {
     float2 textureCoordinate;
 };
 
+
 struct AAPLOut {
     float4 position [[position]];
     float4 color;
-
+    float2 textureCoordinate;
 };
 
 vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
                                 constant AAPLVertex* vertexData [[buffer(0)]]) {
     AAPLOut out;
-    out.position.x = vertexData[vertexID].position.x ;
-    out.position.y = vertexData[vertexID].position.y;
     out.position = float4(vertexData[vertexID].position, 0.0, 1.0);
     out.color = vertexData[vertexID].color;
+    out.textureCoordinate = vertexData[vertexID].textureCoordinate;
     return out;
 }
 
-fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]]) {
-    return  in.color;
-}
+fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
+                                   texture2d<float> colorTexture [[texture(0)]]) {
+    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
+            
+    float4 result = colorTexture.sample(textureSampler, in.textureCoordinate);
+  
 
+    return 1.0f - result ;
+}
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData [[buffer(0)]],
                               constant MVP& mvp [[buffer(1)]]) {
@@ -66,5 +69,5 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
 
 
-    return 1.0f -colorSample;
+    return colorSample;
 }

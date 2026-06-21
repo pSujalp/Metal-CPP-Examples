@@ -10,7 +10,6 @@
 using namespace simd;
 
 
-
 struct VertexData {
     float4 position;
     float2 textureCoordinate;
@@ -25,8 +24,23 @@ struct Uniforms {
 };
 
 
+
+struct VertexOut {
+    float4 position ;
+    float2 texcoord;
+    float2 textureCoordinate;
+};
+
+
+
 struct AAPLVertex {
     float2 position;
     float4 color;
-   
+    float2 textureCoordinate;
+};
+
+struct AAPLOut {
+    float4 position ;
+    float4 color;
+    float2 textureCoordinate;
 };
