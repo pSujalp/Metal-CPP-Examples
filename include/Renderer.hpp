@@ -26,6 +26,9 @@ class Renderer
         void createDefaultLibrary(MTL::Device* pDevice );
         void CreateCube();
 
+        void CreateSkyBox();
+        void buildSkyBoxShaders();
+
 
     private:
         MTL::Device* _pDevice;
@@ -39,7 +42,13 @@ class Renderer
         MTL::Buffer * cubeVertexBuffer;
         MTL::Library * metallibrary;
         MTL::DepthStencilState* depthStencilState;
-        
 
+
+        MTL::Buffer * SkyBoxVertexBuffer;
+        MTL::Buffer * MVPSkyBoxBuffer;
+        Texture* skyboxTexture;
+        MTL::RenderPipelineState * _SkyboxPSO;
+        MTL::DepthStencilState* SkyBoxDepthStencilState;
+        MTL::Library * metalSkyBoxlibrary;
        
 };

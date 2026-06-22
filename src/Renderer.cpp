@@ -3,6 +3,31 @@
 #include "Shader.h"
 
 
+// 36 explicit triangle verts (6 faces × 2 tris × 3 verts)
+// xyz = cubemap sample direction, viewed from INSIDE the cube
+static const simd::float4 cubeVertexData[] =
+{
+    // +X (right)
+    { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+    { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+    // -X (left)
+    {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+    {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+    // +Y (top)
+    {-1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+    { 1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+    // -Y (bottom)
+    {-1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+    { 1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+    // +Z (front)
+    {-1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f},
+    { 1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f},
+    // -Z (back)
+    { 1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f},
+    {-1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f},
+};
+
+
 Renderer::Renderer(MTL::Device* pDevice)
 : _pDevice(pDevice->retain())
 {
@@ -15,101 +40,196 @@ Renderer::Renderer(MTL::Device* pDevice)
     __builtin_printf("Step 3: buildShaders\n");
     buildShaders();
 
-    __builtin_printf("Step 4: CreateCube\n");
+    __builtin_printf("Step 4: buildSkyBoxShaders\n");
+    buildSkyBoxShaders();
+
+    __builtin_printf("Step 5: CreateCube\n");
     CreateCube();
 
-    __builtin_printf("Step 5: constructor done\n");
+    __builtin_printf("Step 6: CreateSkyBox\n");
+    CreateSkyBox();
+
+    __builtin_printf("Constructor done\n");
 }
+
 
 Renderer::~Renderer()
 {
-    cubeVertexBuffer->release();   
+    cubeVertexBuffer->release();
     delete grassTexture;
     _pPSO->release();
     depthStencilState->release();
     UniformBuffer->release();
     transformationBuffer->release();
+
+    SkyBoxVertexBuffer->release();
+    MVPSkyBoxBuffer->release();
+    _SkyboxPSO->release();
+    SkyBoxDepthStencilState->release();
+    delete skyboxTexture;
+
+    metallibrary->release();
+    metalSkyBoxlibrary->release();
+
     _pCommandQueue->release();
     _pDevice->release();
 }
 
-void Renderer::createDefaultLibrary(MTL::Device* pDevice) {
+
+void Renderer::createDefaultLibrary(MTL::Device* pDevice)
+{
     using NS::StringEncoding::UTF8StringEncoding;
 
-    char cwd[1024];
-    getcwd(cwd, sizeof(cwd));
-    __builtin_printf("CWD: %s\n", cwd);
+    {
+        Shader sh;
+        const char* src = sh.GetShader("shaders/square.metal");
+        assert(src && "ERROR: shaders/square.metal not found");
 
-    Shader sh;
-    const char* shadersrc = sh.GetShader("shaders/square.metal");
-    if (!shadersrc) {
-        __builtin_printf("ERROR: GetShader returned null — file not found\n");
-        assert(false);
+        NS::Error* pError = nullptr;
+        metallibrary = pDevice->newLibrary(
+            NS::String::string(src, UTF8StringEncoding), nullptr, &pError
+        );
+        if (!metallibrary) {
+            __builtin_printf("Cube shader compile FAILED: %s\n",
+                pError->localizedDescription()->utf8String());
+            assert(false);
+        }
+        __builtin_printf("Cube shader library OK\n");
     }
-    __builtin_printf("Shader source loaded, first 100 chars:\n%.100s\n", shadersrc);
 
-    NS::Error* pError = nullptr;
-    metallibrary = pDevice->newLibrary(
-        NS::String::string(shadersrc, UTF8StringEncoding), nullptr, &pError
-    );
+    {
+        Shader sh;
+        const char* src = sh.GetShader("shaders/skybox.metal");
+        assert(src && "ERROR: shaders/skybox.metal not found");
 
-    if (!metallibrary) {
-        __builtin_printf("Compile FAILED: %s\n",
-            pError->localizedDescription()->utf8String());
-        assert(false);
-    }
-    __builtin_printf("Library compiled OK\n");
-
-    NS::Array* fnames = metallibrary->functionNames();
-    __builtin_printf("Function count: %lu\n", fnames->count());
-    for (uint32_t i = 0; i < fnames->count(); ++i) {
-        __builtin_printf("  fn: %s\n", ((NS::String*)fnames->object(i))->utf8String());
+        NS::Error* pError = nullptr;
+        metalSkyBoxlibrary = pDevice->newLibrary(
+            NS::String::string(src, UTF8StringEncoding), nullptr, &pError
+        );
+        if (!metalSkyBoxlibrary) {
+            __builtin_printf("Skybox shader compile FAILED: %s\n",
+                pError->localizedDescription()->utf8String());
+            assert(false);
+        }
+        __builtin_printf("Skybox shader library OK\n");
     }
 }
 
-void Renderer::CreateCube() {
+
+void Renderer::buildShaders()
+{
+    NS::Error* pError = nullptr;
+
+    MTL::Function* vert = metallibrary->newFunction(
+        NS::String::string("vertexShader", NS::ASCIIStringEncoding));
+    assert(vert && "ERROR: 'vertexShader' not found");
+
+    MTL::Function* frag = metallibrary->newFunction(
+        NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+    assert(frag && "ERROR: 'fragmentShader' not found");
+
+    MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+    pDesc->setVertexFunction(vert);
+    pDesc->setFragmentFunction(frag);
+    pDesc->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
+    pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
+    MTL::DepthStencilDescriptor* depthDesc = MTL::DepthStencilDescriptor::alloc()->init();
+    depthDesc->setDepthCompareFunction(MTL::CompareFunctionLess);
+    depthDesc->setDepthWriteEnabled(true);
+    depthStencilState = _pDevice->newDepthStencilState(depthDesc);
+    depthDesc->release();
+
+    _pPSO = _pDevice->newRenderPipelineState(pDesc, &pError);
+    if (!_pPSO) {
+        __builtin_printf("%s", pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    UniformBuffer        = _pDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
+    transformationBuffer = _pDevice->newBuffer(sizeof(MVP),      MTL::ResourceStorageModeShared);
+
+    frag->release();
+    vert->release();
+    pDesc->release();
+}
+
+
+void Renderer::buildSkyBoxShaders()
+{
+    NS::Error* pError = nullptr;
+
+    MTL::Function* vert = metalSkyBoxlibrary->newFunction(
+        NS::String::string("skyboxVertex", NS::ASCIIStringEncoding));
+    assert(vert && "ERROR: 'skyboxVertex' not found");
+
+    MTL::Function* frag = metalSkyBoxlibrary->newFunction(
+        NS::String::string("skyboxFragment", NS::ASCIIStringEncoding));
+    assert(frag && "ERROR: 'skyboxFragment' not found");
+
+    MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+    pDesc->setVertexFunction(vert);
+    pDesc->setFragmentFunction(frag);
+    pDesc->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
+    pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
+    MTL::DepthStencilDescriptor* depthDesc = MTL::DepthStencilDescriptor::alloc()->init();
+    depthDesc->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
+    depthDesc->setDepthWriteEnabled(false);
+    SkyBoxDepthStencilState = _pDevice->newDepthStencilState(depthDesc);
+    depthDesc->release();
+
+    _SkyboxPSO = _pDevice->newRenderPipelineState(pDesc, &pError);
+    if (!_SkyboxPSO) {
+        __builtin_printf("%s", pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    frag->release();
+    vert->release();
+    pDesc->release();
+}
+
+
+void Renderer::CreateCube()
+{
     VertexData cubeVertices[] = {
-        
+        // Front
         {{-0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
         {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 0.0}},
         {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{-0.5,  0.5,  0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
-
-        
+        // Back
         {{ 0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{-0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
         {{-0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
         {{ 0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{ 0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-        
+        // Top
         {{-0.5,  0.5,  0.5, 1.0}, {0.0, 0.0}},
         {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 0.0}},
         {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
         {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
         {{-0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{-0.5,  0.5,  0.5, 1.0}, {0.0, 0.0}},
-
-        
+        // Bottom
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{ 0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{-0.5, -0.5,  0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-        
+        // Left
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{-0.5, -0.5,  0.5, 1.0}, {1.0, 0.0}},
         {{-0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{-0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
         {{-0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-        
+        // Right
         {{ 0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
         {{ 0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
@@ -119,101 +239,72 @@ void Renderer::CreateCube() {
     };
 
     cubeVertexBuffer = _pDevice->newBuffer(
-        &cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared
+        cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared
     );
     grassTexture = new Texture("assets/mc_grass.jpeg", _pDevice);
 }
 
-void Renderer::buildShaders()
+
+void Renderer::CreateSkyBox()
 {
-    NS::Error* pError = nullptr;
+    static const simd::float4 skyboxVerts[] = {
+        // +X
+        { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+        { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+        // -X
+        {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+        {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+        // +Y
+        {-1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+        { 1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+        // -Y
+        {-1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+        { 1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+        // +Z
+        {-1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f},
+        { 1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f},
+        // -Z
+        { 1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f},
+        {-1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f},
+    };
 
-    MTL::Function* vertexShader = metallibrary->newFunction(
-        NS::String::string("vertexShader", NS::ASCIIStringEncoding)
+    SkyBoxVertexBuffer = _pDevice->newBuffer(
+        skyboxVerts, sizeof(skyboxVerts), MTL::ResourceStorageModeShared
     );
-    if (!vertexShader) {
-        __builtin_printf("ERROR: vertex function 'vertexShader' not found in library.\n");
-        assert(false);
-    }
+    MVPSkyBoxBuffer = _pDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
 
-    MTL::Function* fragmentShader = metallibrary->newFunction(
-        NS::String::string("fragmentShader", NS::ASCIIStringEncoding)
-    );
-    if (!fragmentShader) {
-        __builtin_printf("ERROR: fragment function 'fragmentShader' not found in library.\n");
-        assert(false);
-    }
-
-    MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
-    pDesc->setVertexFunction(vertexShader);
-    pDesc->setFragmentFunction(fragmentShader);
-    pDesc->colorAttachments()->object(0)->setPixelFormat(
-        MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB
-    );
-    
-    pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-
-    MTL::DepthStencilDescriptor* depthStencilDescriptor =
-        MTL::DepthStencilDescriptor::alloc()->init();
-    depthStencilDescriptor->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
-    depthStencilDescriptor->setDepthWriteEnabled(true);
-    depthStencilState = _pDevice->newDepthStencilState(depthStencilDescriptor);
-    depthStencilDescriptor->release();
-
-    _pPSO = _pDevice->newRenderPipelineState(pDesc, &pError);
-    if (!_pPSO) {
-        __builtin_printf("%s", pError->localizedDescription()->utf8String());
-        assert(false);
-    }
-
-    UniformBuffer       = _pDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
-    transformationBuffer = _pDevice->newBuffer(sizeof(MVP),     MTL::ResourceStorageModeShared);
-
-    fragmentShader->release();
-    vertexShader->release();
-    pDesc->release();
+    skyboxTexture = new Texture("assets/skybox.png", _pDevice);
 }
+
 
 void Renderer::draw(MTK::View* pView)
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
-    
+    // ── Uniforms ──────────────────────────────────────────────────────────────
     Uniforms uniforms;
     uniforms.time = {0.1f, 0.3f};
     memcpy(UniformBuffer->contents(), &uniforms, sizeof(Uniforms));
 
-    
-    
+    // ── Shared view/projection ────────────────────────────────────────────────
+    glm::mat4 viewMatrix = glm::lookAt(
+        glm::vec3(0.0f, 0.0f, 5.0f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
+    auto  drawableSize = pView->drawableSize();
+    float aspect       = (float)drawableSize.width / (float)drawableSize.height;
+    glm::mat4 proj     = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
+
+    // ── Cube MVP ──────────────────────────────────────────────────────────────
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.0f, -1.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+    static float deg = 0.0f;
+    deg += 45.0f * Time::DeltaTime;
+    if (deg >= 360.0f) deg -= 360.0f;
+    model = glm::rotate(model, glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    
-    static float accumulatedDegrees = 0.0f;
-    const float rotationSpeedDegreesPerSecond = 45.0f;
-    accumulatedDegrees += rotationSpeedDegreesPerSecond * Time::DeltaTime;
-    if (accumulatedDegrees >= 360.0f)
-        accumulatedDegrees -= 360.0f;
-
-    
-    float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-    model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 viewMatrix = glm::lookAt(
-        glm::vec3(0.0f, 0.0f,  5.0f),   
-        glm::vec3(0.0f, 0.0f,  0.0f),   
-        glm::vec3(0.0f, 1.0f,  0.0f)    
-    );
-
-    
-    auto drawableSize = pView->drawableSize();
-    float aspectRatio = (float)drawableSize.width / (float)drawableSize.height;
-    float fov  = glm::radians(60.0f);   
-    float nearZ = 0.1f;
-    float farZ  = 100.0f;
-    glm::mat4 perspectiveMatrix = glm::perspective(fov, aspectRatio, nearZ, farZ);
-    glm::mat4 MVP_GLM = perspectiveMatrix * viewMatrix * model;
-
+    glm::mat4 MVP_GLM = proj * viewMatrix * model;
     MVP mvp1;
     mvp1.MVP = matrix_float4x4({
         simd::float4{ MVP_GLM[0][0], MVP_GLM[0][1], MVP_GLM[0][2], MVP_GLM[0][3] },
@@ -222,6 +313,26 @@ void Renderer::draw(MTK::View* pView)
         simd::float4{ MVP_GLM[3][0], MVP_GLM[3][1], MVP_GLM[3][2], MVP_GLM[3][3] },
     });
     memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
+
+    // ── Skybox MVP ────────────────────────────────────────────────────────────
+    static float skyboxDeg = 0.0f;
+    skyboxDeg += 1.0f * Time::DeltaTime;
+    if (skyboxDeg >= 360.0f) skyboxDeg -= 360.0f;
+
+    glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+    skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 skyboxMVP_GLM = proj * viewMatrix * skyboxModel;
+
+    MVP mvpSkybox;
+    mvpSkybox.MVP = matrix_float4x4({
+        simd::float4{ skyboxMVP_GLM[0][0], skyboxMVP_GLM[0][1], skyboxMVP_GLM[0][2], skyboxMVP_GLM[0][3] },
+        simd::float4{ skyboxMVP_GLM[1][0], skyboxMVP_GLM[1][1], skyboxMVP_GLM[1][2], skyboxMVP_GLM[1][3] },
+        simd::float4{ skyboxMVP_GLM[2][0], skyboxMVP_GLM[2][1], skyboxMVP_GLM[2][2], skyboxMVP_GLM[2][3] },
+        simd::float4{ skyboxMVP_GLM[3][0], skyboxMVP_GLM[3][1], skyboxMVP_GLM[3][2], skyboxMVP_GLM[3][3] },
+    });
+    memcpy(MVPSkyBoxBuffer->contents(), &mvpSkybox, sizeof(MVP));
+
+    // ── Command buffer ────────────────────────────────────────────────────────
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
     if (!pCmd) {
         __builtin_printf("ERROR: commandBuffer is nil\n");
@@ -245,16 +356,24 @@ void Renderer::draw(MTK::View* pView)
         return;
     }
 
+    // ── 1. Draw skybox first (depth write disabled — fills background) ────────
+    pEnc->setRenderPipelineState(_SkyboxPSO);
+    pEnc->setDepthStencilState(SkyBoxDepthStencilState);
+    pEnc->setVertexBuffer(SkyBoxVertexBuffer, 0, 0);  // buffer(0): positions
+    pEnc->setVertexBuffer(MVPSkyBoxBuffer,    0, 2);  // buffer(2): MVP
+    pEnc->setFragmentTexture(skyboxTexture->texture, 0);
+    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle,  // explicit tris, NOT strip
+                         NS::UInteger(0), NS::UInteger(36));
+
+    // ── 2. Draw cube on top ───────────────────────────────────────────────────
     pEnc->setRenderPipelineState(_pPSO);
     pEnc->setDepthStencilState(depthStencilState);
-
-    pEnc->setVertexBuffer(cubeVertexBuffer,      0, 0);  
-    pEnc->setVertexBuffer(UniformBuffer,         0, 1);  
-    pEnc->setVertexBuffer(transformationBuffer,  0, 2);  
-
+    pEnc->setVertexBuffer(cubeVertexBuffer,     0, 0);  // buffer(0): VertexData
+    pEnc->setVertexBuffer(UniformBuffer,        0, 1);  // buffer(1): Uniforms
+    pEnc->setVertexBuffer(transformationBuffer, 0, 2);  // buffer(2): MVP
     pEnc->setFragmentTexture(grassTexture->texture, 0);
-
-    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
+    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle,
+                         NS::UInteger(0), NS::UInteger(36));
 
     pEnc->endEncoding();
     pCmd->presentDrawable(pView->currentDrawable());
