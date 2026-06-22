@@ -9,39 +9,29 @@
 #include <metal_stdlib>
 using namespace metal;
 
-// Must match the MVP struct in VertexData.hpp
+
 struct MVP {
     float4x4 MVP;
 };
 
 struct SkyboxVOut {
     float4 position [[position]];
-    float3 direction;        // world-space direction for equirect lookup
+    float3 direction;  
 };
 
-// ─── Vertex ──────────────────────────────────────────────────────────────────
 vertex SkyboxVOut skyboxVertex(
     uint                   vid      [[vertex_id]],
     constant float4*       verts    [[buffer(0)]],
     constant MVP&          mvp      [[buffer(2)]])
 {
     float4 pos = verts[vid];
-
     SkyboxVOut out;
-    // Store the raw xyz as the sample direction BEFORE projection
     out.direction = pos.xyz;
-
-    // Project — force depth to 1.0 (far plane) by outputting w,w instead of z,w
     float4 clip = mvp.MVP * pos;
-    out.position = clip.xyww;   // z = w → NDC depth = 1.0 after divide
-
+    out.position = clip.xyww;  
     return out;
 }
 
-// ─── Fragment ─────────────────────────────────────────────────────────────────
-// Converts a 3-D direction vector to (u, v) on an equirectangular map:
-//   u = atan2(z, x) / (2π) + 0.5      → [0, 1] longitude
-//   v = asin(y / |dir|) / π + 0.5     → [0, 1] latitude
 fragment float4 skyboxFragment(
     SkyboxVOut             in       [[stage_in]],
     texture2d<float>       skyTex   [[texture(0)]])
