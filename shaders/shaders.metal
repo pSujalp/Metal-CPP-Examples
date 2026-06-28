@@ -9,7 +9,7 @@ struct VertexData {
 };
 
 struct VertexOut{
-    float4 position[[position]];
+   float4 position [[position]];
 };
 
 struct MVP{
@@ -20,7 +20,6 @@ struct MVP{
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData [[buffer(0)]],
                               constant MVP & mvp [[buffer(1)]]){
-
                 VertexOut out;
                 out.position = mvp.MVP * vertexData[vertexID].position;
                 return out;

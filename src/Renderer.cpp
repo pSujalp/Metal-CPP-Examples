@@ -8,6 +8,8 @@ void Renderer::draw( MTK::View* pView )
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
+
+    
     pEnc->endEncoding();
     pCmd->presentDrawable( pView->currentDrawable() );
     pCmd->commit();
@@ -123,4 +125,5 @@ void Renderer::buildBuffers(){
 cubeVertexBuffer = _pDevice->newBuffer(
         &cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared
     );
+
 }
