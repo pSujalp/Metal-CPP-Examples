@@ -9,3 +9,6 @@ struct VertexData {
 };
 
 
+struct MVP{
+    matrix_float4x4 MVP;
+};
