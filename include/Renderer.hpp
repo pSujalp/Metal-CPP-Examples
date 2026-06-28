@@ -3,6 +3,8 @@
 #include <Metal/Metal.hpp>
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
+#include "Shader.h"
+#include "VertexData.h"
 #include <simd/simd.h>
 
 class Renderer
@@ -18,8 +20,9 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* _pPSO;
-        MTL::Buffer* _pVertexPositionsBuffer;
-        MTL::Buffer* _pVertexColorsBuffer;
+        MTL::DepthStencilState * depthStencilState;
+
+        MTL::Buffer* cubeVertexBuffer;
         
 
 };

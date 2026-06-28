@@ -20,7 +20,6 @@ struct MVP{
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData [[buffer(0)]],
                               constant MVP & mvp [[buffer(1)]]){
-
                 VertexOut out;
                 out.position = mvp.MVP * vertexData[vertexID].position;
                 return out;
