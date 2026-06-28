@@ -9,7 +9,7 @@ void Renderer::draw( MTK::View* pView )
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
-    
+
     pEnc->endEncoding();
     pCmd->presentDrawable( pView->currentDrawable() );
     pCmd->commit();
@@ -28,6 +28,7 @@ Renderer::~Renderer()
     _pCommandQueue->release();
     _pDevice->release();
 }
+
 
  void Renderer::makePipeline()
 {
