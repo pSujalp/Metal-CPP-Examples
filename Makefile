@@ -5,7 +5,7 @@ CC := clang
 CPPFLAGS := -I./metal-cpp -I./metal-cpp-extensions -I./include
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
-LDFLAGS := -framework Metal -framework Foundation -framework Cocoa -framework CoreGraphics -framework MetalKit
+LDFLAGS := -L./libs -lglfw3 -framework Metal -framework Foundation -framework Cocoa -framework CoreGraphics -framework MetalKit -framework QuartzCore -framework IOKit -framework CoreVideo
 
 TARGET := build/metal
 
