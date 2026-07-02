@@ -267,17 +267,22 @@ void Renderer::draw(MTK::View* pView)
     memcpy(UniformBuffer->contents(), &uniforms, sizeof(Uniforms));
 
     
-    glm::mat4 viewMatrix = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 5.0f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    );
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+    static float cameraAngle = 0.0f;
+    const float radius = 10.0f;
+    cameraAngle += 30.0f * Time::DeltaTime;
+    if (cameraAngle >= 360.0f) cameraAngle -= 360.0f;
+    float camX = radius * static_cast<float>(sin(glm::radians(cameraAngle)));
+    float camZ = radius * static_cast<float>(cos(glm::radians(cameraAngle)));
+    viewMatrix = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
     auto  drawableSize = pView->drawableSize();
     float aspect       = (float)drawableSize.width / (float)drawableSize.height;
     glm::mat4 proj     = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
 
     
     glm::mat4 model = glm::mat4(1.0f);
+
     model = glm::translate(model, glm::vec3(0.0f, 1.0f, -1.0f));
     static float deg = 0.0f;
     deg += 45.0f * Time::DeltaTime;
