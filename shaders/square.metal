@@ -47,20 +47,10 @@ vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
 
 fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
                                    texture2d<float> colorTexture [[texture(0)]]) {
-    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
+    constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
 
     float3 hdrColor = colorTexture.sample(textureSampler, in.textureCoordinate).rgb;
-
-    // Exposure tonemap (Reinhard-style exponential). This only does something
-    // meaningful now that the offscreen render target is a floating-point
-    // format (RGBA16Float) and can actually hold values above 1.0.
-    float3 result = float3(1.0f) - exp(-hdrColor * 1.9f);
-
-    // No manual pow(1/2.2) gamma correction here: the final pipeline's
-    // color attachment is BGRA8Unorm_sRGB, which gamma-encodes on write
-    // automatically. Doing it manually too would double gamma-correct
-    // and wash the image out.
-
+    float3 result = float3(1.0f) - exp(-hdrColor * 1.5f);
     return float4(result, 1.0f);
 }
 

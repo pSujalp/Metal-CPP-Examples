@@ -98,8 +98,8 @@ void Renderer::buildShaders()
     
     MTL::TextureDescriptor* colorDesc = MTL::TextureDescriptor::alloc()->init();
     colorDesc->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
-    colorDesc->setWidth(512);
-    colorDesc->setHeight(512);
+    colorDesc->setWidth(512*4);
+    colorDesc->setHeight(512*4);
     colorDesc->setStorageMode(MTL::StorageModeShared);
     colorDesc->setUsage(MTL::TextureUsageRenderTarget | MTL::TextureUsageShaderRead);
     _renderTexture = _pDevice->newTexture(colorDesc);
@@ -108,8 +108,8 @@ void Renderer::buildShaders()
     
     MTL::TextureDescriptor* depthDesc = MTL::TextureDescriptor::alloc()->init();
     depthDesc->setPixelFormat(MTL::PixelFormatDepth32Float);
-    depthDesc->setWidth(512);
-    depthDesc->setHeight(512);
+    depthDesc->setWidth(512*4);
+    depthDesc->setHeight(512*4);
     depthDesc->setStorageMode(MTL::StorageModePrivate);
     depthDesc->setUsage(MTL::TextureUsageRenderTarget);
     _offscreenDepthTexture = _pDevice->newTexture(depthDesc);
