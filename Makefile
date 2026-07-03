@@ -32,7 +32,10 @@ build/assets/%: assets/%
 copy-shaders: build/shaders/square.metal
 copy-assets: build/assets/mc_grass.jpeg
 
-$(TARGET): $(OBJ) copy-shaders copy-assets
+copy-fonts : build/assets/font/cmunrm.ttf
+copy-fonts1 : build/assets/font/FingerPaint-Regular.ttf
+
+$(TARGET): $(OBJ) copy-shaders copy-assets copy-fonts copy-fonts1
 	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) -o $@
 
 build/%.c.o: src/%.c

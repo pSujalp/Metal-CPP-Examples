@@ -20,7 +20,7 @@ Renderer::Renderer(MTL::Device* pDevice)
 
     __builtin_printf("Step 5: constructor done\n");
 
-    textR = new TextRendering("assets/font/cmunrm.ttf",pDevice,"Sujal");
+    textR = new TextRendering("assets/font/FingerPaint-Regular.ttf",pDevice,"Sujal");
 
 }
 
