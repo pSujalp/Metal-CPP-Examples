@@ -6,6 +6,8 @@
 #include "simd/simd.h"
 #include "VertexData.hpp"
 #include "Texture.hpp"
+#include "TextRendering.h"
+
 
 class Renderer
 {
@@ -22,9 +24,11 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* _pPSO;
-        Texture* grassTexture;
         MTL::Buffer* squareVertexBuffer;
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* Uniform1Buffer;
         MTL::Library * metallibrary;
+
+
+        TextRendering * textR;
 };

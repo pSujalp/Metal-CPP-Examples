@@ -19,12 +19,16 @@ Renderer::Renderer(MTL::Device* pDevice)
     createSquare();
 
     __builtin_printf("Step 5: constructor done\n");
+
+    textR = new TextRendering("font/cmunrm.ttf",pDevice);
+
+    
 }
 
 Renderer::~Renderer()
 {
     squareVertexBuffer->release();
-    delete grassTexture;
+
     _pPSO->release();
     _pCommandQueue->release();
     _pDevice->release();
@@ -139,9 +143,9 @@ void Renderer::createSquare() {
     
     squareVertexBuffer = _pDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
      __builtin_printf("squareVertexBuffer: %p\n", squareVertexBuffer);
-    grassTexture = new Texture("assets/mc_grass.jpeg", _pDevice);
-    __builtin_printf("grassTexture ptr: %p\n", grassTexture);
-    __builtin_printf("grassTexture->texture: %p\n", grassTexture->texture);
+ 
+    
+   
 }
 void Renderer::draw(MTK::View* pView)
 {
@@ -151,13 +155,14 @@ void Renderer::draw(MTK::View* pView)
     Uniforms1 uniforms1;
 
 
-
-
     uniforms.time = {0.1f,0.3f};
     uniforms1.intAsBool = 1;
 
     memcpy(UniformBuffer->contents(),&uniforms,sizeof(Uniforms));
     memcpy(Uniform1Buffer->contents(),&uniforms1,sizeof(Uniforms1));
+
+
+    textR->Draw("Sujal");
 
     
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
@@ -192,7 +197,7 @@ void Renderer::draw(MTK::View* pView)
 
     pEnc->setRenderPipelineState(_pPSO);
     pEnc->setVertexBuffer(squareVertexBuffer, 0, 0);
-    pEnc->setFragmentTexture(grassTexture->texture, 0);
+    pEnc->setFragmentTexture(textR->texture, 0);
     pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
     pEnc->endEncoding();
