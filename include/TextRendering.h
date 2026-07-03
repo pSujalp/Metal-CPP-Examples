@@ -30,6 +30,8 @@ private:
     int b_w = 512;
     int b_h = 128;
     int l_h = 64; 
+
+    size_t multipler = 4;
     std::string word;
 
 public:
@@ -41,9 +43,10 @@ public:
     }
 
     
-    TextRendering(const std::string &filepath  ,MTL::Device * device, std::string wordpara = "")
+    TextRendering(const std::string &filepath  ,MTL::Device * device, std::string wordpara = "" , size_t multipler  = 4)
     { 
         this->word = wordpara;
+        this->multipler = multipler;
         fontFile = fopen(filepath.c_str(), "rb");
         fseek(fontFile, 0, SEEK_END);
         size = ftell(fontFile);      
@@ -61,9 +64,9 @@ public:
             printf("failed\n");
         }
 
-        b_w = 512 * 4;
-        b_h = 128 * 4 ;
-        l_h = 64 * 4 ; 
+        b_w = 512 * multipler;
+        b_h = 128 * multipler ;
+        l_h = 64 * multipler ; 
 
        
         bitmap = (unsigned char *)calloc(b_w * b_h, sizeof(unsigned char));
@@ -82,7 +85,9 @@ public:
 
 
         memset(bitmap, 0, b_w * b_h);
-        png.clear();
+         png.clear();
+
+
         char *word = variableword.data();
         int x = 0;
         int ascent, descent, lineGap;
