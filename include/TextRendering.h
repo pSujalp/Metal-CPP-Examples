@@ -78,9 +78,9 @@ public:
 
     void Draw(std::string variableword)
     {
-        // Reset per-frame scratch buffers. Without this, glyph pixels from
-        // previous calls stay baked into the atlas and the PNG buffer keeps
-        // growing/stale data keeps getting decoded from its front.
+        
+        
+        
 
         if(variableword.compare(word) == true ) return ;
 
@@ -136,8 +136,8 @@ public:
         textureDescriptor->setUsage(MTL::TextureUsageShaderRead);
         textureDescriptor->setStorageMode(MTL::StorageModeShared);
 
-        // Release the previous frame's texture before overwriting the
-        // pointer, otherwise every Draw() call leaks a Metal texture.
+        
+        
         if (texture)
         {
             texture->release();
