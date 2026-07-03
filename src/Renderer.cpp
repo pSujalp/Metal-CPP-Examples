@@ -20,9 +20,8 @@ Renderer::Renderer(MTL::Device* pDevice)
 
     __builtin_printf("Step 5: constructor done\n");
 
-    textR = new TextRendering("font/cmunrm.ttf",pDevice);
+    textR = new TextRendering("assets/font/cmunrm.ttf",pDevice,"Sujal");
 
-    
 }
 
 Renderer::~Renderer()
@@ -107,7 +106,6 @@ void Renderer::buildShaders()
         }
         assert(false);
     }
-
     MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
     pDesc->setVertexFunction( vertexShader );
     pDesc->setFragmentFunction( fragmentShader);
@@ -161,9 +159,13 @@ void Renderer::draw(MTK::View* pView)
     memcpy(UniformBuffer->contents(),&uniforms,sizeof(Uniforms));
     memcpy(Uniform1Buffer->contents(),&uniforms1,sizeof(Uniforms1));
 
+    std::string str = "Metal C++ ";
 
-    textR->Draw("Sujal");
+    ch = ch % 90 ;
 
+    str.push_back(ch++);
+
+    textR->Draw(str);
     
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
     if (!pCmd) {
@@ -199,6 +201,7 @@ void Renderer::draw(MTK::View* pView)
     pEnc->setVertexBuffer(squareVertexBuffer, 0, 0);
     pEnc->setFragmentTexture(textR->texture, 0);
     pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
+
 
     pEnc->endEncoding();
     pCmd->presentDrawable(pView->currentDrawable());

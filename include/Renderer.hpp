@@ -31,4 +31,6 @@ class Renderer
 
 
         TextRendering * textR;
+
+        int ch = 65;
 };

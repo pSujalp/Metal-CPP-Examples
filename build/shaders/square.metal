@@ -41,8 +41,6 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData,
                               constant Uniforms& uniforms [[buffer(1)]],
                                constant Uniforms1& uniforms1 [[buffer(2)]]) {
-    
-    
     VertexOut out;
     if(uniforms1.intAsBool){
         out.position = vertexData[vertexID].position + float4(uniforms.time,0,0);
@@ -59,5 +57,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                       min_filter::linear);
     // Sample the texture to obtain a color
     const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
+
+    if(colorSample.a < 0.1f) discard_fragment();
     return colorSample;
 }

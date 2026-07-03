@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vector>
 #include <string>
 #include <cmath>
@@ -15,9 +16,8 @@
 
 class TextRendering
 {
-public: MTL::Texture* texture;
+public: MTL::Texture* texture = nullptr;
 private:
-    MTL::Texture* Texttexture;
     MTL::Device* device;
 
     FILE *fontFile;
@@ -31,6 +31,7 @@ private:
     int b_h = 128;
     int l_h = 64; 
     std::string word;
+
 public:
     static void write_to_mem(void *context, void *data, int size)
     {
@@ -40,9 +41,9 @@ public:
     }
 
     
-    TextRendering(const std::string &filepath ,MTL::Device * device)
-    {
-
+    TextRendering(const std::string &filepath  ,MTL::Device * device, std::string wordpara = "")
+    { 
+        this->word = wordpara;
         fontFile = fopen(filepath.c_str(), "rb");
         fseek(fontFile, 0, SEEK_END);
         size = ftell(fontFile);      
@@ -60,9 +61,9 @@ public:
             printf("failed\n");
         }
 
-        b_w = 512;
-        b_h = 128;
-        l_h = 64; 
+        b_w = 512 * 4;
+        b_h = 128 * 4 ;
+        l_h = 64 * 4 ; 
 
        
         bitmap = (unsigned char *)calloc(b_w * b_h, sizeof(unsigned char));
@@ -71,10 +72,21 @@ public:
         scale = stbtt_ScaleForPixelHeight(&info, l_h);
 
         this->device = device;
+
+        Draw(wordpara);
     }
 
     void Draw(std::string variableword)
     {
+        // Reset per-frame scratch buffers. Without this, glyph pixels from
+        // previous calls stay baked into the atlas and the PNG buffer keeps
+        // growing/stale data keeps getting decoded from its front.
+
+        if(variableword.compare(word) == true ) return ;
+
+
+        memset(bitmap, 0, b_w * b_h);
+        png.clear();
 
         char *word = variableword.data();
         int x = 0;
@@ -84,7 +96,7 @@ public:
         descent = roundf(descent * scale);
 
         int i;
-        for (i = 0; i < strlen(word); ++i)
+        for (i = 0; i < (int)strlen(word); ++i)
         {
            
             int ax;
@@ -124,12 +136,20 @@ public:
         textureDescriptor->setUsage(MTL::TextureUsageShaderRead);
         textureDescriptor->setStorageMode(MTL::StorageModeShared);
 
-    Texttexture = device->newTexture(textureDescriptor);
-    MTL::Region region = MTL::Region(0, 0, 0, width, height, 1);
-    NS::UInteger bytesPerRow = 4 * width;
-    Texttexture->replaceRegion(region, 0, image, bytesPerRow);
-    textureDescriptor->release();
-    stbi_image_free(image);
+        // Release the previous frame's texture before overwriting the
+        // pointer, otherwise every Draw() call leaks a Metal texture.
+        if (texture)
+        {
+            texture->release();
+            texture = nullptr;
+        }
+
+        texture = device->newTexture(textureDescriptor);
+        MTL::Region region = MTL::Region(0, 0, 0, width, height, 1);
+        NS::UInteger bytesPerRow = 4 * width;
+        texture->replaceRegion(region, 0, image, bytesPerRow);
+        textureDescriptor->release();
+        stbi_image_free(image);
 
     }
 
@@ -138,5 +158,9 @@ public:
     {
         free(fontBuffer);
         free(bitmap);
+        if (texture)
+        {
+            texture->release();
+        }
     }
 };
