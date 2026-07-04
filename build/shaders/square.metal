@@ -24,6 +24,16 @@ struct Uniforms
 
 
 
+float4 fog(float4 position, float4 color) {
+float distance = position.z / position.w;
+
+float density = 0.02f;
+float fog = 1.0 - clamp(exp(-density * distance), 0.0, 1.0);
+float4 fogColor = float4(1.0);
+color = mix(color, fogColor, fog);
+return color;
+}
+
 
 struct VertexOut {
     // The [[position]] attribute of this member indicates that this value
@@ -56,5 +66,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                       min_filter::linear);
     // Sample the texture to obtain a color
     const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
-    return colorSample;
+
+    const float4 foggy = fog(in.position,colorSample);
+
+    return foggy;
 }
