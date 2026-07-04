@@ -7,6 +7,9 @@
 #include "VertexData.hpp"
 #include "Texture.hpp"
 #include "TextRendering.h"
+#include <string>
+#include <iostream>
+#include "Time.hpp"
 
 
 class Renderer

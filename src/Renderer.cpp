@@ -159,11 +159,9 @@ void Renderer::draw(MTK::View* pView)
     memcpy(UniformBuffer->contents(),&uniforms,sizeof(Uniforms));
     memcpy(Uniform1Buffer->contents(),&uniforms1,sizeof(Uniforms1));
 
-    std::string str = "Metal C++ ";
+    std::string str = "Hello Metal C++  " ;
 
-    ch = ch % 90 ;
-
-    str.push_back(ch++);
+    str.append( std::to_string( static_cast<int>(1/Time::DeltaTime)));
 
     textR->Draw(str);
     
