@@ -22,6 +22,19 @@ void Renderer::draw(MTK::View* pView)
     MTL::Size threadGroupSize = MTL::Size((uint32_t)tgSize, 1, 1);
 
     CCE->dispatchThreads(gridSize, threadGroupSize);
+
+    MatMulParams *params = (MatMulParams *)m_device_buffer_params_ptr->contents();
+    params->row_dim_x =m_rows_X;
+    params->col_dim_x = m_cols_X;
+    params->inner_dim = m_cols_A;
+
+    CCE->setComputePipelineState(m_MatMultiplyFunctionPSO);
+    CCE->setBuffer(m_device_buffer_A_ptr, 0, 0);
+    CCE->setBuffer(m_device_buffer_B_ptr, 0, 1);
+    CCE->setBuffer(m_device_buffer_X_ptr, 0, 2);
+    CCE->setBuffer(m_device_buffer_params_ptr, 0, 3);
+
+
     CCE->endEncoding();
 
     // ─── Render Pass ──────────────────────────────────────────────────────────
@@ -40,11 +53,16 @@ void Renderer::draw(MTK::View* pView)
         // Draw a fullscreen triangle (3 verts, no vertex buffer needed)
         RCE->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
 
+
+
         RCE->endEncoding();
 
         // Present the drawable
         pCmd->presentDrawable(pView->currentDrawable());
     }
+
+
+
 
     pCmd->commit();
     pCmd->waitUntilCompleted();
@@ -74,6 +92,20 @@ Renderer::Renderer(MTL::Device* pDevice) : _pDevice(pDevice->retain())
     makePipeline();
     assert(_pPSO  && "Failed to create compute pipeline state");
     assert(_pRPSO && "Failed to create render pipeline state");
+
+    m_device_buffer_A_ptr = pDevice->newBuffer(m_rows_X * m_cols_A * sizeof(float), MTL::ResourceStorageModeShared);
+    m_device_buffer_B_ptr = pDevice->newBuffer(m_cols_A * m_cols_X * sizeof(float), MTL::ResourceStorageModeShared);
+    m_device_buffer_X_ptr = pDevice->newBuffer(m_rows_X * m_cols_X * sizeof(float), MTL::ResourceStorageModeShared);
+    m_device_buffer_params_ptr = pDevice->newBuffer(sizeof(MatMulParams), MTL::ResourceStorageModeShared);
+
+
+    Matrix<float> A(static_cast<float*>(m_device_buffer_A_ptr->contents()), {m_rows_X, m_cols_A});
+    Matrix<float> B(static_cast<float*>(m_device_buffer_B_ptr->contents()), {m_cols_A, m_cols_X});
+    
+    // Let's randomize the two input matricies.
+    // This runs on the CPU (refer to the implementation in Utilities.cpp)
+    randomize_uniform(A, -1.0f, 1.0f);
+    randomize_uniform(B, -1.0f, 1.0f);
 }
 
 Renderer::~Renderer()
@@ -153,6 +185,9 @@ void Renderer::makePipeline()
 
     _pPSO = _pDevice->newComputePipelineState(computeFn, &pError);
     computeFn->release();
+
+
+    
     pComputeLib->release();
     if (!_pPSO) {
         __builtin_printf("Compute PSO error: %s\n", pError->localizedDescription()->utf8String());
