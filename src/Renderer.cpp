@@ -130,7 +130,7 @@ void Renderer::makePipeline()
             out.color    = float4(0.2, 0.4, 0.8, 1.0); // solid blue
             return out;
         }
-
+            
         fragment float4 frag_main(VertexOut in [[stage_in]])
         {
             return in.color;
