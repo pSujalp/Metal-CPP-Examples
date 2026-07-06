@@ -80,6 +80,8 @@ const int y_group_count = (m_rows_X + y_threads_per_group - 1) / y_threads_per_g
     verifyResult();
 
     pPool->release();
+
+       // Ends here and runs for 1 frame 
 }
 
 Renderer::Renderer(MTL::Device* pDevice) : _pDevice(pDevice->retain())
@@ -213,8 +215,8 @@ void Renderer::makePipeline()
     }
 
     MTL::Function *computeFn1 = pComputeLib1->newFunction(
-        NS::String::string("mat_mul_opt1", UTF8StringEncoding));
-    assert(computeFn1 && "Failed to find kernel mat_mul_opt1");
+        NS::String::string("mat_mul_simple1", UTF8StringEncoding));
+    assert(computeFn1 && "Failed to find kernel mat_mul_simple1");
 
     m_MatMultiplyFunctionPSO = _pDevice->newComputePipelineState(computeFn1, &pError);
     computeFn1->release();
@@ -316,4 +318,8 @@ void Renderer::verifyResult()
         error_exit("exiting");
     }
     std::cout << "Passed! Max error was: " << max_error << std::endl;
+
+    exit(0); 
+
+    
 }
