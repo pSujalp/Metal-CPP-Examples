@@ -42,3 +42,18 @@
 - [Transparency](https://github.com/pSujalp/Metal-CPP-Examples/tree/Transparency)
 
 - [main](https://github.com/pSujalp/Metal-CPP-Examples/tree/main)
+
+
+
+
+## Credits & References
+
+- Apple Docs [Metal](https://developer.apple.com/documentation/metal)
+
+- bkvogel Brian Vogel [Metal Multiplication](https://github.com/bkvogel/metal_performance_testing)
+
+- JoeyDeVries [LearnOpenGL.com](https://learnopengl.com/)
+
+
+- Metal Cpp Examples [Examples](https://github.com/metal-by-example/learn-metal-cpp-ios)
+
