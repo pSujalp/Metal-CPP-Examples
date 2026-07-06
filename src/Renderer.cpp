@@ -37,10 +37,8 @@ void Renderer::draw(MTK::View* pView)
     const int x_threads_per_group = 8;
     const int y_threads_per_group = 8;
     assert(x_threads_per_group == y_threads_per_group);
-
-    // The number of thread groups (i.e., blocks) per grid.
-    const int x_group_count = (m_cols_X + x_threads_per_group - 1) / x_threads_per_group;
-    const int y_group_count = (m_rows_X + y_threads_per_group - 1) / y_threads_per_group;
+const int x_group_count = (m_cols_X + x_threads_per_group - 1) / x_threads_per_group; // (4+7)/8 = 1
+const int y_group_count = (m_rows_X + y_threads_per_group - 1) / y_threads_per_group; // (4+7)/8 = 1
     MTL::Size thread_group_count = MTL::Size::Make(x_group_count, y_group_count, 1);          // should be the size of the grid = (x_threads, y_threads)
     MTL::Size threadgroupSize = MTL::Size::Make(x_threads_per_group, y_threads_per_group, 1); //
 
@@ -215,8 +213,8 @@ void Renderer::makePipeline()
     }
 
     MTL::Function *computeFn1 = pComputeLib1->newFunction(
-        NS::String::string("mat_mul_optimized_nv", UTF8StringEncoding));
-    assert(computeFn1 && "Failed to find kernel mat_mul_optimized_nv");
+        NS::String::string("mat_mul_opt1", UTF8StringEncoding));
+    assert(computeFn1 && "Failed to find kernel mat_mul_opt1");
 
     m_MatMultiplyFunctionPSO = _pDevice->newComputePipelineState(computeFn1, &pError);
     computeFn1->release();

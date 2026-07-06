@@ -51,7 +51,7 @@ class Renderer
 
         MTL::Buffer *m_device_buffer_params_ptr;
 
-        int m_rows_X = 1024;
-        int m_cols_X = 1024;
-        int m_cols_A = 1024;
+        int m_rows_X = 4;
+        int m_cols_X = 4;
+        int m_cols_A = 4;
 };

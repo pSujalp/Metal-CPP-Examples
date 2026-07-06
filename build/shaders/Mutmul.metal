@@ -101,133 +101,150 @@ kernel void mat_mul_optimized_nv(device const float* inA,
     result[c + wB * ty + tx] = Csub;    
 }
 
-// For reference, I have copied the original CUDA kernel source code below, which
-// is included in the "cuda-samples" package: https://github.com/NVIDIA/cuda-samples/blob/master/Samples/0_Introduction/matrixMul/matrixMul.cu
-// Key differences in syntax:
-// - Change `__syncthreads();` in CUDA to `threadgroup_barrier(mem_flags::mem_none);` in Metal.
-// - Change `__shared__` in CUDA to `threadgroup` in CUDA.
-// - In CUDA, you can simply call the kernel with arbitrary parameters. However, in Metal you
-// can only pass in Buffer pointers to (shared) GPU memory which can then be cast to anything you like.
-// To pass arbitrary parameters in Metal, the convention seems to be to make a custom struct containing them
-// and supply it to the shader as a Buffer.
+kernel void mat_mul_naive(device const float* inA,
+                           device const float* inB,
+                           device float* result,
+                           constant MatMulParams& params,
+                           uint2 id [[thread_position_in_grid]])
+{
+    uint row = id.y;
+    uint col = id.x;
+    if (row >= params.row_dim_x || col >= params.col_dim_x) return;
 
-// Original CUDA kernel source from NVIDIA (Note that the license allows redistribution):
+    float sum = 0.0;
+    for (uint k = 0; k < params.inner_dim; ++k)
+        sum += inA[row * params.inner_dim + k] * inB[k * params.col_dim_x + col];
 
-/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * Matrix multiplication: C = A * B.
- * Host code.
- *
- * This sample implements matrix multiplication which makes use of shared memory
- * to ensure data reuse, the matrix multiplication is done using tiling approach.
- * It has been written for clarity of exposition to illustrate various CUDA programming
- * principles, not with the goal of providing the most performant generic kernel for matrix multiplication.
- * See also:
- * V. Volkov and J. Demmel, "Benchmarking GPUs to tune dense linear algebra,"
- * in Proc. 2008 ACM/IEEE Conf. on Supercomputing (SC '08),
- * Piscataway, NJ: IEEE Press, 2008, pp. Art. 31:1-11.
- */
-/**
- * Matrix multiplication (CUDA Kernel) on the device: C = A * B
- * wA is A's width and wB is B's width
- */
-/*
-template <int BLOCK_SIZE> __global__ void MatrixMulCUDA(float *C, float *A,
-    float *B, int wA,
-    int wB) {
-  // Block index
-  int bx = blockIdx.x;
-  int by = blockIdx.y;
-
-  // Thread index
-  int tx = threadIdx.x;
-  int ty = threadIdx.y;
-
-  // Index of the first sub-matrix of A processed by the block
-  int aBegin = wA * BLOCK_SIZE * by;
-
-  // Index of the last sub-matrix of A processed by the block
-  int aEnd   = aBegin + wA - 1;
-
-  // Step size used to iterate through the sub-matrices of A
-  int aStep  = BLOCK_SIZE;
-
-  // Index of the first sub-matrix of B processed by the block
-  int bBegin = BLOCK_SIZE * bx;
-
-  // Step size used to iterate through the sub-matrices of B
-  int bStep  = BLOCK_SIZE * wB;
-
-  // Csub is used to store the element of the block sub-matrix
-  // that is computed by the thread
-  float Csub = 0;
-
-  // Loop over all the sub-matrices of A and B
-  // required to compute the block sub-matrix
-  for (int a = aBegin, b = bBegin;
-       a <= aEnd;
-       a += aStep, b += bStep) {
-    // Declaration of the shared memory array As used to
-    // store the sub-matrix of A
-    __shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
-
-    // Declaration of the shared memory array Bs used to
-    // store the sub-matrix of B
-    __shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
-
-    // Load the matrices from device memory
-    // to shared memory; each thread loads
-    // one element of each matrix
-    As[ty][tx] = A[a + wA * ty + tx];
-    Bs[ty][tx] = B[b + wB * ty + tx];
-
-    // Synchronize to make sure the matrices are loaded
-    __syncthreads();
-
-    // Multiply the two matrices together;
-    // each thread computes one element
-    // of the block sub-matrix
-#pragma unroll
-
-    for (int k = 0; k < BLOCK_SIZE; ++k) {
-      Csub += As[ty][k] * Bs[k][tx];
-    }
-
-    // Synchronize to make sure that the preceding
-    // computation is done before loading two new
-    // sub-matrices of A and B in the next iteration
-    __syncthreads();
-  }
-
-  // Write the block sub-matrix to device memory;
-  // each thread writes one element
-  int c = wB * BLOCK_SIZE * by + BLOCK_SIZE * bx;
-  C[c + wB * ty + tx] = Csub;
+    result[row * params.col_dim_x + col] = sum;
 }
-*/
+
+
+kernel void mat_mul_simple1(device const float* A,
+                            device const float* B,
+                            device float* X,
+                            constant MatMulParams& params,
+                            uint2 id [[ thread_position_in_grid ]])
+{
+    // Note: matrices are in row-major order in the supplied backing arrays.
+    const uint row_dim_x = params.row_dim_x;
+    const uint col_dim_x = params.col_dim_x;
+    const uint inner_dim = params.inner_dim;
+    
+    // Check if the thread is in-bounds.
+    if ((id.x < col_dim_x) && (id.y < row_dim_x)) {
+        // id.x is the column index of the result matrix.
+        // id.y is the row index of the result matrix.
+        const uint index = id.y*col_dim_x + id.x;
+        float sum = 0;
+        for (uint k = 0; k < inner_dim; ++k) {
+            // index_A corresponds to A[id.y, k]
+            const uint index_A = id.y*inner_dim + k;
+            
+            // index_B corresponds to B[k, id.x]
+            const uint index_B = k*col_dim_x + id.x;
+
+            sum += A[index_A] * B[index_B];
+        }
+        X[index] = sum;
+    }
+}
+
+
+kernel void mat_mul_opt1(device const float* A,
+                            device const float* B,
+                            device float* X,
+                            constant MatMulParams& params,
+                            uint2 id [[ thread_position_in_grid ]])
+{
+    // Note: matrices are in row-major order in the supplied backing arrays.
+    const uint row_dim_x = params.row_dim_x;
+    const uint col_dim_x = params.col_dim_x;
+    const uint inner_dim = params.inner_dim;
+    const uint idx = id.x*4; // column index of the corner in X.
+    const uint idy = id.y*4; // row index of the corner in X.
+    // Note: float4x4 uses column major: Asub[m][n] is row n of column m.
+    float4x4 Asub(0.0f);
+    float4x4 Bsub(0.0f);
+    float4x4 Xsub(0.0f);
+    // bounds check can potentially be removed but does not seem to affect performance
+    if ((idx < col_dim_x) && (idy < row_dim_x)) {
+        uint k = 0;
+        while (k < inner_dim) {
+            // Read the values into 4x4 submatrices Asub and Bsub.
+            for (uint j = 0; j < 4; ++j) { // column offset into X
+                for (uint i = 0; i < 4; ++i) { // row offset into X
+                    // corresponds to A[idy + i, k + j]
+                    Asub[j][i] = A[(idy + i)*inner_dim + k + j];
+                    // corresponds to B[k + i, idx + j]
+                    Bsub[j][i] = B[(k + i)*col_dim_x + idx + j];
+                }
+            }
+            // Multiply the two 4x4 submatrices and accumulate the result.
+            Xsub += Asub * Bsub;
+            k += 4;
+        }
+        // Write out the results.
+        for (uint j = 0; j < 4; ++j) { // column offset into X
+            for (uint i = 0; i < 4; ++i) { // row offset into X
+                X[(idy + i)*col_dim_x + idx + j] = Xsub[j][i];
+            }
+        }
+    }
+}
+
+
+kernel void mat_mul_opt2(device const float* A,
+                            device const float* B,
+                            device float* X,
+                            constant MatMulParams& params,
+                            uint2 id [[ thread_position_in_grid ]])
+{
+    // Note: matrices are in row-major order in the supplied backing arrays.
+    const uint row_dim_x = params.row_dim_x;
+    const uint col_dim_x = params.col_dim_x;
+    const uint inner_dim = params.inner_dim;
+    const uint idx = id.x*4; // column index of the corner in X.
+    const uint idy = id.y*8; // row index of the corner in X.
+    // Note: float4x4 uses column major: Asub[m][n] is row n of column m.
+    float4x4 Asub(0.0f);
+    float4x4 Bsub(0.0f);
+    float4x4 Xsub(0.0f);
+    float4x4 Asub2(0.0f);
+    float4x4 Xsub2(0.0f);
+    // bounds check can potentially be removed but does not seem to affect performance
+    if ((idx < col_dim_x) && (idy < row_dim_x)) {
+        uint k = 0;
+        while (k < inner_dim) {
+            // Read the values into the 4x4 submatrices.
+            for (uint i = 0; i < 4; ++i) { // row offset into X
+                for (uint j = 0; j < 4; ++j) { // column offset into X
+                    // corresponds to A[idy + i, k + j]
+                    Asub[j][i] = A[(idy + i)*inner_dim + k + j];
+                }
+            }
+            for (uint i = 0; i < 4; ++i) { // row offset into X
+                for (uint j = 0; j < 4; ++j) { // column offset into X
+                    // corresponds to B[k + i, idx + j]
+                    Bsub[j][i] = B[(k + i)*col_dim_x + idx + j];
+                }
+            }
+            for (uint i = 0; i < 4; ++i) { // row offset into X
+                for (uint j = 0; j < 4; ++j) { // column offset into X
+                    // corresponds to A[idy + i + 4, k + j]
+                    Asub2[j][i] = A[(idy + i + 4)*inner_dim + k + j];
+                }
+            }
+            // Multiply the 4x4 submatrices and accumulate the result.
+            Xsub += Asub * Bsub;
+            Xsub2 += Asub2 * Bsub;
+            k += 4;
+        }
+        // Write out the results.
+        for (uint i = 0; i < 4; ++i) { // row offset into X
+            for (uint j = 0; j < 4; ++j) { // column offset into X
+                X[(idy + i)*col_dim_x + idx + j] = Xsub[j][i];
+                X[(idy + i + 4)*col_dim_x + idx + j] = Xsub2[j][i];
+            }
+        }
+    }
+}
