@@ -24,7 +24,7 @@ void Renderer::draw(MTK::View* pView)
     CCE->dispatchThreads(gridSize, threadGroupSize);
 
     MatMulParams *params = (MatMulParams *)m_device_buffer_params_ptr->contents();
-    params->row_dim_x =m_rows_X;
+    params->row_dim_x = m_rows_X;
     params->col_dim_x = m_cols_X;
     params->inner_dim = m_cols_A;
 
@@ -34,6 +34,17 @@ void Renderer::draw(MTK::View* pView)
     CCE->setBuffer(m_device_buffer_X_ptr, 0, 2);
     CCE->setBuffer(m_device_buffer_params_ptr, 0, 3);
 
+    const int x_threads_per_group = 8;
+    const int y_threads_per_group = 8;
+    assert(x_threads_per_group == y_threads_per_group);
+
+    // The number of thread groups (i.e., blocks) per grid.
+    const int x_group_count = (m_cols_X + x_threads_per_group - 1) / x_threads_per_group;
+    const int y_group_count = (m_rows_X + y_threads_per_group - 1) / y_threads_per_group;
+    MTL::Size thread_group_count = MTL::Size::Make(x_group_count, y_group_count, 1);          // should be the size of the grid = (x_threads, y_threads)
+    MTL::Size threadgroupSize = MTL::Size::Make(x_threads_per_group, y_threads_per_group, 1); //
+
+    CCE->dispatchThreadgroups(thread_group_count, threadgroupSize);
 
     CCE->endEncoding();
 
@@ -186,10 +197,33 @@ void Renderer::makePipeline()
     _pPSO = _pDevice->newComputePipelineState(computeFn, &pError);
     computeFn->release();
 
-
-    
     pComputeLib->release();
-    if (!_pPSO) {
+    if (!_pPSO)
+    {
+        __builtin_printf("Compute PSO error: %s\n", pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    Shader sh;
+
+    MTL::Library *pComputeLib1 = _pDevice->newLibrary(
+        NS::String::string(sh.GetShader("shaders/Mutmul.metal"), UTF8StringEncoding), nullptr, &pError);
+    if (!pComputeLib1)
+    {
+        __builtin_printf("Compute library error: %s\n", pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    MTL::Function *computeFn1 = pComputeLib1->newFunction(
+        NS::String::string("mat_mul_optimized_nv", UTF8StringEncoding));
+    assert(computeFn1 && "Failed to find kernel mat_mul_optimized_nv");
+
+    m_MatMultiplyFunctionPSO = _pDevice->newComputePipelineState(computeFn1, &pError);
+    computeFn1->release();
+    pComputeLib1->release();
+
+    if (!m_MatMultiplyFunctionPSO)
+    {
         __builtin_printf("Compute PSO error: %s\n", pError->localizedDescription()->utf8String());
         assert(false);
     }
@@ -250,4 +284,38 @@ void Renderer::verifyResult()
         }
     }
     __builtin_printf("Success\n");
+    std::cout << "Verifying result..." << std::endl;
+    Matrix<float> A(static_cast<float *>(m_device_buffer_A_ptr->contents()), {m_rows_X, m_cols_A});
+    Matrix<float> B(static_cast<float *>(m_device_buffer_B_ptr->contents()), {m_cols_A, m_cols_X});
+    Matrix<float> X(static_cast<float *>(m_device_buffer_X_ptr->contents()), {m_rows_X, m_cols_X});
+    // Show the contents if small.
+    if (X.size() < 1000)
+    {
+        std::cout << "A:\n"
+             << A << std::endl;
+        std::cout << "B:\n"
+             << B << std::endl;
+        std::cout << "X:\n"
+             << X << std::endl;
+    }
+
+    const float max_allowable_error = 1e-3;
+
+    // Create empty matrix.
+    Matrix<float> X_true;
+
+    // Compute the true matrix product using BLAS sgemm.
+    // X_true <- A x B
+    mat_multiply_blas(X_true, A, B);
+
+    const float max_error = assert_almost_equal_max_error(X, X_true, max_allowable_error);
+
+    const float max_result_val = max_value(X_true);
+    if (max_result_val == 0)
+    {
+        std::cout << "Max result magnitude was: " << max_result_val << std::endl;
+        std::cout << "It is meaningless to verify unless some values are non-zero!" << std::endl;
+        error_exit("exiting");
+    }
+    std::cout << "Passed! Max error was: " << max_error << std::endl;
 }
