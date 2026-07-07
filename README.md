@@ -41,13 +41,13 @@ make && make run
 | Matrix_Multiplication_on_GPU(METAL)      | https://github.com/pSujalp/Metal-CPP-Examples/tree/Matrix_Multiplication_on_GPU(METAL)      |
 | Mixing_Of_textures                       | https://github.com/pSujalp/Metal-CPP-Examples/tree/Mixing_Of_textures                       |
 | Mxing_of_Textures_with_color_interpolate | https://github.com/pSujalp/Metal-CPP-Examples/tree/Mxing_of_Textures_with_color_interpolate |
-| MSAA_using_ASSIMP_Models                 | https://github.com/pSujalp/Metal-CPP-Examples/tree/MSAA_using_ASSIMP_Models                 |
+| ⛔️ MSAA_using_ASSIMP_Models   ⛔️ (**Model not loading properly**)              | https://github.com/pSujalp/Metal-CPP-Examples/tree/MSAA_using_ASSIMP_Models                 |
 | RENDER_PASS(FRAME_BUFFER)                | https://github.com/pSujalp/Metal-CPP-Examples/tree/RENDER_PASS(FRAME_BUFFER)                |
 | RenderPass_Blur                          | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Blur                          |
 | RenderPass_Edge_Detection                | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Edge_Detection                |
 | RenderPass_GreyScale                     | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_GreyScale                     |
 | Renderpass_Sharpen_Kernels               | https://github.com/pSujalp/Metal-CPP-Examples/tree/Renderpass_Sharpen_Kernels               |
-| SCREENSHOT                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/SCREENSHOT                               |
+| ⛔️SCREENSHOT⛔️ (**Works but crashes after 1st frame**)                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/SCREENSHOT                               |
 | SIMPLE_FOG                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/SIMPLE_FOG                               |
 | SKYBOX                                   | https://github.com/pSujalp/Metal-CPP-Examples/tree/SKYBOX                                   |
 | Text_Rendering                           | https://github.com/pSujalp/Metal-CPP-Examples/tree/Text_Rendering                           |
