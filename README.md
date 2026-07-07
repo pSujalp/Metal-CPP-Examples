@@ -1,60 +1,84 @@
 # Metal C++ Examples
 
+<table>
+<tr>
+<td width="58%">
 
+A collection of **Metal C++** examples demonstrating graphics programming concepts ranging from rendering a simple triangle to advanced rendering techniques such as render passes, instancing, HDR, MSAA, and model loading.
 
-<img width="1470" height="846" alt="Screenshot 2026-06-21 at 12 23 20 AM" src="https://github.com/user-attachments/assets/a1376055-25dd-4fff-a97e-7d1a064c5261" />
+### Getting Started
 
- Go to the Respective branch 
- 
- `make && make run
- `
+Switch to the branch you want to explore and run:
 
-### Prerequistes
+```bash
+make && make run
+```
 
-* Make 
+### Prerequisites
 
-  
-* Working Mac Laptop
+* macOS
+* Apple Silicon or Intel Mac with Metal support
+* Apple Command Line Tools
+* Metal Toolchain
+* Make
 
-* Metal toolchain installed
+### Branches
 
-* Apple CLI Tool
+| Example                                  | Link                                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Basic_Window                             | https://github.com/pSujalp/Metal-CPP-Examples/tree/Basic_Window                             |
+| Calculation_on_GPUs                      | https://github.com/pSujalp/Metal-CPP-Examples/tree/Calculation_on_GPUs                      |
+| Triangle                                 | https://github.com/pSujalp/Metal-CPP-Examples/tree/Triangle                                 |
+| 2D_sprite                                | https://github.com/pSujalp/Metal-CPP-Examples/tree/2D_sprite                                |
+| 3D                                       | https://github.com/pSujalp/Metal-CPP-Examples/tree/3D                                       |
+| ASSIMP_Model                             | https://github.com/pSujalp/Metal-CPP-Examples/tree/ASSIMP_Model                             |
+| Frame_Rate                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/Frame_Rate                               |
+| GLFW                                     | https://github.com/pSujalp/Metal-CPP-Examples/tree/GLFW                                     |
+| Gamma_Correction                         | https://github.com/pSujalp/Metal-CPP-Examples/tree/Gamma_Correction                         |
+| HDR                                      | https://github.com/pSujalp/Metal-CPP-Examples/tree/HDR                                      |
+| Instancing                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/Instancing                               |
+| Light                                    | https://github.com/pSujalp/Metal-CPP-Examples/tree/Light                                    |
+| Matrix_Multiplication_on_GPU(METAL)      | https://github.com/pSujalp/Metal-CPP-Examples/tree/Matrix_Multiplication_on_GPU(METAL)      |
+| Mixing_Of_textures                       | https://github.com/pSujalp/Metal-CPP-Examples/tree/Mixing_Of_textures                       |
+| Mxing_of_Textures_with_color_interpolate | https://github.com/pSujalp/Metal-CPP-Examples/tree/Mxing_of_Textures_with_color_interpolate |
+| MSAA_using_ASSIMP_Models                 | https://github.com/pSujalp/Metal-CPP-Examples/tree/MSAA_using_ASSIMP_Models                 |
+| RENDER_PASS(FRAME_BUFFER)                | https://github.com/pSujalp/Metal-CPP-Examples/tree/RENDER_PASS(FRAME_BUFFER)                |
+| RenderPass_Blur                          | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Blur                          |
+| RenderPass_Edge_Detection                | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Edge_Detection                |
+| RenderPass_GreyScale                     | https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_GreyScale                     |
+| Renderpass_Sharpen_Kernels               | https://github.com/pSujalp/Metal-CPP-Examples/tree/Renderpass_Sharpen_Kernels               |
+| SCREENSHOT                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/SCREENSHOT                               |
+| SIMPLE_FOG                               | https://github.com/pSujalp/Metal-CPP-Examples/tree/SIMPLE_FOG                               |
+| SKYBOX                                   | https://github.com/pSujalp/Metal-CPP-Examples/tree/SKYBOX                                   |
+| Text_Rendering                           | https://github.com/pSujalp/Metal-CPP-Examples/tree/Text_Rendering                           |
+| Textures                                 | https://github.com/pSujalp/Metal-CPP-Examples/tree/Textures                                 |
+| Transparency                             | https://github.com/pSujalp/Metal-CPP-Examples/tree/Transparency                             |
+| Wire_Frame_Meshes                        | https://github.com/pSujalp/Metal-CPP-Examples/tree/Wire_Frame_Meshes                        |
+| main                                     | https://github.com/pSujalp/Metal-CPP-Examples/tree/main                                     |
 
+### Credits & References
 
-# Metal-CPP-Examples Branches
-  
-- [Basic_Window](https://github.com/pSujalp/Metal-CPP-Examples/tree/Basic_Window)
-- [Calculation_on_GPUs](https://github.com/pSujalp/Metal-CPP-Examples/tree/Calculation_on_GPUs)
-- [Triangle](https://github.com/pSujalp/Metal-CPP-Examples/tree/Triangle)
-- [2D_sprite](https://github.com/pSujalp/Metal-CPP-Examples/tree/2D_sprite)
-- [3D](https://github.com/pSujalp/Metal-CPP-Examples/tree/3D)
-- [ASSIMP_Model](https://github.com/pSujalp/Metal-CPP-Examples/tree/ASSIMP_Model)
-- [Gamma_Correction](https://github.com/pSujalp/Metal-CPP-Examples/tree/Gamma_Correction)
-- [Instancing](https://github.com/pSujalp/Metal-CPP-Examples/tree/Instancing)
-- [MSAA_using_ASSIMP_Models](https://github.com/pSujalp/Metal-CPP-Examples/tree/MSAA_using_ASSIMP_Models)
-- [RENDER_PASS(FRAME_BUFFER)](https://github.com/pSujalp/Metal-CPP-Examples/tree/RENDER_PASS(FRAME_BUFFER))
-- [RenderPass_Blur](https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Blur)
-- [RenderPass_Edge_Detection](https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_Edge_Detection)
-- [RenderPass_GreyScale](https://github.com/pSujalp/Metal-CPP-Examples/tree/RenderPass_GreyScale)
-- [Renderpass_Sharpen_Kernels](https://github.com/pSujalp/Metal-CPP-Examples/tree/Renderpass_Sharpen_Kernels)
-- [SkyBox](https://github.com/pSujalp/Metal-CPP-Examples/tree/SkyBox)
-- [Textures](https://github.com/pSujalp/Metal-CPP-Examples/tree/Textures)
-- [Transparency](https://github.com/pSujalp/Metal-CPP-Examples/tree/Transparency)
+* Apple Metal Documentation
+  https://developer.apple.com/documentation/metal
 
-- [main](https://github.com/pSujalp/Metal-CPP-Examples/tree/main)
+* Brian Vogel — Metal Performance Testing
+  https://github.com/bkvogel/metal_performance_testing
 
+* LearnOpenGL
+  https://learnopengl.com/
 
+* Learn Metal C++ Examples
+  https://github.com/metal-by-example/learn-metal-cpp-ios
 
+* Learn Metal Tutorial
+  https://metaltutorial.com/
 
-## Credits & References
+</td>
 
-- Apple Docs [Metal](https://developer.apple.com/documentation/metal)
+<td width="42%" align="right" valign="top">
 
-- bkvogel Brian Vogel [Metal Multiplication](https://github.com/bkvogel/metal_performance_testing)
+<img width="100%" alt="Metal C++ Examples" src="https://github.com/user-attachments/assets/a1376055-25dd-4fff-a97e-7d1a064c5261"/>
 
-- JoeyDeVries [LearnOpenGL.com](https://learnopengl.com/)
-
-
-- Metal Cpp Examples [Examples](https://github.com/metal-by-example/learn-metal-cpp-ios)
-
-- Learn Metal by wmarti [learnmetaltutorial](https://metaltutorial.com/)
+</td>
+</tr>
+</table>
