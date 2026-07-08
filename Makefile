@@ -16,7 +16,7 @@ CFLAGS := -Wall -std=c11 -O2
 CPPFLAGS += -I$(shell brew --prefix glfw)/include
 
 LDFLAGS += \
-    -L$(shell brew --prefix glfw)/lib \
+    -L$(shell brew --prefix glfw)/lib/ \
     -framework Metal \
     -framework Foundation \
     -framework Cocoa \

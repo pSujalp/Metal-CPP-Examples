@@ -102,6 +102,8 @@ void MTLEngine::createRenderPipeline() {
 
 void MTLEngine::draw() {
     sendRenderCommand();
+
+    
 }
 
 void MTLEngine::sendRenderCommand() {
@@ -123,6 +125,7 @@ void MTLEngine::sendRenderCommand() {
     metalCommandBuffer->waitUntilCompleted();
     
     renderPassDescriptor->release();
+
 }
 
 void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
