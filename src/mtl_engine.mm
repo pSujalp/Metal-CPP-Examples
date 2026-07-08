@@ -213,7 +213,6 @@ void MTLEngine::sendRenderCommand() {
 
     metal4CommandBuffer->endCommandBuffer();
 
-    
     metal4CommandQueue->wait(surface);
     metal4CommandQueue->commit(&metal4CommandBuffer, 1);
     metal4CommandQueue->signalDrawable(surface);
