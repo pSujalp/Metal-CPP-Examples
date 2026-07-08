@@ -20,6 +20,9 @@
 
 #include <Metal/MTL4CommandBuffer.hpp>
 #include <Metal/MTL4CommandQueue.hpp>
+#include <Metal/MTL4RenderPipeline.hpp>
+#include <Metal/MTL4RenderPass.hpp>
+
 
 #include <iostream>
 
@@ -38,6 +41,7 @@ private:
     void createRenderPipeline();
     
     void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder);
+    void encodeRenderCommand_M4(MTL4::RenderCommandEncoder* renderCommandEncoder);
     void sendRenderCommand();
     void draw();
     
@@ -52,6 +56,12 @@ private:
     MTL::RenderPipelineState* metalRenderPSO;
     MTL::Buffer* triangleVertexBuffer;
 
+
+
+    MTL::Library* shader_lib;
     MTL4::CommandQueue* metal4CommandQueue;
     MTL4::CommandBuffer* metal4CommandBuffer;
+    MTL::RenderPipelineState* metalRenderPSO1;
+
+    Array< MTL::Buffer*, MAX_FRAMES_IN_FLIGHT > vertex_buffers;
 };

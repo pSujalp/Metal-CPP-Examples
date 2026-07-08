@@ -4,7 +4,9 @@
 void MTLEngine::init() {
     initDevice();
     initWindow();
+
     
+
     createTriangle();
     createCommandQueue();
     createRenderPipeline();
@@ -90,7 +92,34 @@ void MTLEngine::createRenderPipeline() {
     assert(renderPipelineDescriptor);
     MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
     renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
-        
+
+    shader_lib = metalDevice->newDefaultLibrary();
+    shader_lib = metalDevice->newLibrary( NS::String::string( "shaders/shaders.metallib" , NS::ASCIIStringEncoding ), nullptr );
+
+    MTL4::Compiler* compiler;
+    {
+            auto* compiler_desc = MTL4::CompilerDescriptor::alloc()->init();
+
+            compiler = metalDevice->newCompiler( compiler_desc, nullptr );
+    }
+
+     auto* vertex_fun_desc = MTL4::LibraryFunctionDescriptor::alloc()->init();
+     vertex_fun_desc->setLibrary( shader_lib );
+     vertex_fun_desc->setName( NS::String::string( "vertexShader" , NS::ASCIIStringEncoding ) );
+
+    auto* fragment_fun_desc = MTL4::LibraryFunctionDescriptor::alloc()->init();
+    fragment_fun_desc->setLibrary( shader_lib );
+    fragment_fun_desc->setName( NS::String::string( "fragmentShader" , NS::ASCIIStringEncoding ) );
+
+    auto* desc = MTL4::RenderPipelineDescriptor::alloc()->init();
+
+    desc->setLabel(NS::String::string("Triangle Rendering Pipeline", NS::ASCIIStringEncoding) );
+    desc->colorAttachments()->object( 0 )->setPixelFormat((MTL::PixelFormat)metalLayer.pixelFormat );
+    desc->setVertexFunctionDescriptor( vertex_fun_desc );
+    desc->setFragmentFunctionDescriptor( fragment_fun_desc );
+    metalRenderPSO1 = compiler->newRenderPipelineState( desc, (MTL4::CompilerTaskOptions*)nullptr, (NS::Error**)nullptr );
+    
+
     NS::Error* error;
     metalRenderPSO = metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
     
@@ -99,8 +128,7 @@ void MTLEngine::createRenderPipeline() {
 
 void MTLEngine::draw() {
     sendRenderCommand();
-
-    
+ 
 }
 
 void MTLEngine::sendRenderCommand() {
@@ -119,12 +147,19 @@ void MTLEngine::sendRenderCommand() {
     cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
     cd->setStoreAction(MTL::StoreActionStore);
 
+
+    cd1->setTexture(metalDrawable->texture());
+    cd1->setLoadAction(MTL::LoadActionClear);
+    cd1->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
+    cd1->setStoreAction(MTL::StoreActionStore);
+
     MTL4::RenderCommandEncoder* renderCommandEncoderM_4 = metal4CommandBuffer->renderCommandEncoder(renderPassDescriptor_M4);
     MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
 
 
     encodeRenderCommand(renderCommandEncoder);
-    // encodeRenderCommand(renderCommandEncoderM_4);
+    encodeRenderCommand_M4(renderCommandEncoderM_4);
+    
     renderCommandEncoder->endEncoding();
 
     metalCommandBuffer->presentDrawable(metalDrawable);
@@ -142,4 +177,16 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
     NS::UInteger vertexStart = 0;
     NS::UInteger vertexCount = 3;
     renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
+}
+
+void MTLEngine::encodeRenderCommand_M4(MTL4::RenderCommandEncoder* renderCommandEncoder) {
+
+    renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
+    renderCommandEncoder->setVertexBuffer(triangleVertexBuffer, 0, 0);
+    MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
+    NS::UInteger vertexStart = 0;
+    NS::UInteger vertexCount = 3;
+    renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
+
+
 }
