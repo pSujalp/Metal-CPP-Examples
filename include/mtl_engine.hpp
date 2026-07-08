@@ -18,6 +18,9 @@
 #include "VertexData.hpp"
 #include "simd/simd.h"
 
+#include <Metal/MTL4CommandBuffer.hpp>
+#include <Metal/MTL4CommandQueue.hpp>
+
 #include <iostream>
 
 class MTLEngine {
@@ -48,4 +51,7 @@ private:
     MTL::CommandBuffer* metalCommandBuffer;
     MTL::RenderPipelineState* metalRenderPSO;
     MTL::Buffer* triangleVertexBuffer;
+
+    MTL4::CommandQueue* metal4CommandQueue;
+    MTL4::CommandBuffer* metal4CommandBuffer;
 };
