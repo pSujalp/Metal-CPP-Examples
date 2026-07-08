@@ -17,9 +17,13 @@
 #include "Shader.h"
 #include "VertexData.hpp"
 #include "simd/simd.h"
-
-#include "cglm/cglm.h"
 #include <iostream>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 
 class MTLEngine {
