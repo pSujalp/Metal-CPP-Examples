@@ -18,7 +18,9 @@
 #include "VertexData.hpp"
 #include "simd/simd.h"
 
+#include "cglm/cglm.h"
 #include <iostream>
+
 
 class MTLEngine {
 public:

@@ -8,15 +8,19 @@ CPPFLAGS := \
     -I./include \
     -I$(EXTERNAL)/metal-cpp \
     -I$(EXTERNAL)/metal-cpp-extensions \
-	-I$(EXTERNAL)/GLFW
+	-I$(EXTERNAL)/GLFW \
+
 
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
 
 CPPFLAGS += -I$(shell brew --prefix glfw)/include
 
+CPPFLAGS += -I$(shell brew --prefix cglm)/include
+
 LDFLAGS += \
     -L$(shell brew --prefix glfw)/lib/ \
+	-L$(shell brew --prefix cglm)/lib/ \
     -framework Metal \
     -framework Foundation \
     -framework Cocoa \
