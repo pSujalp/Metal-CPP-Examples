@@ -18,17 +18,15 @@
 #include "VertexData.hpp"
 #include "simd/simd.h"
 
-#include <Metal/MTL4CommandBuffer.hpp>
-#include <Metal/MTL4CommandQueue.hpp>
-#include <Metal/MTL4RenderPipeline.hpp>
-#include <Metal/MTL4RenderPass.hpp>
-#include <Metal/MTL4CommandAllocator.hpp>
-#include <Metal/MTL4ArgumentTable.hpp>
-#include <Metal/MTL4Compiler.hpp>
+#include <Texture.hpp>
+
 
 #include "utils.hpp"
 
 #include <iostream>
+
+
+#include "stb_image.h"
 
 class MTLEngine {
 public:
@@ -68,4 +66,9 @@ private:
     MTL::ResidencySet*   residency_set = nullptr;
     MTL::SharedEvent*    frame_available_shared_event = nullptr;
     size_t frame_num = 0;
+
+
+    Texture* grassTexture;
+
+  
 };

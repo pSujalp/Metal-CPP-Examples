@@ -68,14 +68,21 @@ void MTLEngine::initWindow() {
 }
 
 void MTLEngine::createTriangle() {
-    simd::float3 triangleVertices[] = {
-        {-0.5f, -0.5f, 0.0f},
-        { 0.5f, -0.5f, 0.0f},
-        { 0.0f,  0.5f, 0.0f}
+    VertexData squareVertices[] {
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 1.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 0.0f}}
     };
 
-    triangleVertexBuffer = metalDevice->newBuffer(&triangleVertices, sizeof(triangleVertices), MTL::ResourceStorageModeShared);
+    triangleVertexBuffer = metalDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
     triangleVertexBuffer->setLabel(NS::String::string("Triangle Vertex Buffer", NS::ASCIIStringEncoding));
+    grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+
+   
+
 }
 
 void MTLEngine::createCommandQueue() {
@@ -95,9 +102,12 @@ void MTLEngine::createCommandQueue() {
 
     
     auto* argTableDesc = MTL4::ArgumentTableDescriptor::alloc()->init();
-    argTableDesc->setMaxBufferBindCount(1);
+    argTableDesc->setMaxBufferBindCount(2);
+    argTableDesc->setMaxTextureBindCount(1);
     arg_table = metalDevice->newArgumentTable(argTableDesc, nullptr);
     argTableDesc->release();
+
+
 
     if (!arg_table) {
         std::cerr << "newArgumentTable() returned null.\n";
@@ -105,12 +115,19 @@ void MTLEngine::createCommandQueue() {
     }
     arg_table->setAddress(triangleVertexBuffer->gpuAddress(), 0);
 
+    MTL::ResourceID r_ID = grassTexture->texture->gpuResourceID();
+    arg_table->setTexture(r_ID ,0);
+
+
     
     auto* residencyDesc = MTL::ResidencySetDescriptor::alloc()->init();
     residency_set = metalDevice->newResidencySet(residencyDesc, nullptr);
     residencyDesc->release();
 
     residency_set->addAllocation(triangleVertexBuffer);
+    residency_set->addAllocation(grassTexture->texture);
+
+
     residency_set->commit();
 
     metal4CommandQueue->addResidencySet(residency_set);
@@ -122,19 +139,10 @@ void MTLEngine::createCommandQueue() {
 void MTLEngine::createRenderPipeline() {
     using NS::StringEncoding::UTF8StringEncoding;
 
-    Shader sh;
-    NS::Error* pError = nullptr;
-
-    const char* source = sh.GetShader("shaders/shaders.metal");
-    if (!source) {
-        std::cerr << "Shader::GetShader() returned null -- check the path 'shaders/shaders.metal' relative to your working directory.\n";
-        exit(EXIT_FAILURE);
-    }
-
-    shaderLibrary = metalDevice->newLibrary(NS::String::string(source, UTF8StringEncoding), nullptr, &pError);
-    if (!shaderLibrary) {
-        std::cerr << "Shader compile error: " << pError->localizedDescription()->utf8String() << std::endl;
-        exit(EXIT_FAILURE);
+    shaderLibrary  = metalDevice->newDefaultLibrary();
+    if(!shaderLibrary ){
+        std::cerr << "Failed to load default library.";
+        std::exit(-1);
     }
 
     MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
@@ -228,5 +236,9 @@ void MTLEngine::encodeRenderCommand(MTL4::RenderCommandEncoder* encoder) {
     encoder->setLabel(NS::String::string("Triangle", NS::ASCIIStringEncoding));
     encoder->setRenderPipelineState(metalRenderPSO);
     encoder->setArgumentTable(arg_table, MTL::RenderStageVertex);
-    encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, (NS::UInteger)0, (NS::UInteger)3);
+    encoder->setArgumentTable(arg_table, MTL::RenderStageFragment);
+
+    encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, (NS::UInteger)0, (NS::UInteger)6);
+   
+
 }
