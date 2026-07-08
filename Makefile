@@ -39,6 +39,8 @@ SRC_CPP := $(wildcard src/*.cpp)
 SRC_MM  := $(wildcard src/*.mm)
 SRC_METAL := $(wildcard shaders/*.metal)
 
+SRC_METAL1 := $(wildcard include/*.metal)
+
 OBJ := \
     $(patsubst src/%.c,build/%.c.o,$(SRC_C)) \
     $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
@@ -77,7 +79,7 @@ build/assets/%: assets/%
 	cp $< $@
 
 default.air: $(SRC_METAL)
-	xcrun -sdk macosx metal -c $(SRC_METAL) -o $@
+	xcrun -sdk macosx metal -c $(SRC_METAL) $(SRC_METAL1) -o $@
 
 default.metallib: default.air
 	xcrun -sdk macosx metallib $< -o $@
