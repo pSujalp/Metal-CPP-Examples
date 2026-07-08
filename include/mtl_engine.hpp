@@ -12,7 +12,6 @@
 
 #include <Metal/Metal.hpp>
 #include <Metal/Metal.h>
-
 #include <QuartzCore/CAMetalLayer.h>
 #include <QuartzCore/QuartzCore.hpp>
 #include <simd/simd.h>
@@ -21,6 +20,7 @@
 #include "VertexData.hpp"
 #include "Texture.hpp"
 #include <stb_image.h>
+#include "AAPLMathUtilities.h"
 
 #include <iostream>
 #include <filesystem>
@@ -35,10 +35,16 @@ private:
     void initDevice();
     void initWindow();
     
-    void createSquare();
+    void createCube();
+    void createBuffers();
     void createDefaultLibrary();
     void createCommandQueue();
     void createRenderPipeline();
+    void createDepthAndMSAATextures();
+    void createRenderPassDescriptor();
+
+    // Upon resizing, update Depth and MSAA Textures.
+    void updateRenderPassDescriptor();
     
     void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder);
     void sendRenderCommand();
@@ -57,7 +63,13 @@ private:
     MTL::CommandQueue* metalCommandQueue;
     MTL::CommandBuffer* metalCommandBuffer;
     MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* squareVertexBuffer;
+    MTL::Buffer* cubeVertexBuffer;
+    MTL::Buffer* transformationBuffer;
+    MTL::DepthStencilState* depthStencilState;
+    MTL::RenderPassDescriptor* renderPassDescriptor;
+    MTL::Texture* msaaRenderTargetTexture = nullptr;
+    MTL::Texture* depthTexture;
+    int sampleCount = 4;
     
     Texture* grassTexture;
 };

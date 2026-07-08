@@ -1,11 +1,10 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
+See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-Implementation of vector, matrix, and quaternion math utility functions useful for 3D graphics rendering.
-*/
+Implementation of vector, matrix, and quaternion math utility functions useful for 3D graphics
+ rendering with Metal
 
-/*
  Metal uses column-major matrices and column-vector inputs.
 
     linearIndex     cr              example with reference elements
@@ -14,10 +13,10 @@ Implementation of vector, matrix, and quaternion math utility functions useful f
      2  6 10 14     02 12 22 32     02  12  sz   tz
      3  7 11 15     03 13 23 33     03  13  1/d  33
 
-  The "cr" names are for <column><row>.
- */
+  The "cr" names are for <column><row>
+*/
 
-#import "AAPLMathUtilities.h"
+#include "AAPLMathUtilities.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -87,7 +86,8 @@ vector_float4 AAPL_SIMD_OVERLOAD vector_lerp(vector_float4 v0, vector_float4 v1,
     return ((1 - t) * v0) + (t * v1);
 }
 
-// `matrix_make_rows` takes input data with rows of elements.
+//------------------------------------------------------------------------------
+// matrix_make_rows takes input data with rows of elements.
 // This way, the calling code matrix data can look like the rows
 // of a matrix made for transforming column vectors.
 
@@ -97,7 +97,7 @@ matrix_float3x3 AAPL_SIMD_OVERLOAD matrix_make_rows(
                                    float m01, float m11, float m21,
                                    float m02, float m12, float m22) {
     return (matrix_float3x3){ {
-            { m00, m01, m02 },      // Each line here provides column data.
+            { m00, m01, m02 },      // each line here provides column data
             { m10, m11, m12 },
             { m20, m21, m22 } } };
 }
@@ -108,13 +108,13 @@ matrix_float4x4 AAPL_SIMD_OVERLOAD matrix_make_rows(
                                    float m02, float m12, float m22, float m32,
                                    float m03, float m13, float m23, float m33) {
     return (matrix_float4x4){ {
-        { m00, m01, m02, m03 },     // Each line here provides column data.
+        { m00, m01, m02, m03 },     // each line here provides column data
         { m10, m11, m12, m13 },
         { m20, m21, m22, m23 },
         { m30, m31, m32, m33 } } };
 }
 
-// Each argument is a column vector.
+// each arg is a column vector
 matrix_float3x3 AAPL_SIMD_OVERLOAD matrix_make_columns(
                                    vector_float3 col0,
                                    vector_float3 col1,
@@ -122,7 +122,7 @@ matrix_float3x3 AAPL_SIMD_OVERLOAD matrix_make_columns(
     return (matrix_float3x3){ col0, col1, col2 };
 }
 
-// Each argument is a column vector.
+// each arg is a column vector
 matrix_float4x4 AAPL_SIMD_OVERLOAD matrix_make_columns(
                                    vector_float4 col0,
                                    vector_float4 col1,
@@ -142,7 +142,7 @@ matrix_float3x3 AAPL_SIMD_OVERLOAD matrix3x3_from_quaternion(quaternion_float q)
     float zz = q.z * q.z;
     float zw = q.z * q.w;
 
-    // Indices are m<column><row>.
+    // indices are m<column><row>
     float m00 = 1 - 2 * (yy + zz);
     float m10 = 2 * (xy - zw);
     float m20 = 2 * (xz + yw);
@@ -289,20 +289,6 @@ matrix_float4x4 AAPL_SIMD_OVERLOAD matrix4x4_scale_translation(vector_float3 s, 
                               0,   0,   0,   1 );
 }
 
-matrix_float4x4 AAPL_SIMD_OVERLOAD matrix4x4_reflect(vector_float4 plane)
-{
-    vector_float4 p = vector_normalize(plane);
-    
-    matrix_float4x4 reflect =
-    { {
-        { -2 * p.x * p.x + 1,     -2 * p.y * p.x,     -2 * p.z * p.x,     0},
-        {     -2 * p.x * p.y, -2 * p.y * p.y + 1,     -2 * p.z * p.y,     0},
-        {     -2 * p.x * p.z,     -2 * p.y * p.z, -2 * p.z * p.z + 1,     0},
-        {     -2 * p.x * p.w,     -2 * p.y * p.w,     -2 * p.z * p.w,     1}
-    } };
-    return reflect;
-}
-
 
 matrix_float4x4 AAPL_SIMD_OVERLOAD matrix_look_at_left_hand(vector_float3 eye,
                                                             vector_float3 target,
@@ -408,7 +394,7 @@ quaternion_float AAPL_SIMD_OVERLOAD quaternion(vector_float3 v, float w) {
     return (quaternion_float){ v.x, v.y, v.z, w };
 }
 
-quaternion_float AAPL_SIMD_OVERLOAD quaternion_identity(void) {
+quaternion_float AAPL_SIMD_OVERLOAD quaternion_identity() {
     return quaternion(0, 0, 0, 1);
 }
 
@@ -451,18 +437,18 @@ quaternion_float AAPL_SIMD_OVERLOAD quaternion(matrix_float4x4 m) {
 }
 
 float AAPL_SIMD_OVERLOAD quaternion_length(quaternion_float q) {
-    //  Return (sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w)).
+    //  return sqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
     return vector_length(q);
 }
 
 float AAPL_SIMD_OVERLOAD quaternion_length_squared(quaternion_float q) {
-    //  Return (q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w).
+    //  return q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
     return vector_length_squared(q);
 }
 
 vector_float3 AAPL_SIMD_OVERLOAD quaternion_axis(quaternion_float q) {
     // This query doesn't make sense if w > 1, but we do our best by
-    // forcing q to be a unit quaternion if it obviously isn't.
+    // forcing q to be a unit quaternion if it obviously isn't
     if (q.w > 1.0)
     {
         q = quaternion_normalize(q);
@@ -472,7 +458,7 @@ vector_float3 AAPL_SIMD_OVERLOAD quaternion_axis(quaternion_float q) {
 
     if (axisLen < 1e-5)
     {
-        // At lengths this small, direction is arbitrary.
+        // At lengths this small, direction is arbitrary
         return vector_make(1, 0, 0);
     }
     else
@@ -486,7 +472,7 @@ float AAPL_SIMD_OVERLOAD quaternion_angle(quaternion_float q) {
 }
 
 quaternion_float AAPL_SIMD_OVERLOAD quaternion_normalize(quaternion_float q) {
-    //  Return (q / quaternion_length(q)).
+    //  return q / quaternion_length(q);
     return vector_normalize(q);
 }
 
@@ -557,14 +543,14 @@ quaternion_float AAPL_SIMD_OVERLOAD quaternion_from_matrix3x3(matrix_float3x3 m)
     }  else if ((m.columns[0][0] > m.columns[1][1] ) &&
                 (m.columns[0][0] > m.columns[2][2])) {
 
-        float diagonal = sqrt(1.0 + m.columns[0][0] - m.columns[1][1] -  m.columns[2][2]) * 2.0;
+        float diagonal = sqrt( 1.0 + m.columns[0][0] - m.columns[1][1] - m.columns[2][2] ) * 2.0;
 
         q.x = diagonal / 4.0;
         q.y = (m.columns[0][1] + m.columns[1][0]) / diagonal;
         q.z = (m.columns[0][2] + m.columns[2][0]) / diagonal;
         q.w = (m.columns[2][1] - m.columns[1][2]) / diagonal;
 
-    } else if ( m.columns[1][1] >  m.columns[2][2]) {
+    } else if ( m.columns[1][1] > m.columns[2][2]) {
 
         float diagonal = sqrt(1.0 + m.columns[1][1] - m.columns[0][0] - m.columns[2][2]) * 2.0;
 
@@ -635,7 +621,7 @@ vector_float3 AAPL_SIMD_OVERLOAD up_direction_vector_from_quaternion(quaternion_
     direction.z = 2.0 * (q.y*q.z - q.w*q.x);
 
     direction = vector_normalize(direction);
-    // Negate for a right-hand coordinate system.
+    // Negate for a right-handed coordinate system
     return direction;
 }
 
@@ -646,6 +632,6 @@ vector_float3 AAPL_SIMD_OVERLOAD right_direction_vector_from_quaternion(quaterni
     direction.z = 2.0 * (q.x * q.z + q.w * q.y);
 
     direction = vector_normalize(direction);
-    // Negate for a right-hand coordinate system.
+    // Negate for a right-handed coordinate system
     return direction;
 }

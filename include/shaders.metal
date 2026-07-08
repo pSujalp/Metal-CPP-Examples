@@ -1,16 +1,12 @@
 //
-//  square.metal
+//  cube.metal
 //  MetalTutorial
 //
 
 #include <metal_stdlib>
 using namespace metal;
 
-
-struct VertexData {
-    float4 position;
-    float2 textureCoordinate;
-};
+#include "VertexData.hpp"
 
 struct VertexOut {
     // The [[position]] attribute of this member indicates that this value
@@ -26,9 +22,11 @@ struct VertexOut {
 };
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
-             constant VertexData* vertexData) {
+             constant VertexData* vertexData,
+             constant TransformationData* transformationData)
+{
     VertexOut out;
-    out.position = vertexData[vertexID].position;
+    out.position = transformationData->perspectiveMatrix * transformationData->viewMatrix * transformationData->modelMatrix * vertexData[vertexID].position;
     out.textureCoordinate = vertexData[vertexID].textureCoordinate;
     return out;
 }
