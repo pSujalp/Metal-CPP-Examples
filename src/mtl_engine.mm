@@ -66,6 +66,7 @@ void MTLEngine::createTriangle() {
 
 void MTLEngine::createCommandQueue() {
     metalCommandQueue = metalDevice->newCommandQueue();
+    metal4CommandQueue = metalDevice->newMTL4CommandQueue();
 }
 
 void MTLEngine::createRenderPipeline() {
@@ -104,6 +105,7 @@ void MTLEngine::draw() {
 
 void MTLEngine::sendRenderCommand() {
     metalCommandBuffer = metalCommandQueue->commandBuffer();
+    metal4CommandBuffer = metalDevice->newCommandBuffer();
     
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
