@@ -1,11 +1,8 @@
-
 #include "mtl_engine.hpp"
 
 void MTLEngine::init() {
     initDevice();
     initWindow();
-
-    
 
     createTriangle();
     createCommandQueue();
@@ -15,7 +12,6 @@ void MTLEngine::init() {
 void MTLEngine::run() {
     while (!glfwWindowShouldClose(glfwWindow)) {
         @autoreleasepool {
-            metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
             draw();
         }
         glfwPollEvents();
@@ -24,26 +20,44 @@ void MTLEngine::run() {
 
 void MTLEngine::cleanup() {
     glfwTerminate();
+
+    if (residency_set) residency_set->release();
+    if (arg_table) arg_table->release();
+    for (auto* alloc : cmd_allocators) {
+        if (alloc) alloc->release();
+    }
+    if (frame_available_shared_event) frame_available_shared_event->release();
+    if (metal4CommandBuffer) metal4CommandBuffer->release();
+    if (metal4CommandQueue) metal4CommandQueue->release();
+    if (metal4Compiler) metal4Compiler->release();
+    if (metalRenderPSO) metalRenderPSO->release();
+    if (shaderLibrary) shaderLibrary->release();
+    if (triangleVertexBuffer) triangleVertexBuffer->release();
+
     metalDevice->release();
 }
 
 void MTLEngine::initDevice() {
     metalDevice = MTL::CreateSystemDefaultDevice();
+    if (!metalDevice) {
+        std::cerr << "MTL::CreateSystemDefaultDevice() returned null.\n";
+        exit(EXIT_FAILURE);
+    }
 }
 
 void MTLEngine::initWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindow = glfwCreateWindow(800, 600, "Metal Engine", NULL, NULL);
-    
+
     if (!glfwWindow) {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
-    
+
     int width, height;
     glfwGetFramebufferSize(glfwWindow, &width, &height);
-    
+
     metalWindow = glfwGetCocoaWindow(glfwWindow);
     metalLayer = [CAMetalLayer layer];
     metalLayer.device = (__bridge id<MTLDevice>)metalDevice;
@@ -59,134 +73,161 @@ void MTLEngine::createTriangle() {
         { 0.5f, -0.5f, 0.0f},
         { 0.0f,  0.5f, 0.0f}
     };
-    
+
     triangleVertexBuffer = metalDevice->newBuffer(&triangleVertices, sizeof(triangleVertices), MTL::ResourceStorageModeShared);
+    triangleVertexBuffer->setLabel(NS::String::string("Triangle Vertex Buffer", NS::ASCIIStringEncoding));
 }
 
-
-
-
 void MTLEngine::createCommandQueue() {
-    metalCommandQueue = metalDevice->newCommandQueue();
     metal4CommandQueue = metalDevice->newMTL4CommandQueue();
+    if (!metal4CommandQueue) {
+        std::cerr << "newMTL4CommandQueue() returned null -- this device/OS doesn't support Metal 4.\n";
+        exit(EXIT_FAILURE);
+    }
+
+    for (auto& alloc : cmd_allocators) {
+        alloc = metalDevice->newCommandAllocator();
+    }
+    metal4CommandBuffer = metalDevice->newCommandBuffer();
+
+    frame_available_shared_event = metalDevice->newSharedEvent();
+    frame_available_shared_event->setSignaledValue(0);
+
+    
+    auto* argTableDesc = MTL4::ArgumentTableDescriptor::alloc()->init();
+    argTableDesc->setMaxBufferBindCount(1);
+    arg_table = metalDevice->newArgumentTable(argTableDesc, nullptr);
+    argTableDesc->release();
+
+    if (!arg_table) {
+        std::cerr << "newArgumentTable() returned null.\n";
+        exit(EXIT_FAILURE);
+    }
+    arg_table->setAddress(triangleVertexBuffer->gpuAddress(), 0);
+
+    
+    auto* residencyDesc = MTL::ResidencySetDescriptor::alloc()->init();
+    residency_set = metalDevice->newResidencySet(residencyDesc, nullptr);
+    residencyDesc->release();
+
+    residency_set->addAllocation(triangleVertexBuffer);
+    residency_set->commit();
+
+    metal4CommandQueue->addResidencySet(residency_set);
+
+    CA::MetalLayer* metalLayerCpp = (__bridge CA::MetalLayer*)metalLayer;
+    metal4CommandQueue->addResidencySet(metalLayerCpp->residencySet());
 }
 
 void MTLEngine::createRenderPipeline() {
-    
     using NS::StringEncoding::UTF8StringEncoding;
 
     Shader sh;
     NS::Error* pError = nullptr;
 
-    MTL::Library* pLibrary = metalDevice->newLibrary( NS::String::string(sh.GetShader("shaders/shaders.metal"), UTF8StringEncoding), nullptr, &pError );
-    
-    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
-    assert(vertexShader);
-    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
-    assert(fragmentShader);
-    
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
-    renderPipelineDescriptor->setLabel(NS::String::string("Triangle Rendering Pipeline", NS::ASCIIStringEncoding));
-    renderPipelineDescriptor->setVertexFunction(vertexShader);
-    renderPipelineDescriptor->setFragmentFunction(fragmentShader);
-    assert(renderPipelineDescriptor);
-    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
-    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
-
-    shader_lib = metalDevice->newDefaultLibrary();
-    shader_lib = metalDevice->newLibrary( NS::String::string( "shaders/shaders.metallib" , NS::ASCIIStringEncoding ), nullptr );
-
-    MTL4::Compiler* compiler;
-    {
-            auto* compiler_desc = MTL4::CompilerDescriptor::alloc()->init();
-
-            compiler = metalDevice->newCompiler( compiler_desc, nullptr );
+    const char* source = sh.GetShader("shaders/shaders.metal");
+    if (!source) {
+        std::cerr << "Shader::GetShader() returned null -- check the path 'shaders/shaders.metal' relative to your working directory.\n";
+        exit(EXIT_FAILURE);
     }
 
-     auto* vertex_fun_desc = MTL4::LibraryFunctionDescriptor::alloc()->init();
-     vertex_fun_desc->setLibrary( shader_lib );
-     vertex_fun_desc->setName( NS::String::string( "vertexShader" , NS::ASCIIStringEncoding ) );
+    shaderLibrary = metalDevice->newLibrary(NS::String::string(source, UTF8StringEncoding), nullptr, &pError);
+    if (!shaderLibrary) {
+        std::cerr << "Shader compile error: " << pError->localizedDescription()->utf8String() << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
-    auto* fragment_fun_desc = MTL4::LibraryFunctionDescriptor::alloc()->init();
-    fragment_fun_desc->setLibrary( shader_lib );
-    fragment_fun_desc->setName( NS::String::string( "fragmentShader" , NS::ASCIIStringEncoding ) );
+    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
 
-    auto* desc = MTL4::RenderPipelineDescriptor::alloc()->init();
+    auto* compilerDesc = MTL4::CompilerDescriptor::alloc()->init();
+    metal4Compiler = metalDevice->newCompiler(compilerDesc, nullptr);
+    compilerDesc->release();
 
-    desc->setLabel(NS::String::string("Triangle Rendering Pipeline", NS::ASCIIStringEncoding) );
-    desc->colorAttachments()->object( 0 )->setPixelFormat((MTL::PixelFormat)metalLayer.pixelFormat );
-    desc->setVertexFunctionDescriptor( vertex_fun_desc );
-    desc->setFragmentFunctionDescriptor( fragment_fun_desc );
-    metalRenderPSO1 = compiler->newRenderPipelineState( desc, (MTL4::CompilerTaskOptions*)nullptr, (NS::Error**)nullptr );
-    
+    if (!metal4Compiler) {
+        std::cerr << "newCompiler() returned null.\n";
+        exit(EXIT_FAILURE);
+    }
+    auto* vertexFunctionDescriptor = MTL4::LibraryFunctionDescriptor::alloc()->init();
+    vertexFunctionDescriptor->setLibrary(shaderLibrary);
+    vertexFunctionDescriptor->setName(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
 
-    NS::Error* error;
-    metalRenderPSO = metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    
-    renderPipelineDescriptor->release();
+    auto* fragmentFunctionDescriptor = MTL4::LibraryFunctionDescriptor::alloc()->init();
+    fragmentFunctionDescriptor->setLibrary(shaderLibrary);
+    fragmentFunctionDescriptor->setName(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+
+    auto* pipelineDescriptor = MTL4::RenderPipelineDescriptor::alloc()->init();
+    pipelineDescriptor->setLabel(NS::String::string("Triangle Rendering Pipeline (Metal 4)", NS::ASCIIStringEncoding));
+    pipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
+    pipelineDescriptor->setVertexFunctionDescriptor(vertexFunctionDescriptor);
+    pipelineDescriptor->setFragmentFunctionDescriptor(fragmentFunctionDescriptor);
+
+    NS::Error* pPipelineError = nullptr;
+    metalRenderPSO = metal4Compiler->newRenderPipelineState(pipelineDescriptor, (MTL4::CompilerTaskOptions*)nullptr, &pPipelineError);
+    if (!metalRenderPSO) {
+        if (pPipelineError) {
+            std::cerr << "Pipeline compile error: " << pPipelineError->localizedDescription()->utf8String() << std::endl;
+        } else {
+            std::cerr << "newRenderPipelineState() returned null (no error object provided).\n";
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    pipelineDescriptor->release();
+    vertexFunctionDescriptor->release();
+    fragmentFunctionDescriptor->release();
 }
 
 void MTLEngine::draw() {
     sendRenderCommand();
- 
 }
 
 void MTLEngine::sendRenderCommand() {
-    metalCommandBuffer = metalCommandQueue->commandBuffer();
-    metal4CommandBuffer = metalDevice->newCommandBuffer();
+    const size_t frame_idx = frame_num % kMaxFramesInFlight;
+
     
-    MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
-    MTL4::RenderPassDescriptor * renderPassDescriptor_M4 = MTL4::RenderPassDescriptor::alloc()->init();
+    if (frame_num >= kMaxFramesInFlight) {
+        frame_available_shared_event->waitUntilSignaledValue(frame_num - kMaxFramesInFlight, UINT64_MAX);
+    }
 
+    MTL4::CommandAllocator* cmd_alloc = cmd_allocators[frame_idx];
+    cmd_alloc->reset();
+
+    CA::MetalDrawable* surface = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    if (!surface) {
+        std::cerr << "nextDrawable() returned null -- skipping this frame.\n";
+        return;
+    }
+
+    MTL4::RenderPassDescriptor* renderPassDescriptor = MTL4::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
-    MTL::RenderPassColorAttachmentDescriptor* cd1 = renderPassDescriptor_M4->colorAttachments()->object(0);
-
-
-    cd->setTexture(metalDrawable->texture());
+    cd->setTexture(surface->texture());
     cd->setLoadAction(MTL::LoadActionClear);
-    cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
+    cd->setClearColor(MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
     cd->setStoreAction(MTL::StoreActionStore);
 
+    metal4CommandBuffer->beginCommandBuffer(cmd_alloc);
 
-    cd1->setTexture(metalDrawable->texture());
-    cd1->setLoadAction(MTL::LoadActionClear);
-    cd1->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
-    cd1->setStoreAction(MTL::StoreActionStore);
+    MTL4::RenderCommandEncoder* encoder = metal4CommandBuffer->renderCommandEncoder(renderPassDescriptor);
+    encodeRenderCommand(encoder);
+    encoder->endEncoding();
 
-    MTL4::RenderCommandEncoder* renderCommandEncoderM_4 = metal4CommandBuffer->renderCommandEncoder(renderPassDescriptor_M4);
-    MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
+    metal4CommandBuffer->endCommandBuffer();
 
-
-    encodeRenderCommand(renderCommandEncoder);
-    encodeRenderCommand_M4(renderCommandEncoderM_4);
     
-    renderCommandEncoder->endEncoding();
+    metal4CommandQueue->wait(surface);
+    metal4CommandQueue->commit(&metal4CommandBuffer, 1);
+    metal4CommandQueue->signalDrawable(surface);
+    surface->present();
 
-    metalCommandBuffer->presentDrawable(metalDrawable);
-    metalCommandBuffer->commit();
-    metalCommandBuffer->waitUntilCompleted();
-    
+    metal4CommandQueue->signalEvent(frame_available_shared_event, frame_num);
+    frame_num++;
+
     renderPassDescriptor->release();
-
 }
 
-void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
-    renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
-    renderCommandEncoder->setVertexBuffer(triangleVertexBuffer, 0, 0);
-    MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
-    NS::UInteger vertexStart = 0;
-    NS::UInteger vertexCount = 3;
-    renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
-}
-
-void MTLEngine::encodeRenderCommand_M4(MTL4::RenderCommandEncoder* renderCommandEncoder) {
-
-    renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
-    renderCommandEncoder->setVertexBuffer(triangleVertexBuffer, 0, 0);
-    MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
-    NS::UInteger vertexStart = 0;
-    NS::UInteger vertexCount = 3;
-    renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
-
-
+void MTLEngine::encodeRenderCommand(MTL4::RenderCommandEncoder* encoder) {
+    encoder->setLabel(NS::String::string("Triangle", NS::ASCIIStringEncoding));
+    encoder->setRenderPipelineState(metalRenderPSO);
+    encoder->setArgumentTable(arg_table, MTL::RenderStageVertex);
+    encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, (NS::UInteger)0, (NS::UInteger)3);
 }

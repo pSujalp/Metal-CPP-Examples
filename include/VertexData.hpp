@@ -8,7 +8,14 @@
 
 using namespace simd;
 
-struct VertexData {
+struct VertexIn
+{
     float4 position;
-    float2 textureCoordinate;
+    float4 color;
+};
+
+struct VertexOut
+{
+    float4 position ;
+    float4 color;
 };

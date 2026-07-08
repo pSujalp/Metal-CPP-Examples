@@ -22,7 +22,11 @@
 #include <Metal/MTL4CommandQueue.hpp>
 #include <Metal/MTL4RenderPipeline.hpp>
 #include <Metal/MTL4RenderPass.hpp>
+#include <Metal/MTL4CommandAllocator.hpp>
+#include <Metal/MTL4ArgumentTable.hpp>
+#include <Metal/MTL4Compiler.hpp>
 
+#include "utils.hpp"
 
 #include <iostream>
 
@@ -35,33 +39,33 @@ public:
 private:
     void initDevice();
     void initWindow();
-    
+
     void createTriangle();
     void createCommandQueue();
     void createRenderPipeline();
-    
-    void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder);
-    void encodeRenderCommand_M4(MTL4::RenderCommandEncoder* renderCommandEncoder);
-    void sendRenderCommand();
+
     void draw();
-    
-    MTL::Device* metalDevice;
-    GLFWwindow* glfwWindow;
-    NSWindow* metalWindow;
-    CAMetalLayer* metalLayer;
-    CA::MetalDrawable* metalDrawable;
-    
-    MTL::CommandQueue* metalCommandQueue;
-    MTL::CommandBuffer* metalCommandBuffer;
-    MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* triangleVertexBuffer;
+    void sendRenderCommand();
+    void encodeRenderCommand(MTL4::RenderCommandEncoder* renderCommandEncoder);
 
+    static constexpr size_t kMaxFramesInFlight = 3;
 
+    MTL::Device*        metalDevice  = nullptr;
+    GLFWwindow*         glfwWindow   = nullptr;
+    NSWindow*           metalWindow  = nullptr;
+    CAMetalLayer*       metalLayer   = nullptr;
 
-    MTL::Library* shader_lib;
-    MTL4::CommandQueue* metal4CommandQueue;
-    MTL4::CommandBuffer* metal4CommandBuffer;
-    MTL::RenderPipelineState* metalRenderPSO1;
+    MTL::Buffer*  triangleVertexBuffer = nullptr;
+    MTL::Library* shaderLibrary        = nullptr;
 
-    Array< MTL::Buffer*, MAX_FRAMES_IN_FLIGHT > vertex_buffers;
+    MTL4::CommandQueue*       metal4CommandQueue  = nullptr;
+    MTL4::CommandBuffer*      metal4CommandBuffer = nullptr;
+    MTL::RenderPipelineState* metalRenderPSO      = nullptr;
+    MTL4::Compiler*           metal4Compiler      = nullptr;
+
+    Array<MTL4::CommandAllocator*, kMaxFramesInFlight> cmd_allocators{};
+    MTL4::ArgumentTable* arg_table     = nullptr;
+    MTL::ResidencySet*   residency_set = nullptr;
+    MTL::SharedEvent*    frame_available_shared_event = nullptr;
+    size_t frame_num = 0;
 };
