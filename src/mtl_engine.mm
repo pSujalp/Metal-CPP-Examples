@@ -108,11 +108,9 @@ void MTLEngine::sendRenderCommand() {
     metal4CommandBuffer = metalDevice->newCommandBuffer();
     
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
-
     MTL4::RenderPassDescriptor * renderPassDescriptor_M4 = MTL4::RenderPassDescriptor::alloc()->init();
 
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
-
     MTL::RenderPassColorAttachmentDescriptor* cd1 = renderPassDescriptor_M4->colorAttachments()->object(0);
 
 
@@ -120,9 +118,13 @@ void MTLEngine::sendRenderCommand() {
     cd->setLoadAction(MTL::LoadActionClear);
     cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
     cd->setStoreAction(MTL::StoreActionStore);
-    
+
+    MTL4::RenderCommandEncoder* renderCommandEncoderM_4 = metal4CommandBuffer->renderCommandEncoder(renderPassDescriptor_M4);
     MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
+
+
     encodeRenderCommand(renderCommandEncoder);
+    // encodeRenderCommand(renderCommandEncoderM_4);
     renderCommandEncoder->endEncoding();
 
     metalCommandBuffer->presentDrawable(metalDrawable);
