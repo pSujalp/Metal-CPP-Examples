@@ -10,7 +10,7 @@ CPPFLAGS := \
     -I$(EXTERNAL)/metal-cpp-extensions \
 	-I$(EXTERNAL)/GLFW
 
-CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
+CXXFLAGS := -Wall -std=c++26 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
 
 CPPFLAGS += -I$(shell brew --prefix glfw)/include

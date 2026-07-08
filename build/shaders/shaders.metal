@@ -1,22 +1,34 @@
 //
-//  triangle.metal
+//  square.metal
 //  MetalTutorial
 //
 
 #include <metal_stdlib>
 using namespace metal;
 
-vertex float4
-vertexShader(uint vertexID [[vertex_id]],
-             constant simd::float3* vertexPositions)
-{
-    float4 vertexOutPositions = float4(vertexPositions[vertexID][0],
-                                       vertexPositions[vertexID][1],
-                                       vertexPositions[vertexID][2],
-                                       1.0f);
-    return vertexOutPositions;
+struct VertexData {
+    float4 position;
+    float2 textureCoordinate;
+};
+
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 textureCoordinate;
+};
+
+vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
+             constant VertexData* vertexData) {
+    VertexOut out;
+    out.position = vertexData[vertexID].position;
+    out.textureCoordinate = vertexData[vertexID].textureCoordinate;
+    return out;
 }
 
-fragment float4 fragmentShader(float4 vertexOutPositions [[stage_in]]) {
-    return float4(182.0f/255.0f, 240.0f/255.0f, 228.0f/255.0f, 1.0f);
+fragment float4 fragmentShader(VertexOut in [[stage_in]],
+                               texture2d<float> colorTexture [[texture(0)]]) {
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+    const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
+    return colorSample;
 }
