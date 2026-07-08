@@ -1,7 +1,5 @@
 CXX := clang++
 CC := clang
-
-
 # External libraries
 EXTERNAL := external
 CPPFLAGS := \
@@ -11,14 +9,10 @@ CPPFLAGS := \
 	-I$(EXTERNAL)/GLFW \
 	-I$(EXTERNAL)/stb \
 
-
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
-
 CPPFLAGS += -I$(shell brew --prefix glfw)/include
-
 CPPFLAGS += -I$(shell brew --prefix cglm)/include
-
 LDFLAGS += \
     -L$(shell brew --prefix glfw)/lib/ \
 	-L$(shell brew --prefix cglm)/lib/ \
@@ -32,28 +26,20 @@ LDFLAGS += \
 	-framework QuartzCore
 
 LDLIBS += -lglfw
-
 TARGET := build/metal
 SRC_C   := $(wildcard src/*.c)
 SRC_CPP := $(wildcard src/*.cpp)
 SRC_MM  := $(wildcard src/*.mm)
-SRC_METAL := $(wildcard shaders/*.metal)
-
+SRC_METAL  := $(wildcard shaders/*.metal)
 SRC_METAL1 := $(wildcard include/*.metal)
-
 OBJ := \
     $(patsubst src/%.c,build/%.c.o,$(SRC_C)) \
     $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
     $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
-
-SHADERS := $(patsubst shaders/%,build/shaders/%,$(wildcard shaders/*))
+	
 ASSETS  := $(patsubst assets/%,build/assets/%,$(wildcard assets/*))
-
 BUILD_DIR := build
-FILES_TO_COPY := default.metallib default.air
-
-TARGET_FILES := $(patsubst %, $(BUILD_DIR)/%, $(FILES_TO_COPY))
-
+FILES_TO_COPY := build/default.metallib build/default.air
 LIB_D := -Llib/
 
 $(BUILD_DIR):
@@ -63,14 +49,9 @@ $(BUILD_DIR):
 .PHONY: all clean run
 .SECONDARY:
 
-all: $(TARGET) $(SHADERS) $(ASSETS) $(TARGET_FILES)
-
+all: $(TARGET) $(ASSETS) $(FILES_TO_COPY)
 
 $(BUILD_DIR)/%: % | $(BUILD_DIR)
-	mkdir -p $(dir $@)
-	cp $< $@
-
-build/shaders/%: shaders/%
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -78,17 +59,14 @@ build/assets/%: assets/%
 	mkdir -p $(dir $@)
 	cp $< $@
 
-default.air: $(SRC_METAL)
+build/default.air: $(SRC_METAL) $(SRC_METAL1) | $(BUILD_DIR)
 	xcrun -sdk macosx metal -c $(SRC_METAL) $(SRC_METAL1) -o $@
 
-default.metallib: default.air
+build/default.metallib: build/default.air
 	xcrun -sdk macosx metallib $< -o $@
 
-$(TARGET): $(OBJ) $(SHADERS) $(ASSETS) default.metallib
+$(TARGET): $(OBJ) $(ASSETS) build/default.metallib
 	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) $(LIB_D) $(LDLIBS) -o $@
-
-
-
 
 build/%.c.o: src/%.c
 	mkdir -p $(dir $@)
@@ -106,4 +84,4 @@ run: all
 	./$(TARGET)
 
 clean:
-	rm -rf build default.air default.metallib
+	rm -rf build
