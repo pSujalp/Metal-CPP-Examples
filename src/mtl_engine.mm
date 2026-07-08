@@ -84,10 +84,17 @@ void MTLEngine::initWindow() {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+
+     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+   glfwSetWindowMonitor(glfwWindow, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow, frameBufferSizeCallback);
     int width, height;
     glfwGetFramebufferSize(glfwWindow, &width, &height);
+
+   
     
     metalWindow = glfwGetCocoaWindow(glfwWindow);
     metalLayer = [CAMetalLayer layer];
