@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <string_view>
+#include <string>
 
 #include <mach-o/dyld.h>
 
@@ -12,7 +14,12 @@ struct Shader
 private:
     std::string Code;
     std::ifstream ShaderFile;
-    std::filesystem::path executableDirectory() const
+   
+
+public:
+    Shader() {}
+
+     std::filesystem::path executableDirectory() const
     {
 
         uint32_t size = 0;
@@ -26,9 +33,6 @@ private:
 
         return std::filesystem::current_path();
     }
-
-public:
-    Shader() {}
 
     const char *GetShader(const std::string &filepath)
     {
@@ -56,5 +60,13 @@ public:
         Code = vShaderStream.str();
 
         return Code.c_str();
+    }
+
+   std::string GetMetallibLocation(const std::string & sv){
+       std::filesystem::path exeDir = executableDirectory();
+       std::string dirStr = exeDir.string();
+       dirStr.append(sv);
+
+       return dirStr.c_str();
     }
 };

@@ -21,6 +21,7 @@
 #include "Texture.hpp"
 #include <stb_image.h>
 #include "AAPLMathUtilities.h"
+#include "Shader.h"
 
 #include <iostream>
 #include <filesystem>
@@ -38,6 +39,7 @@ private:
     void createCube();
     void createBuffers();
     void createDefaultLibrary();
+    MTL::Library* loadLibrary(MTL::Device* device, const char* path);
     void createCommandQueue();
     void createRenderPipeline();
     void createDepthAndMSAATextures();

@@ -58,6 +58,24 @@ void MTLEngine::resizeFrameBuffer(int width, int height) {
     updateRenderPassDescriptor();
 }
 
+MTL::Library* MTLEngine::loadLibrary(MTL::Device* device, const char* path) {
+    NS::Error* error = nullptr;
+
+    NS::String* nsPath = NS::String::string(path, NS::StringEncoding::UTF8StringEncoding);
+    NS::URL* url = NS::URL::fileURLWithPath(nsPath);
+
+    MTL::Library* library = device->newLibrary(url, &error);
+
+    if (!library) {
+        printf("Failed to load library at %s: %s\n",
+               path,
+               error ? error->localizedDescription()->utf8String() : "unknown error");
+        assert(false);
+    }
+
+    return library;
+}
+
 void MTLEngine::initWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -146,7 +164,20 @@ void MTLEngine::createBuffers() {
 }
 
 void MTLEngine::createDefaultLibrary() {
-    metalDefaultLibrary = metalDevice->newDefaultLibrary();
+
+       Shader sh ;
+       std::filesystem::path exeDir = sh.executableDirectory();
+
+
+        std::string dirStr = exeDir.string();
+
+        dirStr.append("/default.metallib");
+
+
+       const char* dirCStr = dirStr.c_str();
+       metalDefaultLibrary = loadLibrary(metalDevice, dirCStr );
+
+
     if(!metalDefaultLibrary){
         std::cerr << "Failed to load default library.";
         std::exit(-1);
