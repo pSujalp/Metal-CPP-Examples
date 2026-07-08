@@ -9,7 +9,8 @@ void MTLEngine::init() {
     initDevice();
     initWindow();
     
-    createTriangle();
+    createSquare();
+    createDefaultLibrary();
     createCommandQueue();
     createRenderPipeline();
 }
@@ -27,10 +28,20 @@ void MTLEngine::run() {
 void MTLEngine::cleanup() {
     glfwTerminate();
     metalDevice->release();
+    delete grassTexture;
 }
 
 void MTLEngine::initDevice() {
     metalDevice = MTL::CreateSystemDefaultDevice();
+}
+
+void MTLEngine::frameBufferSizeCallback(GLFWwindow *window, int width, int height) {
+    MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
+    engine->resizeFrameBuffer(width, height);
+}
+
+void MTLEngine::resizeFrameBuffer(int width, int height) {
+    metalLayer.drawableSize = CGSizeMake(width, height);
 }
 
 void MTLEngine::initWindow() {
@@ -43,6 +54,8 @@ void MTLEngine::initWindow() {
         exit(EXIT_FAILURE);
     }
     
+    glfwSetWindowUserPointer(glfwWindow, this);
+    glfwSetFramebufferSizeCallback(glfwWindow, frameBufferSizeCallback);
     int width, height;
     glfwGetFramebufferSize(glfwWindow, &width, &height);
     
@@ -55,39 +68,42 @@ void MTLEngine::initWindow() {
     metalWindow.contentView.wantsLayer = YES;
 }
 
-void MTLEngine::createTriangle() {
-    simd::float3 triangleVertices[] = {
-        {-0.5f, -0.5f, 0.0f},
-        { 0.5f, -0.5f, 0.0f},
-        { 0.0f,  0.5f, 0.0f}
+void MTLEngine::createSquare() {
+    VertexData squareVertices[] {
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{-0.5,  0.5,  0.5, 1.0f}, {0.0f, 1.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{-0.5, -0.5,  0.5, 1.0f}, {0.0f, 0.0f}},
+        {{ 0.5,  0.5,  0.5, 1.0f}, {1.0f, 1.0f}},
+        {{ 0.5, -0.5,  0.5, 1.0f}, {1.0f, 0.0f}}
     };
     
-    triangleVertexBuffer = metalDevice->newBuffer(&triangleVertices, sizeof(triangleVertices), MTL::ResourceStorageModeShared);
+    squareVertexBuffer = metalDevice->newBuffer(&squareVertices, sizeof(squareVertices), MTL::ResourceStorageModeShared);
+
+    // Make sure to change working directory to Metal-Tutorial root
+    // directory via Product -> Scheme -> Edit Scheme -> Run -> Options
+    grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
 }
 
-
-
+void MTLEngine::createDefaultLibrary() {
+    metalDefaultLibrary = metalDevice->newDefaultLibrary();
+    if(!metalDefaultLibrary){
+        std::cerr << "Failed to load default library.";
+        std::exit(-1);
+    }
+}
 
 void MTLEngine::createCommandQueue() {
     metalCommandQueue = metalDevice->newCommandQueue();
 }
 
 void MTLEngine::createRenderPipeline() {
-    
-    using NS::StringEncoding::UTF8StringEncoding;
-
-    Shader sh;
-    NS::Error* pError = nullptr;
-
-    MTL::Library* pLibrary = metalDevice->newLibrary( NS::String::string(sh.GetShader("shaders/shaders.metal"), UTF8StringEncoding), nullptr, &pError );
-    
-    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
+    MTL::Function* vertexShader = metalDefaultLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
     assert(vertexShader);
-    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+    MTL::Function* fragmentShader = metalDefaultLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
     assert(fragmentShader);
     
     MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
-    renderPipelineDescriptor->setLabel(NS::String::string("Triangle Rendering Pipeline", NS::ASCIIStringEncoding));
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
     assert(renderPipelineDescriptor);
@@ -102,8 +118,6 @@ void MTLEngine::createRenderPipeline() {
 
 void MTLEngine::draw() {
     sendRenderCommand();
-
-    
 }
 
 void MTLEngine::sendRenderCommand() {
@@ -111,6 +125,7 @@ void MTLEngine::sendRenderCommand() {
     
     MTL::RenderPassDescriptor* renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     MTL::RenderPassColorAttachmentDescriptor* cd = renderPassDescriptor->colorAttachments()->object(0);
+    
     cd->setTexture(metalDrawable->texture());
     cd->setLoadAction(MTL::LoadActionClear);
     cd->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
@@ -125,14 +140,14 @@ void MTLEngine::sendRenderCommand() {
     metalCommandBuffer->waitUntilCompleted();
     
     renderPassDescriptor->release();
-
 }
 
 void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
     renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
-    renderCommandEncoder->setVertexBuffer(triangleVertexBuffer, 0, 0);
+    renderCommandEncoder->setVertexBuffer(squareVertexBuffer, 0, 0);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
     NS::UInteger vertexStart = 0;
-    NS::UInteger vertexCount = 3;
+    NS::UInteger vertexCount = 6;
+    renderCommandEncoder->setFragmentTexture(grassTexture->texture, 0);
     renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
 }

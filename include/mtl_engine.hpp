@@ -11,20 +11,19 @@
 #include <GLFW/glfw3native.h>
 
 #include <Metal/Metal.hpp>
-#include <AppKit/AppKit.hpp>
-#include <MetalKit/MetalKit.hpp>
+#include <Metal/Metal.h>
+
 #include <QuartzCore/CAMetalLayer.h>
-#include "Shader.h"
+#include <QuartzCore/QuartzCore.hpp>
+#include <simd/simd.h>
+
+
 #include "VertexData.hpp"
-#include "simd/simd.h"
+#include "Texture.hpp"
+#include <stb_image.h>
+
 #include <iostream>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-
-
+#include <filesystem>
 
 class MTLEngine {
 public:
@@ -36,7 +35,8 @@ private:
     void initDevice();
     void initWindow();
     
-    void createTriangle();
+    void createSquare();
+    void createDefaultLibrary();
     void createCommandQueue();
     void createRenderPipeline();
     
@@ -44,14 +44,20 @@ private:
     void sendRenderCommand();
     void draw();
     
+    static void frameBufferSizeCallback(GLFWwindow *window, int width, int height);
+    void resizeFrameBuffer(int width, int height);
+    
     MTL::Device* metalDevice;
     GLFWwindow* glfwWindow;
     NSWindow* metalWindow;
     CAMetalLayer* metalLayer;
     CA::MetalDrawable* metalDrawable;
     
+    MTL::Library* metalDefaultLibrary;
     MTL::CommandQueue* metalCommandQueue;
     MTL::CommandBuffer* metalCommandBuffer;
     MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* triangleVertexBuffer;
+    MTL::Buffer* squareVertexBuffer;
+    
+    Texture* grassTexture;
 };
