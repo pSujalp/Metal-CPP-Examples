@@ -297,7 +297,9 @@ void Renderer::draw(MTK::View* pView)
     if (deg >= 360.0f) deg -= 360.0f;
     model = glm::rotate(model, glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
 
-    glm::mat4 MVP_GLM = proj * viewMatrix * model;
+    model = glm::scale(model, glm::vec3(4.5f));
+
+    // glm::mat4 MVP_GLM = proj * viewMatrix * model;
 
 
     MVP mvp1;
