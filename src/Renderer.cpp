@@ -128,22 +128,12 @@ void Renderer::draw( MTK::View* pView )
     pCmd->waitUntilCompleted();
 
 
-    std::vector<uint8_t> pixelData(bytesPerRow * height);
 
-    memcpy(pixelData.data(), pPixelBuffer->contents(), pixelData.size());
-    // bool isBGRA = true; 
 
-    //     if (isBGRA) {
-    //         for (size_t i = 0; i < pixelData.size(); i += 4) {
-    //             uint8_t blue = pixelData[i];
-    //             uint8_t red  = pixelData[i + 2];
-
-    //             pixelData[i]     = red;  
     //             pixelData[i + 2] = blue;
-    //         }
     //     }
 
-    stbi_write_png("screenshot.png", width, height, 4, pixelData.data(), width * 4);
+    stbi_write_png("screenshot.png", width, height, 4, pPixelBuffer->contents(), width * 4);
 
 
 
