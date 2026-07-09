@@ -84,12 +84,35 @@ void Renderer::buildBuffers()
     memcpy( _pVertexPositionsBuffer->contents(), positions, positionsDataSize );
     memcpy( _pVertexColorsBuffer->contents(), colors, colorDataSize );
 }
-
 void Renderer::draw( MTK::View* pView )
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
+
+    MTL::Texture* readTexture = pView->currentDrawable()->texture();
+    NS::UInteger width = readTexture->width();
+    NS::UInteger height = readTexture->height();
+    NS::UInteger bytesPerPixel = 4;
+    NS::UInteger bytesPerRow = width * bytesPerPixel;
+    NS::UInteger bufferSize = bytesPerRow * height;
+
+    MTL::Buffer* pPixelBuffer = _pDevice->newBuffer( bufferSize, MTL::ResourceStorageModeShared );
+
+    MTL::BlitCommandEncoder* pBlitEncoder = pCmd->blitCommandEncoder();
+    pBlitEncoder->copyFromTexture(
+        readTexture,
+        0, 0,
+        MTL::Origin(0, 0, 0),
+        MTL::Size(width, height, 1),
+        pPixelBuffer,
+        0,
+        bytesPerRow,
+        bufferSize
+    );
+    pBlitEncoder->endEncoding();   
+
+  
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
@@ -97,9 +120,19 @@ void Renderer::draw( MTK::View* pView )
     pEnc->setVertexBuffer( _pVertexPositionsBuffer, 0, 0 );
     pEnc->setVertexBuffer( _pVertexColorsBuffer, 0, 1 );
     pEnc->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3) );
-
     pEnc->endEncoding();
+
     pCmd->presentDrawable( pView->currentDrawable() );
     pCmd->commit();
+    pCmd->waitUntilCompleted();
+
+
+    std::vector<uint8_t> pixelData(bytesPerRow * height);
+    memcpy(pixelData.data(), pPixelBuffer->contents(), pixelData.size());
+    stbi_write_png("screenshot.png", width, height, 4, pixelData.data(), width * 4);
+
+
+
+    pPixelBuffer->release(); 
     pPool->release();
 }

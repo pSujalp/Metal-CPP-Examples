@@ -5,6 +5,9 @@
 #include <MetalKit/MetalKit.hpp>
 #include "simd/simd.h"
 
+#include <stb_image_write.h>
+#include <vector>
+
 class Renderer
 {
     public:

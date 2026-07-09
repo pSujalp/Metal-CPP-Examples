@@ -78,8 +78,14 @@ void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotificati
     _pDevice = MTL::CreateSystemDefaultDevice();
 
     _pMtkView = MTK::View::alloc()->init( frame, _pDevice );
-    _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+    _pMtkView->setColorPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm );
     _pMtkView->setClearColor( MTL::ClearColor::Make( 0.0, 0.0, 0.0, 1.0 ) );
+
+    
+
+    _pMtkView->setFramebufferOnly(false);
+
+
 
     _pViewDelegate = new MyMTKViewDelegate( _pDevice );
     _pMtkView->setDelegate( _pViewDelegate );
