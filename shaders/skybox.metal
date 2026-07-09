@@ -1,18 +1,13 @@
-//
-//  skybox.metal
-//  Metal-Tutorial
-//
-//  Samples a single equirectangular (lat-long) panorama PNG as a skybox.
-//  The vertex position IS the cubemap direction vector — no separate UV needed.
-//
-
 #include <metal_stdlib>
+#include <simd/simd.h>
 using namespace metal;
+using namespace simd;
 
-
-struct MVP {
-    float4x4 MVP;
+struct MVP_skybox{
+    matrix_float4x4 MVP;
 };
+
+
 
 struct SkyboxVOut {
     float4 position [[position]];
@@ -22,7 +17,7 @@ struct SkyboxVOut {
 vertex SkyboxVOut skyboxVertex(
     uint                   vid      [[vertex_id]],
     constant float4*       verts    [[buffer(0)]],
-    constant MVP&          mvp      [[buffer(2)]])
+    constant MVP_skybox&          mvp      [[buffer(2)]])
 {
     float4 pos = verts[vid];
     SkyboxVOut out;

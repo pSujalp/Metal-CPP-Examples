@@ -4,10 +4,6 @@
 
 
 
-
-
-
-
 Renderer::Renderer(MTL::Device* pDevice)
 : _pDevice(pDevice->retain())
 {
@@ -128,6 +124,7 @@ void Renderer::buildShaders()
 
     UniformBuffer        = _pDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
     transformationBuffer = _pDevice->newBuffer(sizeof(MVP),      MTL::ResourceStorageModeShared);
+    cameraPosFragmentBuffer = _pDevice->newBuffer(sizeof(Camera), MTL::ResourceStorageModeShared);
 
     frag->release();
     vert->release();
@@ -174,49 +171,49 @@ void Renderer::buildSkyBoxShaders()
 void Renderer::CreateCube()
 {
     VertexData cubeVertices[] = {
-        
-        {{-0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
-        {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 0.0}},
-        {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5,  0.5,  0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
-        
-        {{ 0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{-0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{ 0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        
-        {{-0.5,  0.5,  0.5, 1.0}, {0.0, 0.0}},
-        {{ 0.5,  0.5,  0.5, 1.0}, {1.0, 0.0}},
-        {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5,  0.5,  0.5, 1.0}, {0.0, 0.0}},
-        
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{ 0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5, -0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, -0.5,  0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{-0.5, -0.5,  0.5, 1.0}, {1.0, 0.0}},
-        {{-0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5,  0.5,  0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5,  0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        
-        {{ 0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
-        {{ 0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5,  0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{ 0.5,  0.5,  0.5, 1.0}, {0.0, 1.0}},
-        {{ 0.5, -0.5,  0.5, 1.0}, {0.0, 0.0}},
-    };
+
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}},
+
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}},
+
+    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}},
+
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}},
+
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{ 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}},
+    {{-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}},
+
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}},
+    {{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}}
+};
 
     cubeVertexBuffer = _pDevice->newBuffer(
         cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared
@@ -251,7 +248,7 @@ void Renderer::CreateSkyBox()
     SkyBoxVertexBuffer = _pDevice->newBuffer(
         skyboxVerts, sizeof(skyboxVerts), MTL::ResourceStorageModeShared
     );
-    MVPSkyBoxBuffer = _pDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
+    MVPSkyBoxBuffer = _pDevice->newBuffer(sizeof(MVP_skybox), MTL::ResourceStorageModeShared);
 
     skyboxTexture = new Texture("assets/skybox.png", _pDevice);
 }
@@ -276,6 +273,17 @@ void Renderer::draw(MTK::View* pView)
     float camZ = radius * static_cast<float>(cos(glm::radians(cameraAngle)));
     viewMatrix = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
+    glm::mat4 cameraToWorld = glm::inverse(viewMatrix);
+    glm::vec3 cameraPos = glm::vec3(cameraToWorld[3]); 
+
+
+    float3 mslVec1 = *reinterpret_cast<float3*>(&cameraPos);
+
+    memcpy(cameraPosFragmentBuffer->contents(), &mslVec1, sizeof(Camera));
+
+
+    
+
     auto  drawableSize = pView->drawableSize();
     float aspect       = (float)drawableSize.width / (float)drawableSize.height;
     glm::mat4 proj     = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
@@ -290,13 +298,15 @@ void Renderer::draw(MTK::View* pView)
     model = glm::rotate(model, glm::radians(deg), glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 MVP_GLM = proj * viewMatrix * model;
+
+
     MVP mvp1;
-    mvp1.MVP = matrix_float4x4({
-        simd::float4{ MVP_GLM[0][0], MVP_GLM[0][1], MVP_GLM[0][2], MVP_GLM[0][3] },
-        simd::float4{ MVP_GLM[1][0], MVP_GLM[1][1], MVP_GLM[1][2], MVP_GLM[1][3] },
-        simd::float4{ MVP_GLM[2][0], MVP_GLM[2][1], MVP_GLM[2][2], MVP_GLM[2][3] },
-        simd::float4{ MVP_GLM[3][0], MVP_GLM[3][1], MVP_GLM[3][2], MVP_GLM[3][3] },
-    });
+    mvp1.P = GLMToSIMD(proj);
+    mvp1.V = GLMToSIMD(viewMatrix);
+    mvp1.M = GLMToSIMD(model);
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
+
+    mvp1.Normal = GLMToSIMD(normalMatrix);
     
     memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
 
@@ -309,14 +319,9 @@ void Renderer::draw(MTK::View* pView)
     skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 skyboxMVP_GLM = proj * viewMatrix * skyboxModel;
 
-    MVP mvpSkybox;
-    mvpSkybox.MVP = matrix_float4x4({
-        simd::float4{ skyboxMVP_GLM[0][0], skyboxMVP_GLM[0][1], skyboxMVP_GLM[0][2], skyboxMVP_GLM[0][3] },
-        simd::float4{ skyboxMVP_GLM[1][0], skyboxMVP_GLM[1][1], skyboxMVP_GLM[1][2], skyboxMVP_GLM[1][3] },
-        simd::float4{ skyboxMVP_GLM[2][0], skyboxMVP_GLM[2][1], skyboxMVP_GLM[2][2], skyboxMVP_GLM[2][3] },
-        simd::float4{ skyboxMVP_GLM[3][0], skyboxMVP_GLM[3][1], skyboxMVP_GLM[3][2], skyboxMVP_GLM[3][3] },
-    });
-    memcpy(MVPSkyBoxBuffer->contents(), &mvpSkybox, sizeof(MVP));
+    MVP_skybox mvpSkybox;
+    mvpSkybox.MVP = GLMToSIMD(skyboxMVP_GLM);
+    memcpy(MVPSkyBoxBuffer->contents(), &mvpSkybox, sizeof(MVP_skybox));
 
     
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
@@ -357,13 +362,33 @@ void Renderer::draw(MTK::View* pView)
     pEnc->setVertexBuffer(cubeVertexBuffer,     0, 0);  
     pEnc->setVertexBuffer(UniformBuffer,        0, 1);  
     pEnc->setVertexBuffer(transformationBuffer, 0, 2);  
-    pEnc->setFragmentTexture(grassTexture->texture, 0);
+    pEnc->setFragmentTexture(skyboxTexture->texture, 0);
+    pEnc->setFragmentBuffer(cameraPosFragmentBuffer,0,0);
     pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle,
                          NS::UInteger(0), NS::UInteger(36));
-
     pEnc->endEncoding();
     pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
 
     pPool->release();
 }
+
+
+matrix_float4x4 Renderer::GLMToSIMD(const glm::mat4& m)
+{
+    return matrix_float4x4({
+        simd::float4{ m[0][0], m[0][1], m[0][2], m[0][3] },
+        simd::float4{ m[1][0], m[1][1], m[1][2], m[1][3] },
+        simd::float4{ m[2][0], m[2][1], m[2][2], m[2][3] },
+        simd::float4{ m[3][0], m[3][1], m[3][2], m[3][3] },
+    });
+};
+
+matrix_float3x3 Renderer::GLMToSIMD(const glm::mat3& m)
+{
+    return matrix_float3x3({
+        simd::float3{ m[0][0], m[0][1], m[0][2]},
+        simd::float3{ m[1][0], m[1][1], m[1][2] },
+        simd::float3{ m[2][0], m[2][1], m[2][2] }
+    });
+};

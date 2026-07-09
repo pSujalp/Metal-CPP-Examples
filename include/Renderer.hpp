@@ -3,7 +3,7 @@
 #include <Metal/Metal.hpp>
 #include <AppKit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
-#include "simd/simd.h"
+#include <simd/simd.h>
 #include "VertexData.hpp"
 #include "Texture.hpp"
 #include "AAPLMathUtilities.h"
@@ -14,6 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
+using namespace simd;
 class Renderer
 {
     public:
@@ -28,6 +29,9 @@ class Renderer
 
         void CreateSkyBox();
         void buildSkyBoxShaders();
+        matrix_float4x4 GLMToSIMD(const glm::mat4& m);
+        matrix_float3x3 GLMToSIMD(const glm::mat3& m);
+        
 
 
     private:
@@ -40,6 +44,7 @@ class Renderer
         MTL::Buffer* transformationBuffer;
         MTL::Buffer* transformationCubeBuffer;
         MTL::Buffer * cubeVertexBuffer;
+        MTL::Buffer * cameraPosFragmentBuffer;
         MTL::Library * metallibrary;
         MTL::DepthStencilState* depthStencilState;
 
