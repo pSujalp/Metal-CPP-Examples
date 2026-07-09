@@ -90,6 +90,7 @@ void Renderer::draw( MTK::View* pView )
 
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
 
+   
     MTL::Texture* readTexture = pView->currentDrawable()->texture();
     NS::UInteger width = readTexture->width();
     NS::UInteger height = readTexture->height();
@@ -128,7 +129,20 @@ void Renderer::draw( MTK::View* pView )
 
 
     std::vector<uint8_t> pixelData(bytesPerRow * height);
+
     memcpy(pixelData.data(), pPixelBuffer->contents(), pixelData.size());
+    // bool isBGRA = true; 
+
+    //     if (isBGRA) {
+    //         for (size_t i = 0; i < pixelData.size(); i += 4) {
+    //             uint8_t blue = pixelData[i];
+    //             uint8_t red  = pixelData[i + 2];
+
+    //             pixelData[i]     = red;  
+    //             pixelData[i + 2] = blue;
+    //         }
+    //     }
+
     stbi_write_png("screenshot.png", width, height, 4, pixelData.data(), width * 4);
 
 
