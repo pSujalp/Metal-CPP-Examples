@@ -279,6 +279,8 @@ void Renderer::draw(MTK::View* pView)
 
     float3 mslVec1 = *reinterpret_cast<float3*>(&cameraPos);
 
+    matrix_float4x4 t = *reinterpret_cast<matrix_float4x4*>(&cameraToWorld);
+
     memcpy(cameraPosFragmentBuffer->contents(), &mslVec1, sizeof(Camera));
 
 
@@ -317,11 +319,17 @@ void Renderer::draw(MTK::View* pView)
     skyboxDeg += 1.0f * Time::DeltaTime;
     if (skyboxDeg >= 360.0f) skyboxDeg -= 360.0f;
 
-    glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+    
+
+    glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(60.0f));
     skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 skyboxMVP_GLM = proj * viewMatrix * skyboxModel;
 
     MVP_skybox mvpSkybox;
+
+
+    
+
     mvpSkybox.MVP = GLMToSIMD(skyboxMVP_GLM);
     memcpy(MVPSkyBoxBuffer->contents(), &mvpSkybox, sizeof(MVP_skybox));
 
