@@ -313,6 +313,7 @@ void Renderer::createDepthStencilStates(){
 
 //    glStencilFunc(GL_ALWAYS, 1, 0xFF);
 //    glStencilMask(0xFF);
+// glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 //    (depth test enabled, depth write enabled)
 // ---------------------------------------------------------
 {
