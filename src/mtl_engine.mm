@@ -109,75 +109,42 @@ void MTLEngine::initWindow() {
 }
 
 void MTLEngine::createCube() {
-    VertexData cubeVertices[] = {
-        // Front face
-        {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-        
-        // Back face
-        {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
+   
+    sphere = new Sphere(4,30,30);
 
-        // Top face
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {1.0, 0.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
-
-        // Bottom face
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-        // Left face
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-        {{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
-        {{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
-        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
-
-        // Right face
-        {{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-        {{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
-        {{0.5, 0.5, 0.5, 1.0}, {0.0, 1.0}},
-        {{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
-    };
-
+    std::vector<VertexDataPosition> vertexDataposition;
     
-    cubeVertexBuffer = metalDevice->newBuffer(&cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared);
-
-    sphere = new Sphere();
-
-    std::vector<VertexData> positionsVertex;
 
     for (size_t i = 0; i < sphere->positions.size(); i++) {
         glm::vec3 t = sphere->positions[i];
-        glm::vec2 t1 = sphere->uv[i];
-        positionsVertex.push_back({float4{t[0], t[1], t[2], 1.0f}, float2{t1[0],t1[1]}});
+        VertexDataPosition vdp;
+
+        vdp.position = *reinterpret_cast<float3*>(&t);
+        vertexDataposition.emplace_back(vdp);
     }
-    SphereVertexBuffer = metalDevice->newBuffer(positionsVertex.data(), positionsVertex.size() * sizeof(VertexData), MTL::ResourceStorageModeShared);
+
+
+    SphereVertexBuffer = metalDevice->newBuffer(vertexDataposition.data(), vertexDataposition.size() * sizeof(VertexDataPosition), MTL::ResourceStorageModeShared);
     SphereIndexedBuffer = metalDevice->newBuffer(sphere->indices.data(), 
                                                        sphere->indices.size()* sizeof(unsigned int),
                                                        MTL::ResourceStorageModeShared);
 
 
-    grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+    std::vector<VertexDataUV> vertexDataUV;
+
+    for (size_t i = 0; i < sphere->uv.size(); i++) {
+        glm::vec2 t = sphere->uv[i];
+        VertexDataUV vduv;
+        vduv.textureCoordinate = *reinterpret_cast<float2*>(&t);
+        vertexDataUV.emplace_back(vduv);
+    }
+
+    SphereUVBuffer = metalDevice->newBuffer(vertexDataUV.data(), 
+    vertexDataUV.size() * sizeof(VertexDataUV),
+     MTL::ResourceStorageModeShared);
+
+
+    grassTexture = new Texture("assets/mars.jpg", metalDevice);
 }
 
 void MTLEngine::createBuffers() {
@@ -310,14 +277,22 @@ void MTLEngine::sendRenderCommand() {
 
 void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
     // Moves the Cube 1 unit down the negative Z-axis
-    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-1.0);
+    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-8.0);
     
-    float angleInDegrees = glfwGetTime()/2.0 * 45;
-    float angleInRadians = angleInDegrees * M_PI / 180.0f;
-    matrix_float4x4 rotationMatrix = matrix4x4_rotation(angleInRadians, 0.0, 1.0, 0.0);
+    float angleInDegrees;
+    float angleInRadians;
+    matrix_float4x4 rotationMatrix;
 
-    matrix_float4x4 modelMatrix = simd_mul(translationMatrix, rotationMatrix);
+    matrix_float4x4 modelMatrix;
+
+    angleInDegrees =  glfwGetTime()/2 * 90 ;
+    angleInRadians = angleInDegrees * M_PI / 180.0;
+    rotationMatrix = matrix4x4_rotation(angleInRadians, 0.0, 1.0, 0.0);
+
+    modelMatrix = simd_mul(translationMatrix, rotationMatrix);
     
+
+
     float time = glfwGetTime();
     float oscillation = sin(time);  // oscillates between -1 and 1
     float zPosition = 1.5 + 1.5 * oscillation;  // maps oscillation to range [0, 3]
@@ -350,7 +325,8 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
 
 
     renderCommandEncoder->setVertexBuffer(SphereVertexBuffer, 0, 0);
-    renderCommandEncoder->setVertexBuffer(transformationBuffer, 0, 1);
+    renderCommandEncoder->setVertexBuffer(SphereUVBuffer, 0, 1);
+    renderCommandEncoder->setVertexBuffer(transformationBuffer, 0, 2);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
     NS::UInteger vertexStart = 0;
     NS::UInteger vertexCount = 36;

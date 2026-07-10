@@ -70,7 +70,6 @@ private:
     MTL::CommandQueue* metalCommandQueue;
     MTL::CommandBuffer* metalCommandBuffer;
     MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* cubeVertexBuffer;
     MTL::Buffer* transformationBuffer;
     MTL::DepthStencilState* depthStencilState;
     MTL::RenderPassDescriptor* renderPassDescriptor;
@@ -83,6 +82,7 @@ private:
     Sphere * sphere;
     MTL::Buffer* SphereVertexBuffer;
     MTL::Buffer* SphereIndexedBuffer;
+    MTL::Buffer* SphereUVBuffer;
 
 
 

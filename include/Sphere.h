@@ -42,7 +42,7 @@ class Sphere{
         bool oddRow = false;
         for (unsigned int y = 0; y < Y_SEGMENTS; ++y)
         {
-            if (!oddRow) // even rows: y == 0, y == 2; and so on
+            if (!oddRow) 
             {
                 for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
                 {
@@ -78,11 +78,11 @@ class Sphere{
     std::vector<glm::vec2> uv;
     std::vector<unsigned int> indices;
 
-    float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
-    // Temporary vertex
+    float nx, ny, nz, lengthInv = 1.0f / radius;    
+    
     struct Vertex
     {
-        float x, y, z, s, t; // Postion and Texcoords
+        float x, y, z, s, t; 
     };
 
     float deltaLatitude = M_PI / latitudes;
@@ -90,33 +90,28 @@ class Sphere{
     float latitudeAngle;
     float longitudeAngle;
 
-    // Compute all vertices first except normals
+    
     for (int i = 0; i <= latitudes; ++i)
     {
-        latitudeAngle = M_PI / 2 - i * deltaLatitude; /* Starting -pi/2 to pi/2 */
-        float xy = radius * cosf(latitudeAngle);    /* r * cos(phi) */
-        float z = radius * sinf(latitudeAngle);     /* r * sin(phi )*/
+        latitudeAngle = M_PI / 2 - i * deltaLatitude;
+        float xy = radius * cosf(latitudeAngle);   
+        float z = radius * sinf(latitudeAngle);    
 
-        /*
-         * We add (latitudes + 1) vertices per longitude because of equator,
-         * the North pole and South pole are not counted here, as they overlap.
-         * The first and last vertices have same position and normal, but
-         * different tex coords.
-         */
+       
         for (int j = 0; j <= longitudes; ++j)
         {
             longitudeAngle = j * deltaLongitude;
 
             Vertex vertex;
-            vertex.x = xy * cosf(longitudeAngle);       /* x = r * cos(phi) * cos(theta)  */
-            vertex.y = xy * sinf(longitudeAngle);       /* y = r * cos(phi) * sin(theta) */
-            vertex.z = z;                               /* z = r * sin(phi) */
-            vertex.s = (float)j/longitudes;             /* s */
-            vertex.t = (float)i/latitudes;              /* t */
+            vertex.x = xy * cosf(longitudeAngle);      
+            vertex.y = xy * sinf(longitudeAngle);      
+            vertex.z = z;                              
+            vertex.s = (float)j/longitudes;            
+            vertex.t = (float)i/latitudes;             
             vertices.push_back(glm::vec3(vertex.x, vertex.y, vertex.z));
             uv.push_back(glm::vec2(vertex.s, vertex.t));
 
-            // normalized vertex normal
+            
             nx = vertex.x * lengthInv;
             ny = vertex.y * lengthInv;
             nz = vertex.z * lengthInv;
@@ -130,7 +125,7 @@ class Sphere{
     {
         k1 = i * (longitudes + 1);
         k2 = k1 + longitudes + 1;
-        // 2 Triangles per latitude block excluding the first and last longitudes blocks
+        
         for(int j = 0; j < longitudes; ++j, ++k1, ++k2)
         {
             if (i != 0)
