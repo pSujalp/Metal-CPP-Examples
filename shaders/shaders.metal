@@ -155,6 +155,11 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
 }
 
 
+float logisticDepth(float depth, float steepness , float offset )
+{
+	float zVal = linearize_depth(depth,steepness,offset);
+	return (1 / (1 + exp(-steepness * (zVal - offset))));
+}
 
 
 float linearize_depth(float d,float zNear,float zFar)
