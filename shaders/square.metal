@@ -59,5 +59,6 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                       min_filter::linear);
     // Sample the texture to obtain a color
     const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
-    return colorSample;
+
+    
 }

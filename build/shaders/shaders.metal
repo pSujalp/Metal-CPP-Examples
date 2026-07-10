@@ -5,6 +5,8 @@
 #include <metal_stdlib>
 using namespace metal;
 
+float linearize_depth(float d,float zNear,float zFar);
+
 
 struct Vertex {
     float3 position;
@@ -26,6 +28,13 @@ struct TextureInfo {
 struct VertexData {
     float4 position;
     float4 normal;
+};
+
+struct Uniform{
+
+    float far;
+    float near;
+
 };
 
 
@@ -73,6 +82,14 @@ vertex OutData vertexShader(
     return out;
 }
 
+
+float linearize_depth(float d,float zNear,float zFar)
+{
+    float z_n = 2.0 * d - 1.0;
+    return 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+}
+
+
 fragment float4 fragmentShader(OutData in [[stage_in]],
                                constant float4& lightColor    [[buffer(0)]],
                                constant float4& lightPosition [[buffer(1)]],
@@ -80,7 +97,8 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
                                texture2d_array<float> textureArray [[texture(3)]],
                                constant TextureInfo* textureInfoBuffer [[buffer(4)]],
                                constant float4x4& modelMatrix [[buffer(5)]],
-                               sampler textureSampler [[sampler(6)]])
+                               sampler textureSampler [[sampler(6)]],
+                               constant Uniform & uniform [[buffer(7)]])
 {
     if(textureArray.get_array_size() == 0) {
         return float4(0.0, 1.0, 0.0, 1.0); // Return red color if texture array is empty
@@ -132,6 +150,18 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
     float4 specular = specularStrength * spec * specularSample;
     
     float4 finalColor = (ambient + diffuse + specular);
+
+
+
+    float floatdepth = in.position.z;
+    float ld = linearize_depth(floatdepth, uniform.near, uniform.far) / uniform.far;
+
+
+
+    return float4(ld,ld,ld,1.0f);
     
-    return finalColor;
+    return finalColor; //---->
 }
+
+
+

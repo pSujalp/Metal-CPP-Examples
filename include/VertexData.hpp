@@ -34,3 +34,9 @@ struct TransformationData {
 };
 
 
+struct Uniform{
+
+    float far;
+    float near;
+
+};

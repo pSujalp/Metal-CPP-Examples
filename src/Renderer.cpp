@@ -41,7 +41,7 @@ void Renderer::draw( MTK::View* pView )
     matrix_float4x4 rotationMatrix = matrix4x4_rotation(60 * (M_PI / 180.0f), 0.0, 1.0, 0.0);
     matrix_float4x4 scaleMatrix    = matrix4x4_scale(12.01f, 12.01f, 12.01f);
 
-    matrix_float4x4 modelMatrix    = matrix4x4_translation(0.0f, -0.5f, -5.0f) * rotationMatrix * scaleMatrix;
+    matrix_float4x4 modelMatrix    = matrix4x4_translation(0.0f, -0.5f, -(rand()%50)) * rotationMatrix * scaleMatrix;
 
     // Fixed view matrix — replace eye/center when you add a camera
     matrix_float4x4 viewMatrix = matrix_look_at_right_hand(
@@ -63,8 +63,17 @@ void Renderer::draw( MTK::View* pView )
 
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
 
+
+    
+
+
     for (Mesh* mesh : model->meshes)
     {
+        
+        unifom1.far = farZ;
+        unifom1.near = nearZ;
+
+
         pEnc->setVertexBuffer(mesh->vertexBuffer, 0, 0);
         pEnc->setVertexBytes(&modelMatrix,       sizeof(modelMatrix),       1);
         pEnc->setVertexBytes(&viewMatrix,        sizeof(viewMatrix),        2); // [[buffer(2)]]
@@ -75,6 +84,9 @@ void Renderer::draw( MTK::View* pView )
         pEnc->setFragmentTexture(model->textures->textureArray, 3);
         pEnc->setFragmentBuffer(model->textures->textureInfosBuffer, 0, 4);
         pEnc->setFragmentBytes(&modelMatrix,     sizeof(modelMatrix),       5);
+        pEnc->setFragmentBytes(&unifom1,sizeof(Uniform),7);
+
+
 
         pEnc->drawIndexedPrimitives(typeTriangle,
                                     mesh->indexCount,
