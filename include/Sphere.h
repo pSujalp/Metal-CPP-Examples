@@ -17,10 +17,9 @@ class Sphere{
         std::vector<glm::vec2> uv;
         std::vector<glm::vec3> normals;
         std::vector<unsigned int> indices;
-        std::vector<float> data;
 
-        const unsigned int X_SEGMENTS = 64 * 16;
-        const unsigned int Y_SEGMENTS = 64 * 16;
+        const unsigned int X_SEGMENTS = 64 ;    
+        const unsigned int Y_SEGMENTS = 64 ;
         const float PI = 3.14159265359f;
 
         Sphere()
@@ -63,29 +62,100 @@ class Sphere{
         }
         indexCount = static_cast<unsigned int>(indices.size());
 
-        
-        for (unsigned int i = 0; i < positions.size(); ++i)
+
+
+}
+
+
+     Sphere(int radius , int latitudes, int longitudes){
+       if(longitudes < 3)
+        longitudes = 3;
+    if(latitudes < 2)
+        latitudes = 2;
+
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uv;
+    std::vector<unsigned int> indices;
+
+    float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
+    // Temporary vertex
+    struct Vertex
+    {
+        float x, y, z, s, t; // Postion and Texcoords
+    };
+
+    float deltaLatitude = M_PI / latitudes;
+    float deltaLongitude = 2 * M_PI / longitudes;
+    float latitudeAngle;
+    float longitudeAngle;
+
+    // Compute all vertices first except normals
+    for (int i = 0; i <= latitudes; ++i)
+    {
+        latitudeAngle = M_PI / 2 - i * deltaLatitude; /* Starting -pi/2 to pi/2 */
+        float xy = radius * cosf(latitudeAngle);    /* r * cos(phi) */
+        float z = radius * sinf(latitudeAngle);     /* r * sin(phi )*/
+
+        /*
+         * We add (latitudes + 1) vertices per longitude because of equator,
+         * the North pole and South pole are not counted here, as they overlap.
+         * The first and last vertices have same position and normal, but
+         * different tex coords.
+         */
+        for (int j = 0; j <= longitudes; ++j)
         {
-            data.push_back(positions[i].x);
-            data.push_back(positions[i].y);
-            data.push_back(positions[i].z);           
-            if (normals.size() > 0)
+            longitudeAngle = j * deltaLongitude;
+
+            Vertex vertex;
+            vertex.x = xy * cosf(longitudeAngle);       /* x = r * cos(phi) * cos(theta)  */
+            vertex.y = xy * sinf(longitudeAngle);       /* y = r * cos(phi) * sin(theta) */
+            vertex.z = z;                               /* z = r * sin(phi) */
+            vertex.s = (float)j/longitudes;             /* s */
+            vertex.t = (float)i/latitudes;              /* t */
+            vertices.push_back(glm::vec3(vertex.x, vertex.y, vertex.z));
+            uv.push_back(glm::vec2(vertex.s, vertex.t));
+
+            // normalized vertex normal
+            nx = vertex.x * lengthInv;
+            ny = vertex.y * lengthInv;
+            nz = vertex.z * lengthInv;
+            normals.push_back(glm::vec3(nx, ny, nz));
+        }
+    }
+
+
+    unsigned int k1, k2;
+    for(int i = 0; i < latitudes; ++i)
+    {
+        k1 = i * (longitudes + 1);
+        k2 = k1 + longitudes + 1;
+        // 2 Triangles per latitude block excluding the first and last longitudes blocks
+        for(int j = 0; j < longitudes; ++j, ++k1, ++k2)
+        {
+            if (i != 0)
             {
-                data.push_back(normals[i].x);
-                data.push_back(normals[i].y);
-                data.push_back(normals[i].z);
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
             }
-            if (uv.size() > 0)
+
+            if (i != (latitudes - 1))
             {
-                data.push_back(uv[i].x);
-                data.push_back(uv[i].y);
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
             }
+        }
+    }
+
+    this->indexCount = indices.size();
+    this->positions = vertices;
+    this->normals = normals;
+    this->uv = uv;
+    this->indices = indices;
+    
 }
-
-
-}
-
-
     
 
 

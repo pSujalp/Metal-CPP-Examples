@@ -9,16 +9,10 @@ using namespace metal;
 #include "VertexData.hpp"
 
 struct VertexOut {
-    // The [[position]] attribute of this member indicates that this value
-    // is the clip space position of the vertex when this structure is
-    // returned from the vertex function.
-    float4 position [[position]];
 
-    // Since this member does not have a special attribute, the rasterizer
-    // interpolates its value with the values of the other triangle vertices
-    // and then passes the interpolated value to the fragment shader for each
-    // fragment in the triangle.
+    float4 position [[position]];
     float2 textureCoordinate;
+    float3 normal;
 };
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
@@ -28,6 +22,7 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
     VertexOut out;
     out.position = transformationData->perspectiveMatrix * transformationData->viewMatrix * transformationData->modelMatrix * vertexData[vertexID].position;
     out.textureCoordinate = vertexData[vertexID].textureCoordinate;
+    out.normal = vertexData[vertexID].normal;
     return out;
 }
 
@@ -35,7 +30,12 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> colorTexture [[texture(0)]]) {
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
-    // Sample the texture to obtain a color
-    const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
-    return colorSample;
+    
+    
+    float3 L = normalize(float3(1, 1, 1));
+    float3 N = normalize(in.normal);
+    float NdotL = saturate(dot(N, L));
+
+
+    return float4(float3(NdotL), 1) * float4(1.0f,0.0f,0.0f,1.0f);
 }
