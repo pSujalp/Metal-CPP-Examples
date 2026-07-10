@@ -31,6 +31,7 @@ void MTLEngine::cleanup() {
     depthTexture->release();
     renderPassDescriptor->release();
     metalDevice->release();
+    delete sphere;
     delete grassTexture;
 }
 
@@ -161,8 +162,21 @@ void MTLEngine::createCube() {
     
     cubeVertexBuffer = metalDevice->newBuffer(&cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared);
 
-    // Make sure to change working directory to Metal-Tutorial root
-    // directory via Product -> Scheme -> Edit Scheme -> Run -> Options
+    sphere = new Sphere();
+
+    std::vector<VertexData> positionsVertex;
+
+    for (size_t i = 0; i < sphere->positions.size(); i++) {
+        glm::vec3 t = sphere->positions[i];
+        glm::vec2 t1 = sphere->uv[i];
+        positionsVertex.push_back({float4{t[0], t[1], t[2], 1.0f}, float2{t1[0],t1[1]}});
+    }
+    SphereVertexBuffer = metalDevice->newBuffer(positionsVertex.data(), positionsVertex.size() * sizeof(VertexData), MTL::ResourceStorageModeShared);
+    SphereIndexedBuffer = metalDevice->newBuffer(sphere->indices.data(), 
+                                                       sphere->indices.size()* sizeof(unsigned int),
+                                                       MTL::ResourceStorageModeShared);
+
+
     grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
 }
 
@@ -329,14 +343,23 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
     
     renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
     renderCommandEncoder->setCullMode(MTL::CullModeBack);
-//    renderCommandEncoder->setTriangleFillMode(MTL::TriangleFillModeLines);
+    //  renderCommandEncoder->setTriangleFillMode(MTL:: TriangleFillModeFill);
     renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
     renderCommandEncoder->setDepthStencilState(depthStencilState);
-    renderCommandEncoder->setVertexBuffer(cubeVertexBuffer, 0, 0);
+
+
+
+    renderCommandEncoder->setVertexBuffer(SphereVertexBuffer, 0, 0);
     renderCommandEncoder->setVertexBuffer(transformationBuffer, 0, 1);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
     NS::UInteger vertexStart = 0;
     NS::UInteger vertexCount = 36;
     renderCommandEncoder->setFragmentTexture(grassTexture->texture, 0);
-    renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
+
+
+    renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
+                                    sphere->indexCount,
+                                    MTL::IndexTypeUInt32,
+                                    SphereIndexedBuffer,
+                                    0);
 }

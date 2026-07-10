@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,8 +19,8 @@ class Sphere{
         std::vector<unsigned int> indices;
         std::vector<float> data;
 
-        const unsigned int X_SEGMENTS = 64;
-        const unsigned int Y_SEGMENTS = 64;
+        const unsigned int X_SEGMENTS = 64 * 16;
+        const unsigned int Y_SEGMENTS = 64 * 16;
         const float PI = 3.14159265359f;
 
         Sphere()

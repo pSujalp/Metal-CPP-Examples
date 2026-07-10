@@ -23,6 +23,11 @@
 #include "AAPLMathUtilities.h"
 #include "Shader.h"
 
+
+#include "Sphere.h"
+
+#include <vector>
+
 #include <iostream>
 #include <filesystem>
 
@@ -74,4 +79,12 @@ private:
     int sampleCount = 4;
     
     Texture* grassTexture;
+
+    Sphere * sphere;
+    MTL::Buffer* SphereVertexBuffer;
+    MTL::Buffer* SphereIndexedBuffer;
+
+
+
+
 };
