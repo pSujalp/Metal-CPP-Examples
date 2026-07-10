@@ -155,7 +155,7 @@ void Renderer::buildShaders()
 );
 
 pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float_Stencil8);   
-pDesc->setStencilAttachmentPixelFormat(MTL::PixelFormatDepth32Float_Stencil8); 
+// pDesc->setStencilAttachmentPixelFormat(MTL::PixelFormatDepth32Float_Stencil8); 
 
     MTL::DepthStencilDescriptor* depthStencilDescriptor =
         MTL::DepthStencilDescriptor::alloc()->init();

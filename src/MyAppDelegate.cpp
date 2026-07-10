@@ -66,7 +66,7 @@ void MyAppDelegate::applicationWillFinishLaunching( NS::Notification* pNotificat
 
 void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotification )
 {
-    CGRect frame = (CGRect){ {0, 0}, {800, 600} };
+CGRect frame = (CGRect){ {0, 0}, {1920, 1080} };
 
     _pWindow = NS::Window::alloc()->init(
         frame,
