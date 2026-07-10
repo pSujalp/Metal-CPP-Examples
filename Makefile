@@ -1,13 +1,15 @@
 CXX := clang++
 CC := clang
+
+ASSIMP_PREFIX := $(shell brew --prefix assimp)
+
 # External libraries
 EXTERNAL := external
 CPPFLAGS := \
     -I./include \
     -I$(EXTERNAL)/metal-cpp \
     -I$(EXTERNAL)/metal-cpp-extensions \
-	-I$(EXTERNAL)/GLFW \
-	-I$(EXTERNAL)/stb \
+    -I$(ASSIMP_PREFIX)/include
 
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2
@@ -37,7 +39,7 @@ OBJ := \
     $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
     $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
 	
-ASSETS  := $(patsubst assets/%,build/assets/%,$(wildcard assets/*))
+
 BUILD_DIR := build
 FILES_TO_COPY := build/default.metallib build/default.air
 LIB_D := -Llib/
@@ -49,15 +51,13 @@ $(BUILD_DIR):
 .PHONY: all clean run
 .SECONDARY:
 
-all: $(TARGET) $(ASSETS) $(FILES_TO_COPY)
+all: $(TARGET) 
 
 $(BUILD_DIR)/%: % | $(BUILD_DIR)
 	mkdir -p $(dir $@)
 	cp $< $@
 
-build/assets/%: assets/%
-	mkdir -p $(dir $@)
-	cp $< $@
+
 
 build/default.air: $(SRC_METAL) $(SRC_METAL1) | $(BUILD_DIR)
 	xcrun -sdk macosx metal -c $(SRC_METAL) $(SRC_METAL1) -o $@
