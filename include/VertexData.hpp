@@ -20,5 +20,5 @@ struct MVP{
 
 struct Uniforms
 {   float2 time;
-    int intAsBool;
+    int bool1;
 };

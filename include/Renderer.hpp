@@ -25,7 +25,10 @@ class Renderer
         void buildShaders();
         void createDefaultLibrary(MTL::Device* pDevice );
         void CreateCube();
-
+        void createDepthStencilStates();
+        void DrawDirtBlock(MTL::RenderPassDescriptor *pRpd,
+                           MTL::RenderCommandEncoder *pEnc, MTK::View *pView,
+                           float scale, bool colorON, int drawIndex);
 
     private:
         MTL::Device* _pDevice;
@@ -39,7 +42,14 @@ class Renderer
         MTL::Buffer * cubeVertexBuffer;
         MTL::Library * metallibrary;
         MTL::DepthStencilState* depthStencilState;
-        
 
-       
+        MTL::DepthStencilState *NormalRenderingDepthStencilState;
+
+        MTL::DepthStencilState *SilhouetteRenderingDepthStencilState;
+
+        static const int kMaxDrawsPerFrame = 2;
+        MTL::Buffer *UniformBuffers[kMaxDrawsPerFrame];
+        MTL::Buffer *transformationBuffers[kMaxDrawsPerFrame];
+
+        
 };

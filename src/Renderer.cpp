@@ -12,6 +12,9 @@ Renderer::Renderer(MTL::Device* pDevice)
     __builtin_printf("Step 2: createDefaultLibrary\n");
     createDefaultLibrary(pDevice);
 
+
+    createDepthStencilStates();
+
     __builtin_printf("Step 3: buildShaders\n");
     buildShaders();
 
@@ -148,10 +151,11 @@ void Renderer::buildShaders()
     pDesc->setVertexFunction(vertexShader);
     pDesc->setFragmentFunction(fragmentShader);
     pDesc->colorAttachments()->object(0)->setPixelFormat(
-        MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB
-    );
-    
-    pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+    MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB
+);
+
+pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float_Stencil8);   
+pDesc->setStencilAttachmentPixelFormat(MTL::PixelFormatDepth32Float_Stencil8); 
 
     MTL::DepthStencilDescriptor* depthStencilDescriptor =
         MTL::DepthStencilDescriptor::alloc()->init();
@@ -169,6 +173,11 @@ void Renderer::buildShaders()
     UniformBuffer       = _pDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
     transformationBuffer = _pDevice->newBuffer(sizeof(MVP),     MTL::ResourceStorageModeShared);
 
+    for (int i = 0; i < kMaxDrawsPerFrame; ++i) {
+    UniformBuffers[i]       = _pDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
+    transformationBuffers[i] = _pDevice->newBuffer(sizeof(MVP),     MTL::ResourceStorageModeShared);
+}
+
     fragmentShader->release();
     vertexShader->release();
     pDesc->release();
@@ -178,50 +187,9 @@ void Renderer::draw(MTK::View* pView)
 {
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
-    
-    Uniforms uniforms;
-    uniforms.time = {0.1f, 0.3f};
-    memcpy(UniformBuffer->contents(), &uniforms, sizeof(Uniforms));
 
-    
-    
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 1.0f, -1.0f));
-    model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+   
 
-    
-    static float accumulatedDegrees = 0.0f;
-    const float rotationSpeedDegreesPerSecond = 45.0f;
-    accumulatedDegrees += rotationSpeedDegreesPerSecond * Time::DeltaTime;
-    if (accumulatedDegrees >= 360.0f)
-        accumulatedDegrees -= 360.0f;
-
-    
-    float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-    model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 viewMatrix = glm::lookAt(
-        glm::vec3(0.0f, 0.0f,  5.0f),   
-        glm::vec3(0.0f, 0.0f,  0.0f),   
-        glm::vec3(0.0f, 1.0f,  0.0f)    
-    );
-
-    
-    auto drawableSize = pView->drawableSize();
-    float aspectRatio = (float)drawableSize.width / (float)drawableSize.height;
-    float fov  = glm::radians(60.0f);   
-    float nearZ = 0.1f;
-    float farZ  = 100.0f;
-    glm::mat4 perspectiveMatrix = glm::perspective(fov, aspectRatio, nearZ, farZ);
-    glm::mat4 MVP_GLM = perspectiveMatrix * viewMatrix * model;
-
-    MVP mvp1;
-    mvp1.MVP = matrix_float4x4({
-        simd::float4{ MVP_GLM[0][0], MVP_GLM[0][1], MVP_GLM[0][2], MVP_GLM[0][3] },
-        simd::float4{ MVP_GLM[1][0], MVP_GLM[1][1], MVP_GLM[1][2], MVP_GLM[1][3] },
-        simd::float4{ MVP_GLM[2][0], MVP_GLM[2][1], MVP_GLM[2][2], MVP_GLM[2][3] },
-        simd::float4{ MVP_GLM[3][0], MVP_GLM[3][1], MVP_GLM[3][2], MVP_GLM[3][3] },
-    });
-    memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
     if (!pCmd) {
         __builtin_printf("ERROR: commandBuffer is nil\n");
@@ -246,19 +214,159 @@ void Renderer::draw(MTK::View* pView)
     }
 
     pEnc->setRenderPipelineState(_pPSO);
-    pEnc->setDepthStencilState(depthStencilState);
 
-    pEnc->setVertexBuffer(cubeVertexBuffer,      0, 0);  
-    pEnc->setVertexBuffer(UniformBuffer,         0, 1);  
-    pEnc->setVertexBuffer(transformationBuffer,  0, 2);  
+   
+    pEnc->setDepthStencilState(NormalRenderingDepthStencilState);
+    pEnc->setStencilReferenceValue(1);
+    DrawDirtBlock(pRpd, pEnc, pView, 1.0f, false, 0);
 
-    pEnc->setFragmentTexture(grassTexture->texture, 0);
 
-    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
+    pEnc->setDepthStencilState(SilhouetteRenderingDepthStencilState);
+    pEnc->setStencilReferenceValue(1);
+    DrawDirtBlock(pRpd, pEnc, pView, 1.1f, true, 1); 
 
     pEnc->endEncoding();
     pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
 
     pPool->release();
+}
+
+void Renderer::DrawDirtBlock(MTL::RenderPassDescriptor* pRpd  , MTL::RenderCommandEncoder* pEnc,MTK::View* pView, float scale,  bool colorON ,int drawIndex){
+
+    
+
+    
+    Uniforms uniforms;
+    uniforms.time = {0.1f, 0.3f};
+    uniforms.bool1 = colorON;
+    memcpy(UniformBuffers[drawIndex]->contents(), &uniforms, sizeof(Uniforms));
+
+    
+    
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 1.0f, -1.0f));
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+
+    
+    static float accumulatedDegrees = 0.0f;
+    const float rotationSpeedDegreesPerSecond = 45.0f;
+    accumulatedDegrees += rotationSpeedDegreesPerSecond * Time::DeltaTime;
+    if (accumulatedDegrees >= 360.0f)
+        accumulatedDegrees -= 360.0f;
+
+    
+    float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
+    model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 viewMatrix = glm::lookAt(
+        glm::vec3(0.0f, 0.0f,  5.0f),   
+        glm::vec3(0.0f, 0.0f,  0.0f),   
+        glm::vec3(0.0f, 1.0f,  0.0f)    
+    );
+
+   
+    
+    auto drawableSize = pView->drawableSize();
+    float aspectRatio = (float)drawableSize.width / (float)drawableSize.height;
+    float fov  = glm::radians(60.0f);   
+    float nearZ = 0.1f;
+    float farZ  = 100.0f;
+    glm::mat4 perspectiveMatrix = glm::perspective(fov, aspectRatio, nearZ, farZ);
+    glm::mat4 MVP_GLM = perspectiveMatrix * viewMatrix * model;
+
+    MVP mvp1;
+    mvp1.MVP = matrix_float4x4({
+        simd::float4{ MVP_GLM[0][0], MVP_GLM[0][1], MVP_GLM[0][2], MVP_GLM[0][3] },
+        simd::float4{ MVP_GLM[1][0], MVP_GLM[1][1], MVP_GLM[1][2], MVP_GLM[1][3] },
+        simd::float4{ MVP_GLM[2][0], MVP_GLM[2][1], MVP_GLM[2][2], MVP_GLM[2][3] },
+        simd::float4{ MVP_GLM[3][0], MVP_GLM[3][1], MVP_GLM[3][2], MVP_GLM[3][3] },
+    });
+    memcpy(transformationBuffers[drawIndex]->contents(), &mvp1, sizeof(MVP));
+  
+  
+
+    
+
+    pEnc->setVertexBuffer(cubeVertexBuffer,             0, 0);
+    pEnc->setVertexBuffer(UniformBuffers[drawIndex],    0, 1);
+    pEnc->setVertexBuffer(transformationBuffers[drawIndex], 0, 2);
+    pEnc->setFragmentTexture(grassTexture->texture, 0);
+    pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
+
+
+}
+
+
+
+
+void Renderer::createDepthStencilStates(){
+
+
+
+
+   
+
+
+   
+// ---------------------------------------------------------
+//  Normal Render
+
+//    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+//    glStencilMask(0xFF);
+//    (depth test enabled, depth write enabled)
+// ---------------------------------------------------------
+{
+    MTL::StencilDescriptor* stencil = MTL::StencilDescriptor::alloc()->init();
+    stencil->setStencilCompareFunction(MTL::CompareFunctionAlways);
+    stencil->setReadMask(0xFF);
+    stencil->setWriteMask(0xFF);
+    stencil->setStencilFailureOperation(MTL::StencilOperationKeep);
+    stencil->setDepthFailureOperation(MTL::StencilOperationKeep);
+    stencil->setDepthStencilPassOperation(MTL::StencilOperationReplace); // writes ref (1) where depth passes
+
+    MTL::DepthStencilDescriptor* desc = MTL::DepthStencilDescriptor::alloc()->init();
+    desc->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
+    desc->setDepthWriteEnabled(true);
+    desc->setFrontFaceStencil(stencil);
+    desc->setBackFaceStencil(stencil);
+
+    NormalRenderingDepthStencilState = _pDevice->newDepthStencilState(desc);
+
+    stencil->release();
+    desc->release();
+}
+
+// ---------------------------------------------------------
+// Silhouette Render
+
+
+//    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+//    glStencilMask(0x00);
+//    glDisable(GL_DEPTH_TEST);
+// ---------------------------------------------------------
+{
+    MTL::StencilDescriptor* stencil = MTL::StencilDescriptor::alloc()->init();
+    stencil->setStencilCompareFunction(MTL::CompareFunctionNotEqual);
+    stencil->setReadMask(0xFF);
+    stencil->setWriteMask(0x00); 
+    stencil->setStencilFailureOperation(MTL::StencilOperationKeep);
+    stencil->setDepthFailureOperation(MTL::StencilOperationKeep);
+    stencil->setDepthStencilPassOperation(MTL::StencilOperationKeep);
+
+    MTL::DepthStencilDescriptor* desc = MTL::DepthStencilDescriptor::alloc()->init();
+    desc->setDepthCompareFunction(MTL::CompareFunctionAlways); 
+    desc->setDepthWriteEnabled(false);
+    desc->setFrontFaceStencil(stencil);
+    desc->setBackFaceStencil(stencil);
+
+    SilhouetteRenderingDepthStencilState = _pDevice->newDepthStencilState(desc);
+
+    stencil->release();
+    desc->release();
+}
+
+
+
+    
+
 }
