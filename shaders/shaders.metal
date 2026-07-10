@@ -6,6 +6,7 @@
 using namespace metal;
 
 float linearize_depth(float d,float zNear,float zFar);
+float logisticDepth(float depth, float steepness , float offset);
 
 
 struct Vertex {
@@ -145,12 +146,14 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
 
 
 
-    float4 floatdepth = in.position.z;
-    float ld = linearize_depth(floatdepth, uniform.near, uniform.far) / uniform.far;
-    return float4(ld,ld,ld,1.0f);
+    float floatdepth = in.position.z;
+    float ld = linearize_depth(floatdepth,uniform.near,uniform.far) / uniform.far;
     
-    return finalColor; //---->
+    return (ld,ld,ld, 1.0f);
+    
+    
 }
+
 
 
 
@@ -159,3 +162,5 @@ float linearize_depth(float d,float zNear,float zFar)
     float z_n = 2.0 * d - 1.0;
     return 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 }
+
+
