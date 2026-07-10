@@ -22,3 +22,17 @@ struct Uniforms
 {   float2 time;
     int intAsBool;
 };
+
+
+struct NVertexData{
+    float3 position;
+    float3 TexCoords;
+    float3 normal;
+    float3 tangent;
+    float3 bitangent;
+
+};
+
+struct N_MVP{
+    matrix_float4x4 MVP;
+};

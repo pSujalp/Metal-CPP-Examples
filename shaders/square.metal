@@ -42,8 +42,6 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant VertexData* vertexData [[buffer(0)]],
                               constant Uniforms& uniforms [[buffer(1)]],
                               constant MVP & mvp [[buffer(2)]] ) {
-    
-    
         VertexOut out;
         out.position = mvp.MVP * vertexData[vertexID].position;
         out.textureCoordinate = vertexData[vertexID].textureCoordinate;
