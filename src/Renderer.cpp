@@ -10,11 +10,13 @@ Renderer::Renderer( MTL::Device* pDevice )
     createRenderPipeline();
     createLightSourceRenderPipeline();
     loadMeshes();
+
 }
 
 
 Renderer::~Renderer()
 {
+
     lightVertexBuffer->release();
     metalRenderPSO->release();
     metalLightSourceRenderPSO->release();
@@ -29,6 +31,8 @@ void Renderer::draw( MTK::View* pView )
     NS::AutoreleasePool* pPool = NS::AutoreleasePool::alloc()->init();
 
     MTL::CommandBuffer* pCmd = _pCommandQueue->commandBuffer();
+
+
     MTL::RenderPassDescriptor* pRpd = pView->currentRenderPassDescriptor();
     MTL::RenderCommandEncoder* pEnc = pCmd->renderCommandEncoder( pRpd );
 
