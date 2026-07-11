@@ -162,22 +162,35 @@ void MTLEngine::createCube() {
     
     cubeVertexBuffer = metalDevice->newBuffer(&cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared);
 
-    sphere = new Sphere();
+
 
     std::vector<VertexData> positionsVertex;
 
-    for (size_t i = 0; i < sphere->positions.size(); i++) {
-        glm::vec3 t = sphere->positions[i];
-        glm::vec2 t1 = sphere->uv[i];
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec2> uv;
+    std::vector<unsigned int> indices;
+
+
+    Torus torus;
+
+    torus.generateTorus(10,5,32,16,vertices,uv,indices);
+
+    std::cout << "Vertices: " << vertices.size() << std::endl;
+    std::cout << "UVs: " << uv.size() << std::endl;
+    std::cout << "Indices: " << indices.size() << std::endl;
+
+    for (size_t i = 0; i < vertices.size(); i++) {
+        glm::vec3 t = vertices[i];
+        glm::vec2 t1 = uv[i];
         positionsVertex.push_back({float4{t[0], t[1], t[2], 1.0f}, float2{t1[0],t1[1]}});
     }
     SphereVertexBuffer = metalDevice->newBuffer(positionsVertex.data(), positionsVertex.size() * sizeof(VertexData), MTL::ResourceStorageModeShared);
-    SphereIndexedBuffer = metalDevice->newBuffer(sphere->indices.data(), 
-                                                       sphere->indices.size()* sizeof(unsigned int),
+    SphereIndexedBuffer = metalDevice->newBuffer(indices.data(), 
+                                                       indices.size()* sizeof(unsigned int),
                                                        MTL::ResourceStorageModeShared);
 
 
-    grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+    grassTexture = new Texture("assets/texel_checker.png", metalDevice);
 }
 
 void MTLEngine::createBuffers() {
@@ -310,7 +323,7 @@ void MTLEngine::sendRenderCommand() {
 
 void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
     // Moves the Cube 1 unit down the negative Z-axis
-    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-1.0);
+    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-24.0);
     
     float angleInDegrees = glfwGetTime()/2.0 * 45;
     float angleInRadians = angleInDegrees * M_PI / 180.0f;

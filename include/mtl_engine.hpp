@@ -25,11 +25,14 @@
 
 
 #include "Sphere.h"
+#include "Torus.h"
 
 #include <vector>
 
 #include <iostream>
 #include <filesystem>
+
+
 
 class MTLEngine {
 public:
