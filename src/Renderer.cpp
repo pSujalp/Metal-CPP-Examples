@@ -113,9 +113,9 @@ void Renderer::buildShaders()
 {
     NS::Error *pError = nullptr;
 
-    // Offscreen HDR color target
+    
     MTL::TextureDescriptor *colorDesc = MTL::TextureDescriptor::alloc()->init();
-    colorDesc->setPixelFormat(MTL::PixelFormatRGBA16Float);   // HDR format
+    colorDesc->setPixelFormat(MTL::PixelFormatRGBA16Float);   
     colorDesc->setWidth(512 * 4);
     colorDesc->setHeight(512 * 4);
     colorDesc->setStorageMode(MTL::StorageModePrivate);
@@ -123,7 +123,7 @@ void Renderer::buildShaders()
     _renderTexture = _pDevice->newTexture(colorDesc);
     colorDesc->release();
 
-    // Offscreen depth target
+    
     MTL::TextureDescriptor *depthDesc = MTL::TextureDescriptor::alloc()->init();
     depthDesc->setPixelFormat(MTL::PixelFormatDepth32Float);
     depthDesc->setWidth(512 * 4);
@@ -143,7 +143,7 @@ void Renderer::buildShaders()
     _renderToTextureRenderPassDescriptor->depthAttachment()->setStoreAction(MTL::StoreActionDontCare);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setClearDepth(1.0);
 
-    // Pass 1 PSO: brick wall normal-mapped shader -> offscreen HDR texture
+    
     MTL::Function *vertexFn = metallibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
     assert(vertexFn);
     MTL::Function *fragmentFn = metallibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
@@ -171,7 +171,7 @@ void Renderer::buildShaders()
     UniformBuffer = _pDevice->newBuffer(sizeof(N_Uniforms), MTL::ResourceStorageModeShared);
     transformationBuffer = _pDevice->newBuffer(sizeof(N_MVP), MTL::ResourceStorageModeShared);
 
-    // Pass 2 PSO: tonemap offscreen HDR texture -> drawable
+    
     MTL::Function *vertexRPFn = metallibrary->newFunction(NS::String::string("vertexRenderPass", NS::ASCIIStringEncoding));
     assert(vertexRPFn);
     MTL::Function *fragmentRPFn = metallibrary->newFunction(NS::String::string("fragmentRenderPass", NS::ASCIIStringEncoding));
@@ -195,7 +195,7 @@ void Renderer::draw(MTK::View *pView)
     NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
     MTL::CommandBuffer *pCmd = _pCommandQueue->commandBuffer();
 
-    // ---- Pass 1: brick wall into offscreen HDR texture ----
+    
     {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
