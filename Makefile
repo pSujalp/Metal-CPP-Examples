@@ -29,13 +29,21 @@ build/assets/%: assets/%
 	mkdir -p $(dir $@)
 	cp $< $@
 
+SKYBOX_ASSETS := $(wildcard assets/skybox/*.jpg)
+BUILD_SKYBOX_ASSETS := $(patsubst assets/skybox/%.jpg,build/assets/skybox/%.jpg,$(SKYBOX_ASSETS))
+
 copy-shaders: build/shaders/square.metal
-copy-assets: build/assets/mc_grass.jpeg
+copy-assets: build/assets/mc_grass.jpeg $(BUILD_SKYBOX_ASSETS)
 copy-shaders1 : build/shaders/skybox.metal
 copy-assets1 : build/assets/skybox.png
 
+build/assets/skybox/%.jpg: assets/skybox/%.jpg
+	mkdir -p $(dir $@)
+	cp $< $@
+
 $(TARGET): $(OBJ) copy-shaders copy-assets copy-shaders1 copy-assets1
-	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) -o $@
+	mkdir -p $(dir $@)
+	$(CXX) $(OBJ) $(LDFLAGS) -o $@
 
 build/%.c.o: src/%.c
 	mkdir -p $(dir $@)

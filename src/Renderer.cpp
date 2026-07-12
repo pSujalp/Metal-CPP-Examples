@@ -334,11 +334,11 @@ void Renderer::draw(MTK::View *pView)
     memcpy(transformationBuffer->contents(), &mvp1, sizeof(MVP));
 
     static float skyboxDeg = 0.0f;
-    skyboxDeg += 1.0f * Time::DeltaTime;
+    skyboxDeg += 0.0050f ;
     if (skyboxDeg >= 360.0f)
         skyboxDeg -= 360.0f;
 
-    glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+     glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
     skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 skyboxMVP_GLM = proj * viewMatrix * skyboxModel;
 
