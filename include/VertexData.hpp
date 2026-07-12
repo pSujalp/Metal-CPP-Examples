@@ -24,15 +24,23 @@ struct Uniforms
 };
 
 
-struct NVertexData{
-    float3 position;
-    float3 TexCoords;
-    float3 normal;
-    float3 tangent;
-    float3 bitangent;
-
+struct N_Uniforms{
+     float3 lightPos;
+     float3 viewPos;
+     float3x3 normalMatrix;
 };
 
+struct NVertexData {
+	float3 Position;
+	float3 Normal;
+    float2 TexCoords;
+	float3 Tangent;
+	float3 Bitangent;
+};
+
+
 struct N_MVP{
-    matrix_float4x4 MVP;
+    matrix_float4x4 M;
+    matrix_float4x4 V;
+    matrix_float4x4 P;
 };

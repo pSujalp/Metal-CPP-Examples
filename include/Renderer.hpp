@@ -31,7 +31,8 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* _pPSO;
-        Texture* grassTexture;
+        Texture* D_Texture;
+        Texture* N_Texture;
         MTL::Buffer* squareVertexBuffer;
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* transformationBuffer;
@@ -39,6 +40,9 @@ class Renderer
         MTL::Buffer * cubeVertexBuffer;
         MTL::Library * metallibrary;
         MTL::DepthStencilState* depthStencilState;
+
+
+        MTL::Buffer * planeVertexBuffer;
         
 
        

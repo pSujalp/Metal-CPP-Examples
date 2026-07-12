@@ -10,7 +10,7 @@
 
 class Texture {
 public:
-    Texture(const char* filepath, MTL::Device* metalDevice);
+    Texture(const char* filepath, MTL::Device* metalDevice,bool isRGB = true);
     ~Texture();
     MTL::Texture* texture;
     int width, height, channels;

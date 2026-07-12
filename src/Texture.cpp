@@ -1,20 +1,36 @@
-//
-//  Texture.cpp
-//  Metal-Tutorial
-//
+
+
+
+
 
 #include <simd/simd.h>
 #include "Texture.hpp"
 
-Texture::Texture(const char* filepath, MTL::Device* metalDevice) {
+
+
+
+Texture::Texture(const char* filepath, MTL::Device* metalDevice, bool isRGB) {
     device = metalDevice;
     
     stbi_set_flip_vertically_on_load(true);
+    
+    
+    
+    
+    
     unsigned char* image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
     assert(image != NULL);
     
     MTL::TextureDescriptor* textureDescriptor = MTL::TextureDescriptor::alloc()->init();
-    textureDescriptor->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
+
+    
+    
+    
+    
+    
+    textureDescriptor->setPixelFormat(isRGB ? MTL::PixelFormatRGBA8Unorm_sRGB
+                                             : MTL::PixelFormatRGBA8Unorm);
+
     textureDescriptor->setWidth(width);
     textureDescriptor->setHeight(height);
     textureDescriptor->setUsage(MTL::TextureUsageShaderRead);
