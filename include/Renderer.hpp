@@ -47,8 +47,17 @@ class Renderer
         MTL::Buffer * SkyBoxVertexBuffer;
         MTL::Buffer * MVPSkyBoxBuffer;
         Texture* skyboxTexture;
+
+        CubeTexture* skyboxTexture1;
         MTL::RenderPipelineState * _SkyboxPSO;
         MTL::DepthStencilState* SkyBoxDepthStencilState;
         MTL::Library * metalSkyBoxlibrary;
+
+        MTL::SamplerState* samplerState;
+
+        MTL::Buffer * SamplerBuffer;
+
+
+       
        
 };
