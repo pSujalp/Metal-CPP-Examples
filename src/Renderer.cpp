@@ -217,7 +217,7 @@ void Renderer::draw(MTK::View* pView)
 
     
     float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-    model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+    // model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 viewMatrix = glm::lookAt(
         glm::vec3(0.0f, 0.0f,  5.0f),   
         glm::vec3(0.0f, 0.0f,  0.0f),   
