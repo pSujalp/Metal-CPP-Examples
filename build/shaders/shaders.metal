@@ -40,9 +40,6 @@ struct Uniform{
 
 
 struct OutData {
-    // The [[position]] attribute of this member indicates that this value
-    // is the clip space position of the vertex when this structure is
-    // returned from the vertex function.
     float4 position [[position]];
     float4 normal;
     float4 fragmentPosition;
@@ -155,6 +152,11 @@ fragment float4 fragmentShader(OutData in [[stage_in]],
 }
 
 
+float logisticDepth(float depth, float steepness , float offset )
+{
+	float zVal = linearize_depth(depth,steepness,offset);
+	return (1 / (1 + exp(-steepness * (zVal - offset))));
+}
 
 
 float linearize_depth(float d,float zNear,float zFar)

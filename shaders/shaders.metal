@@ -40,9 +40,6 @@ struct Uniform{
 
 
 struct OutData {
-    // The [[position]] attribute of this member indicates that this value
-    // is the clip space position of the vertex when this structure is
-    // returned from the vertex function.
     float4 position [[position]];
     float4 normal;
     float4 fragmentPosition;
