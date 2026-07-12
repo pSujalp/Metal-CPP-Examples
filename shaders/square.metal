@@ -54,6 +54,41 @@ struct VertexOut {
     float3 TangentFragPos;
 };
 
+
+struct AAPLVertex {
+    float2 position;
+    float4 color;
+    float2 textureCoordinate;
+   
+};
+
+
+struct AAPLOut {
+    float4 position [[position]];
+    float4 color;
+    float2 textureCoordinate;
+};
+
+vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
+                                constant AAPLVertex* vertexData [[buffer(0)]]) {
+    AAPLOut out;
+    out.position = float4(vertexData[vertexID].position, 0.0, 1.0);
+    out.color = vertexData[vertexID].color;
+    out.textureCoordinate = vertexData[vertexID].textureCoordinate;
+    return out;
+}
+
+
+fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
+                                   texture2d<float> colorTexture [[texture(0)]]) {
+    constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
+
+    float3 hdrColor = colorTexture.sample(textureSampler, in.textureCoordinate).rgb;
+    float3 result = float3(1.0f) - exp(-hdrColor * 5.5f);
+    
+    return float4(result, 1.0f);
+}
+
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
                               constant NVertexData* vertexData [[buffer(0)]],
                               constant N_Uniforms& uniforms [[buffer(1)]],
@@ -103,7 +138,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
     float3 specular = float3(0.2) * spec;
 
-   
+    // return float4(color, 1.0);
      
 
     return float4(ambient + diffuse + specular, 1.0);

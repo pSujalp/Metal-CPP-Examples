@@ -43,6 +43,13 @@ class Renderer
 
 
         MTL::Buffer * planeVertexBuffer;
+
+
+        MTL::Texture * _renderTexture;
+        MTL::RenderPassDescriptor* _renderToTextureRenderPassDescriptor;
+        float _aspectRatio;
+        MTL::Texture * _offscreenDepthTexture;
+        MTL::RenderPipelineState* _renderToTexturePipelineState;
         
 
        

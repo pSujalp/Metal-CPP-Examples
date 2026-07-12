@@ -34,7 +34,7 @@ NS::Menu* MyAppDelegate::createMenuBar()
     pAppMenuItem->setSubmenu( pAppMenu );
 
     NS::MenuItem* pWindowMenuItem = NS::MenuItem::alloc()->init();
-    NS::Menu* pWindowMenu = NS::Menu::alloc()->init( NS::String::string( "Hello", UTF8StringEncoding ) );
+    NS::Menu* pWindowMenu = NS::Menu::alloc()->init( NS::String::string( "Options", UTF8StringEncoding ) );
 
     SEL closeWindowCb = NS::MenuItem::registerActionCallback( "windowClose", [](void*, SEL, const NS::Object*){
         auto pApp = NS::Application::sharedApplication();

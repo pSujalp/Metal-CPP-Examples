@@ -44,3 +44,13 @@ struct N_MVP{
     matrix_float4x4 V;
     matrix_float4x4 P;
 };
+
+
+struct AAPLVertex {
+    float2 position;
+    float4 color;
+    float2 textureCoordinate;
+   
+};
+
+
