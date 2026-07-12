@@ -307,7 +307,7 @@ void Renderer::draw(MTK::View* pView)
 
     glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
     skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 skyboxMVP_GLM = proj * viewMatrix * skyboxModel;
+    glm::mat4 skyboxMVP_GLM = proj * proj * glm::mat4(glm::mat3(viewMatrix));
 
     MVP mvpSkybox;
     mvpSkybox.MVP = matrix_float4x4({
