@@ -88,6 +88,10 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
 
     float3 normal = NormalMap.sample(textureSampler, in.TexCoords).rgb;
     normal = normalize(normal * 2.0 - 1.0);
+    // normal = (normal * 2.0 - 1.0);
+    // normal.xy *= 1000;   
+    // normal = normalize(normal);
+
     float3 color = DiffuseMap.sample(textureSampler, in.TexCoords).rgb;
     float3 ambient = 0.1 * color;
     float3 lightDir = normalize(in.TangentLightPos - in.TangentFragPos);
