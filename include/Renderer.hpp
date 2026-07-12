@@ -33,6 +33,7 @@ class Renderer
         MTL::RenderPipelineState* _pPSO;
         Texture* D_Texture;
         Texture* N_Texture;
+        Texture* Disp_Texture;
         MTL::Buffer* squareVertexBuffer;
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* transformationBuffer;

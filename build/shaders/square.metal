@@ -79,34 +79,95 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
         return vs_out;
 }
 
+float2 ParallaxMapping(float2 texCoords, float3 viewDir,
+                       texture2d<float> depthMap, float heightScale)
+{ 
+
+    constexpr sampler textureSampler (mag_filter::linear,
+                                      min_filter::linear);
+
+
+    // number of depth layers
+    const float minLayers = 8;
+    const float maxLayers = 64;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(float3(0.0, 0.0, 1.0), viewDir)));  
+    // calculate the size of each layer
+    float layerDepth = 1.0 / numLayers;
+    // depth of current layer
+    float currentLayerDepth = 0.0;
+    // the amount to shift the texture coordinates per layer (from vector P)
+    float2 P = viewDir.xy / viewDir.z * heightScale; 
+    float2 deltaTexCoords = P / numLayers;
+  
+    
+    float2  currentTexCoords     = texCoords;
+    float currentDepthMapValue = depthMap.sample(textureSampler, currentTexCoords).r;
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        
+        currentTexCoords -= deltaTexCoords;
+        
+        currentDepthMapValue = depthMap.sample(textureSampler, currentTexCoords).r;  
+        
+        currentLayerDepth += layerDepth;  
+    }
+    
+   
+    float2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = depthMap.sample(textureSampler, prevTexCoords).r - currentLayerDepth + layerDepth;
+ 
+    
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    float2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return finalTexCoords;
+}
+
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> DiffuseMap [[texture(0)]],
-                               texture2d<float> NormalMap [[texture(1)]]) {
+                               texture2d<float> NormalMap [[texture(1)]],
+                               texture2d<float> DepthMap [[texture(2)]]) {
     constexpr sampler textureSampler (mag_filter::linear,
                                       min_filter::linear);
     
 
-    float3 normal = NormalMap.sample(textureSampler, in.TexCoords).rgb;
-    normal = normalize(normal * 2.0 - 1.0);
-    // normal = (normal * 2.0 - 1.0);
-    // normal.xy *= 1000;   
-    // normal = normalize(normal);
+    float3 normal;
 
-    float3 color = DiffuseMap.sample(textureSampler, in.TexCoords).rgb;
+    float3 viewDir = normalize(in.TangentViewPos - in.TangentFragPos);
+    float2 texCoords = in.TexCoords;
+    float heightScale = 0.5f; // Adjust this value to control the depth effect
+    
+    texCoords = ParallaxMapping(in.TexCoords,  viewDir, DepthMap, heightScale);  
+
+    if(texCoords.x > 1.0 || texCoords.y > 1.0 || texCoords.x < 0.0 || texCoords.y < 0.0)
+        discard_fragment();
+
+    // obtain normal from normal map
+    normal = NormalMap.sample(textureSampler, texCoords).rgb;
+    normal = normalize(normal * 2.0 - 1.0);   
+   
+    // get diffuse color
+    float3 color = DiffuseMap.sample(textureSampler, texCoords).rgb;
+    // ambient
     float3 ambient = 0.1 * color;
+    // diffuse
     float3 lightDir = normalize(in.TangentLightPos - in.TangentFragPos);
     float diff = max(dot(lightDir, normal), 0.0);
     float3 diffuse = diff * color;
-    float3 viewDir = normalize(in.TangentViewPos - in.TangentFragPos);
-    // float3 reflectDir = reflect(-lightDir, normal);
+    // specular    
+    float3 reflectDir = reflect(-lightDir, normal);
     float3 halfwayDir = normalize(lightDir + viewDir);  
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+
     float3 specular = float3(0.2) * spec;
+    return float4(ambient + diffuse + specular, 1.0);
 
    
-     
 
-    return float4(ambient + diffuse + specular, 1.0);
 }
 
 

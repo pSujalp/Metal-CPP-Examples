@@ -139,8 +139,9 @@ void Renderer::CreateCube() {
         sizeof(NVertexData) * vertexData.size(),
         MTL::ResourceStorageModeShared
     );
-    D_Texture = new Texture("assets/brickwall.jpg", _pDevice);
-    N_Texture = new Texture("assets/brickwall_normal.jpg", _pDevice);
+    D_Texture = new Texture("assets/bricks2.jpg", _pDevice);
+    N_Texture = new Texture("assets/bricks2_normal.jpg", _pDevice);
+    Disp_Texture = new Texture("assets/bricks2_disp.jpg", _pDevice);
 }
 
 void Renderer::buildShaders()
@@ -317,6 +318,7 @@ void Renderer::draw(MTK::View* pView)
 
     pEnc->setFragmentTexture(D_Texture->texture, 0);
     pEnc->setFragmentTexture(N_Texture->texture, 1);
+    pEnc->setFragmentTexture(Disp_Texture->texture, 2);
 
     pEnc->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
