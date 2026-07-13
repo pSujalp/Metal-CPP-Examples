@@ -5,10 +5,7 @@
 
 #include <metal_stdlib>
 using namespace metal;
-
-
 #include "VertexData.hpp"
-
 
 
 float DistributionGGX(float3 N, float3 H, float roughness){
@@ -76,9 +73,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> metallic [[texture(2)]],
                                texture2d<float> roughness [[texture(3)]],
                                texture2d<float> ao [[texture(4)]]
-
                                ) {
-
+                                
     constexpr sampler textureSampler (mag_filter::nearest,
                                       min_filter::nearest);
 

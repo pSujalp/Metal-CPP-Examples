@@ -175,11 +175,11 @@ void MTLEngine::createSphere()
 
     // grassTexture = new Texture("mc_grass.jpeg", metalDevice);
 
-    Albedo = new Texture("assets/RUST/albedo.png", metalDevice);
-    AO = new Texture("assets/RUST/ao.png", metalDevice);
-    Metallic = new Texture("assets/RUST/metallic.png", metalDevice);
-    Normal = new Texture("assets/RUST/normal.png", metalDevice);
-    Roughness = new Texture("assets/RUST/roughness.png", metalDevice);
+    Albedo = new Texture("RUST/albedo.png", metalDevice);
+    AO = new Texture("RUST/ao.png", metalDevice);
+    Metallic = new Texture("RUST/metallic.png", metalDevice);
+    Normal = new Texture("RUST/normal.png", metalDevice);
+    Roughness = new Texture("RUST/roughness.png", metalDevice);
 
     for (size_t i = 0; i < kMaxDrawsPerFrame; i++)
     {

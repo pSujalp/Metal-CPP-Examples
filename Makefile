@@ -33,7 +33,8 @@ CPPFLAGS := \
 	-I$(GLM_PREFIX)/include
 
 
-
+ASSETS_SRC := assets/RUST
+BUILD_ASSETS := $(BUILD_DIR)/RUST
 
 
 
@@ -132,7 +133,6 @@ $(BUILD_DIR):
 
 
 
-
 build/default.air: include/PBR.metal | $(BUILD_DIR)
 	xcrun -sdk macosx metal -c $< -o $@
 
@@ -141,9 +141,13 @@ build/default.metallib: build/default.air
 	xcrun -sdk macosx metallib $< -o $@
 
 
-$(TARGET): $(OBJ) build/default.metallib
+$(TARGET): $(OBJ) build/default.metallib $(BUILD_ASSETS)
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
+
+$(BUILD_ASSETS): | $(BUILD_DIR)
+	rm -rf $@
+	cp -R $(ASSETS_SRC) $@
 
 
 $(BUILD_DIR)/%.c.o: src/%.c

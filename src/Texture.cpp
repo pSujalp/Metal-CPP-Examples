@@ -9,7 +9,13 @@ Texture::Texture(const char* filepath, MTL::Device* metalDevice) {
     device = metalDevice;
     
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
+
+    std::string add = executableDirectory().string() ;
+    add.push_back('/');
+    add.append(filepath);
+    
+    std::cout<< add<<"\n";
+    unsigned char* image = stbi_load(add.c_str(), &width, &height, &channels, STBI_rgb_alpha);
     assert(image != NULL);
     
     MTL::TextureDescriptor* textureDescriptor = MTL::TextureDescriptor::alloc()->init();
