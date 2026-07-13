@@ -4,7 +4,7 @@
 <tr>
 <td width="58%">
 
-A collection of **Metal C++** examples demonstrating graphics programming concepts ranging from rendering a simple triangle to advanced rendering techniques such as render passes, instancing, HDR, MSAA, and model loading.
+A collection of **Metal C++** examples demonstrating graphics programming concepts ranging from rendering a simple triangle to advanced rendering techniques such as render passes, instancing, HDR, MSAA, and model loading .
 
 ### Getting Started
 
