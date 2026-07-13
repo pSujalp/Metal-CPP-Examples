@@ -32,6 +32,11 @@ void MTLEngine::cleanup() {
     renderPassDescriptor->release();
     metalDevice->release();
     delete grassTexture;
+
+    ImGui_ImplMetal_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
 }
 
 void MTLEngine::initDevice() {
@@ -105,6 +110,20 @@ void MTLEngine::initWindow() {
     metalWindow.contentView.wantsLayer = YES;
     
     metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
+    ImGui_ImplMetal_Init((__bridge id<MTLDevice>)(metalDevice));
+
+    
+
+
+    
 }
 
 void MTLEngine::createCube() {
@@ -279,6 +298,9 @@ void MTLEngine::updateRenderPassDescriptor() {
 
 void MTLEngine::draw() {
     sendRenderCommand();
+
+
+    
 }
 
 void MTLEngine::sendRenderCommand() {
@@ -288,6 +310,21 @@ void MTLEngine::sendRenderCommand() {
     MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
     encodeRenderCommand(renderCommandEncoder);
     renderCommandEncoder->endEncoding();
+
+    ImGui_ImplMetal_NewFrame((__bridge MTLRenderPassDescriptor*)renderPassDescriptor);
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+
+    if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);
+
+    ImGui::Render();
+    ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), (__bridge id<MTLCommandBuffer>)metalCommandBuffer,
+     (__bridge id <MTLRenderCommandEncoder>)renderCommandEncoder);
+
+
+
 
     metalCommandBuffer->presentDrawable(metalDrawable);
     metalCommandBuffer->commit();

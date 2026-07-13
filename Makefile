@@ -1,87 +1,224 @@
 CXX := clang++
-CC := clang
+CC  := clang
 
-ASSIMP_PREFIX := $(shell brew --prefix assimp)
 
-# External libraries
-EXTERNAL := external
-CPPFLAGS := \
-    -I./include \
-    -I$(EXTERNAL)/metal-cpp \
-    -I$(EXTERNAL)/metal-cpp-extensions \
-    -I$(ASSIMP_PREFIX)/include
 
-CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
-CFLAGS := -Wall -std=c11 -O2
-CPPFLAGS += -I$(shell brew --prefix glfw)/include
-CPPFLAGS += -I$(shell brew --prefix cglm)/include
-LDFLAGS += \
-    -L$(shell brew --prefix glfw)/lib/ \
-	-L$(shell brew --prefix cglm)/lib/ \
-    -framework Metal \
-    -framework Foundation \
-    -framework Cocoa \
-    -framework CoreGraphics \
-    -framework MetalKit \
-    -framework ModelIO \
-    -framework MetalPerformanceShaders \
-	-framework QuartzCore
 
-LDLIBS += -lglfw
-TARGET := build/metal
-SRC_C   := $(wildcard src/*.c)
-SRC_CPP := $(wildcard src/*.cpp)
-SRC_MM  := $(wildcard src/*.mm)
-SRC_METAL  := $(wildcard shaders/*.metal)
-SRC_METAL1 := $(wildcard include/*.metal)
-OBJ := \
-    $(patsubst src/%.c,build/%.c.o,$(SRC_C)) \
-    $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) \
-    $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
-	
 
 BUILD_DIR := build
-FILES_TO_COPY := build/default.metallib build/default.air
-LIB_D := -Llib/
+TARGET := $(BUILD_DIR)/metal
+
+EXTERNAL := external
+
+
+
+
+
+GLFW_PREFIX   := $(shell brew --prefix glfw)
+
+
+
+
+
+CPPFLAGS := \
+	-Iinclude \
+	-I$(EXTERNAL)/metal-cpp \
+	-I$(EXTERNAL)/metal-cpp-extensions \
+	-I$(EXTERNAL)/imgui/include \
+	-I$(EXTERNAL)/imgui/src \
+	-I$(GLFW_PREFIX)/include \
+	-I$(EXTERNAL)/stb \
+	-MMD -MP
+
+
+
+
+
+
+CFLAGS := \
+	-Wall \
+	-std=c11 \
+	-O2
+
+
+CXXFLAGS := \
+	-Wall \
+	-std=c++23 \
+	-O2
+
+
+OBJCXXFLAGS := \
+	$(CXXFLAGS) \
+	-fno-objc-arc
+
+
+
+
+
+
+LDFLAGS := \
+	-Llib \
+	-L$(GLFW_PREFIX)/lib \
+	-framework Metal \
+	-framework MetalKit \
+	-framework Foundation \
+	-framework Cocoa \
+	-framework CoreGraphics \
+	-framework ModelIO \
+	-framework MetalPerformanceShaders \
+	-framework QuartzCore
+
+
+LDLIBS := \
+	-lglfw
+
+
+
+
+
+
+SRC_C := $(wildcard src/*.c)
+
+SRC_CPP := $(wildcard src/*.cpp)
+
+SRC_MM := $(wildcard src/*.mm)
+
+
+IMGUI_CPP := $(wildcard $(EXTERNAL)/imgui/src/*.cpp)
+
+IMGUI_MM := $(wildcard $(EXTERNAL)/imgui/src/*.mm)
+
+
+
+
+
+
+OBJ := \
+	$(patsubst src/%.c,$(BUILD_DIR)/%.c.o,$(SRC_C)) \
+	$(patsubst src/%.cpp,$(BUILD_DIR)/%.cpp.o,$(SRC_CPP)) \
+	$(patsubst src/%.mm,$(BUILD_DIR)/%.mm.o,$(SRC_MM)) \
+	$(patsubst $(EXTERNAL)/imgui/src/%.cpp,$(BUILD_DIR)/imgui/%.cpp.o,$(IMGUI_CPP)) \
+	$(patsubst $(EXTERNAL)/imgui/src/%.mm,$(BUILD_DIR)/imgui/%.mm.o,$(IMGUI_MM))
+
+
+DEPS := $(OBJ:.o=.d)
+
+
+
+
+
+
+
+.DEFAULT_GOAL := all
+
+.PHONY: all clean run
+
+
+all: $(TARGET)
+
+
+
+
+
+
 
 $(BUILD_DIR):
 	mkdir -p $@
 
-.DEFAULT_GOAL := all
-.PHONY: all clean run
-.SECONDARY:
-
-all: $(TARGET) 
-
-$(BUILD_DIR)/%: % | $(BUILD_DIR)
-	mkdir -p $(dir $@)
-	cp $< $@
 
 
 
-build/default.air: $(SRC_METAL) $(SRC_METAL1) | $(BUILD_DIR)
-	xcrun -sdk macosx metal -c $(SRC_METAL) $(SRC_METAL1) -o $@
+
+
+
+build/default.air: include/shaders.metal | $(BUILD_DIR)
+	xcrun -sdk macosx metal -c $< -o $@
+
 
 build/default.metallib: build/default.air
 	xcrun -sdk macosx metallib $< -o $@
 
-$(TARGET): $(OBJ) $(ASSETS) build/default.metallib
-	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) $(LIB_D) $(LDLIBS) -o $@
 
-build/%.c.o: src/%.c
+
+
+
+
+
+$(TARGET): $(OBJ) build/default.metallib
+	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
+
+
+
+
+
+
+
+$(BUILD_DIR)/%.c.o: src/%.c
 	mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-build/%.cpp.o: src/%.cpp
+
+
+
+
+
+
+$(BUILD_DIR)/%.cpp.o: src/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-build/%.mm.o: src/%.mm
+
+
+
+
+
+
+$(BUILD_DIR)/%.mm.o: src/%.mm
+	mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(OBJCXXFLAGS) -c $< -o $@
+
+
+
+
+
+
+
+$(BUILD_DIR)/imgui/%.cpp.o: $(EXTERNAL)/imgui/src/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+
+
+
+
+
+
+$(BUILD_DIR)/imgui/%.mm.o: $(EXTERNAL)/imgui/src/%.mm
+	mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(OBJCXXFLAGS) -c $< -o $@
+
+
+
+
+
+
 
 run: all
 	./$(TARGET)
 
+
+
+
+
+
+
 clean:
-	rm -rf build
+	rm -rf $(BUILD_DIR)
+
+
+
+
+
+
+
+-include $(DEPS)

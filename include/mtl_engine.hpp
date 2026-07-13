@@ -26,6 +26,15 @@
 #include <iostream>
 #include <filesystem>
 
+
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_metal.h"
+#include <stdio.h>
+
+
+
 class MTLEngine {
 public:
     void init();
@@ -74,4 +83,8 @@ private:
     int sampleCount = 4;
     
     Texture* grassTexture;
+
+    bool show_demo_window = true;
+    
+    float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 };
