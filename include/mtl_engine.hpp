@@ -34,6 +34,9 @@
 #include <stdio.h>
 
 
+#include "Sphere.h"
+
+
 
 class MTLEngine {
 public:
@@ -45,7 +48,7 @@ private:
     void initDevice();
     void initWindow();
     
-    void createCube();
+    void createSphere();
     void createBuffers();
     void createDefaultLibrary();
     MTL::Library* loadLibrary(MTL::Device* device, const char* path);
@@ -74,7 +77,6 @@ private:
     MTL::CommandQueue* metalCommandQueue;
     MTL::CommandBuffer* metalCommandBuffer;
     MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* cubeVertexBuffer;
     MTL::Buffer* transformationBuffer;
     MTL::DepthStencilState* depthStencilState;
     MTL::RenderPassDescriptor* renderPassDescriptor;
@@ -87,4 +89,10 @@ private:
     bool show_demo_window = true;
     
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+
+    Sphere * sphere;
+    MTL::Buffer* SphereVertexBuffer;
+    MTL::Buffer* SphereIndexedBuffer;
+    MTL::Buffer* SphereUVBuffer;
+    MTL::Buffer* SphereNormalBuffer;
 };

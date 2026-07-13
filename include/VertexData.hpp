@@ -8,10 +8,17 @@
 
 using namespace simd;
 
-struct VertexData {
-    float4 position;
+struct VertexDataPosition {
+    float3 position;
+};
+
+struct VertexDataUV {
     float2 textureCoordinate;
 };
+struct VertexDataNormal {
+    float3 normal;
+};
+
 
 struct TransformationData {
     float4x4 modelMatrix;

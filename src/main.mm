@@ -1,8 +1,3 @@
-//
-//  main.mm
-//  MetalTutorial
-//
-
 #include "mtl_engine.hpp"
 
 int main() {

@@ -3,6 +3,7 @@ CC  := clang
 
 
 
+GLM_PREFIX := $(shell brew --prefix glm)
 
 
 BUILD_DIR := build
@@ -28,7 +29,8 @@ CPPFLAGS := \
 	-I$(EXTERNAL)/imgui/src \
 	-I$(GLFW_PREFIX)/include \
 	-I$(EXTERNAL)/stb \
-	-MMD -MP
+	-MMD -MP \
+	-I$(GLM_PREFIX)/include
 
 
 
