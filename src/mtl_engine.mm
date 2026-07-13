@@ -173,7 +173,7 @@ void MTLEngine::createSphere()
         vertexDataNormal.emplace_back(vdn);
     }
 
-    grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+    // grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
 
     for (size_t i = 0; i < kMaxDrawsPerFrame; i++)
     {
