@@ -22,6 +22,18 @@ Switch to the branch you want to explore and run:
 * Metal Toolchain
 * Make
 
+### Required Brew Libraries 
+
+* **Assimp**
+```bash
+ brew install assimp
+```
+* **GLM**
+
+```bash
+ brew install glm
+```
+
 ### Branches
 
 | Example                                                         | Link                                                                                                                                                                                       |
