@@ -132,6 +132,13 @@ private:
     float roughness = 0;
     float ao = 0 ;
 
+    Texture * Albedo;
+    Texture * AO;
+    Texture * Metallic;
+    Texture * Normal;
+    Texture * Roughness;
+
+
 
 
 

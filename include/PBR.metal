@@ -70,14 +70,43 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
 }
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
-                               constant Uniforms& uniforms [[buffer(0)]]
+                               constant Uniforms& uniforms [[buffer(0)]],
+                               texture2d<float> albedo [[texture(0)]],
+                               texture2d<float> normal [[texture(1)]],
+                               texture2d<float> metallic [[texture(2)]],
+                               texture2d<float> roughness [[texture(3)]],
+                               texture2d<float> ao [[texture(4)]]
+
                                ) {
 
-    float3 N = normalize(in.Normal);
+    constexpr sampler textureSampler (mag_filter::nearest,
+                                      min_filter::nearest);
+
+
+    const float3 colorFinal = albedo.sample(textureSampler, in.TexCoords).rgb;
+    const float metallicFinal  = metallic.sample(textureSampler, in.TexCoords).r;
+    const float roughnessFinal = roughness.sample(textureSampler, in.TexCoords).r;
+    const float aoFinal        = ao.sample(textureSampler, in.TexCoords).r;
+
+   
+    float3 tangentNormal = normal.sample(textureSampler, in.TexCoords).xyz * 2.0 - 1.0;
+
+    float3 Q1  = dfdx(in.WorldPos);
+    float3 Q2  = dfdy(in.WorldPos);
+    float2 st1 = dfdx(in.TexCoords);
+    float2 st2 = dfdy(in.TexCoords);
+
+    float3 geomNormal = normalize(in.Normal);
+    float3 T  = normalize(Q1*st2.y - Q2*st1.y);
+    float3 B  = -normalize(cross(geomNormal, T));
+    float3x3 TBN = float3x3(T, B, geomNormal);
+
+    
+    float3 N = normalize(TBN * tangentNormal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
 
     float3 F0 = float3(0.04);
-    F0 = mix(F0, uniforms.albedo, uniforms.metallic);
+    F0 = mix(F0, colorFinal, metallicFinal);
     float3 Lo = float3(0.0);
 
     float3 L = normalize(uniforms.lightPosition - in.WorldPos);
@@ -85,20 +114,20 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float distance = length(uniforms.lightPosition - in.WorldPos);
     float attenuation = 1.0 / (distance * distance);
     float3 radiance = uniforms.lightColor * attenuation;
-    float NDF = DistributionGGX(N, H, uniforms.roughness);   
-    float G   = GeometrySmith(N, V, L, uniforms.roughness);      
+    float NDF = DistributionGGX(N, H, roughnessFinal);
+    float G   = GeometrySmith(N, V, L, roughnessFinal);
     float3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
-    float3 numerator    = NDF * G * F; 
+    float3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
     float3 specular = numerator / denominator;
     float3 kS = F;
     float3 kD = float3(1.0) - kS;
-    kD *= 1.0 - uniforms.metallic;
-    float NdotL = max(dot(N, L), 0.0);         
-    Lo += (kD * uniforms.albedo / 3.14159265359 + specular) *   radiance * NdotL;
+    kD *= 1.0 - metallicFinal;
+    float NdotL = max(dot(N, L), 0.0);
+    Lo += (kD * colorFinal / 3.14159265359 + specular) * radiance * NdotL;
 
 
-    float3 ambient = float3(0.03) * uniforms.albedo * uniforms.ao;
+    float3 ambient = float3(0.03) * colorFinal * aoFinal;
     float3 color = ambient + Lo;
     color = color / (color + float3(1.0));
     color = pow(color, float3(1.0/2.2));

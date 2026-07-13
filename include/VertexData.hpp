@@ -33,9 +33,6 @@ struct Uniforms{
     float3 cameraPosition;
     float3 lightPosition;
     float3 lightColor;
-    float3 albedo;
-    float metallic;
-    float roughness;
-    float ao;
+
 };
 

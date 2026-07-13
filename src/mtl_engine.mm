@@ -173,7 +173,13 @@ void MTLEngine::createSphere()
         vertexDataNormal.emplace_back(vdn);
     }
 
-    // grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+    // grassTexture = new Texture("mc_grass.jpeg", metalDevice);
+
+    Albedo = new Texture("assets/RUST/albedo.png", metalDevice);
+    AO = new Texture("assets/RUST/ao.png", metalDevice);
+    Metallic = new Texture("assets/RUST/metallic.png", metalDevice);
+    Normal = new Texture("assets/RUST/normal.png", metalDevice);
+    Roughness = new Texture("assets/RUST/roughness.png", metalDevice);
 
     for (size_t i = 0; i < kMaxDrawsPerFrame; i++)
     {
@@ -342,11 +348,8 @@ void MTLEngine::sendRenderCommand()
 
 
     ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 2000);
-    ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
-    ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
-    ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
-    ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
-    ImGui::SliderFloat("AO", &ao, 0, 1.0f);
+    ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 100);
+  
 
     ImGui::End();
     
@@ -410,10 +413,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     uniforms.lightPosition = simd::float3{LightPosition[0],LightPosition[1],LightPosition[2]};
     uniforms.lightColor = simd::float3{1.0f * lightintensity, 1.0f * lightintensity, 1.0f * lightintensity};
 
-    uniforms.albedo = simd::float3{AlbedoColor[0], AlbedoColor[1], AlbedoColor[2]};
-    uniforms.metallic = metallic;
-    uniforms.roughness = roughness;
-    uniforms.ao = ao;
+    
 
     memcpy(uniformsBuffer[index]->contents(), &uniforms, sizeof(Uniforms));
 
@@ -428,6 +428,12 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
+    renderCommandEncoder->setFragmentTexture(Albedo->texture,0);
+    renderCommandEncoder->setFragmentTexture(Normal->texture,1);
+    renderCommandEncoder->setFragmentTexture(Metallic->texture,2);
+    renderCommandEncoder->setFragmentTexture(Roughness->texture,3);
+    renderCommandEncoder->setFragmentTexture(AO->texture,4);
+
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
 
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
