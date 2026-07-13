@@ -1,10 +1,11 @@
 
 #include "mtl_engine.hpp"
 
-void MTLEngine::init() {
+void MTLEngine::init()
+{
     initDevice();
     initWindow();
-    
+
     createSphere();
     createBuffers();
     createDefaultLibrary();
@@ -14,19 +15,23 @@ void MTLEngine::init() {
     createRenderPassDescriptor();
 }
 
-void MTLEngine::run() {
-    while (!glfwWindowShouldClose(glfwWindow)) {
-        @autoreleasepool {
-            metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+void MTLEngine::run()
+{
+    while (!glfwWindowShouldClose(glfwWindow))
+    {
+        @autoreleasepool
+        {
+            metalDrawable = (__bridge CA::MetalDrawable *)[metalLayer nextDrawable];
             draw();
         }
         glfwPollEvents();
     }
 }
 
-void MTLEngine::cleanup() {
+void MTLEngine::cleanup()
+{
     glfwTerminate();
-    transformationBuffer->release();
+    // transformationBuffer->release();
     msaaRenderTargetTexture->release();
     depthTexture->release();
     renderPassDescriptor->release();
@@ -36,42 +41,48 @@ void MTLEngine::cleanup() {
     ImGui_ImplMetal_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-
 }
 
-void MTLEngine::initDevice() {
+void MTLEngine::initDevice()
+{
     metalDevice = MTL::CreateSystemDefaultDevice();
 }
 
-void MTLEngine::frameBufferSizeCallback(GLFWwindow *window, int width, int height) {
-    MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
+void MTLEngine::frameBufferSizeCallback(GLFWwindow *window, int width, int height)
+{
+    MTLEngine *engine = (MTLEngine *)glfwGetWindowUserPointer(window);
     engine->resizeFrameBuffer(width, height);
 }
-void MTLEngine::resizeFrameBuffer(int width, int height) {
+void MTLEngine::resizeFrameBuffer(int width, int height)
+{
     metalLayer.drawableSize = CGSizeMake(width, height);
     // Deallocate the textures if they have been created
-    if (msaaRenderTargetTexture) {
+    if (msaaRenderTargetTexture)
+    {
         msaaRenderTargetTexture->release();
         msaaRenderTargetTexture = nullptr;
     }
-    if (depthTexture) {
+    if (depthTexture)
+    {
         depthTexture->release();
         depthTexture = nullptr;
     }
     createDepthAndMSAATextures();
-    metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
+    metalDrawable = (__bridge CA::MetalDrawable *)[metalLayer nextDrawable];
     updateRenderPassDescriptor();
 }
 
-MTL::Library* MTLEngine::loadLibrary(MTL::Device* device, const char* path) {
-    NS::Error* error = nullptr;
+MTL::Library *MTLEngine::loadLibrary(MTL::Device *device, const char *path)
+{
+    NS::Error *error = nullptr;
 
-    NS::String* nsPath = NS::String::string(path, NS::StringEncoding::UTF8StringEncoding);
-    NS::URL* url = NS::URL::fileURLWithPath(nsPath);
+    NS::String *nsPath = NS::String::string(path, NS::StringEncoding::UTF8StringEncoding);
+    NS::URL *url = NS::URL::fileURLWithPath(nsPath);
 
-    MTL::Library* library = device->newLibrary(url, &error);
+    MTL::Library *library = device->newLibrary(url, &error);
 
-    if (!library) {
+    if (!library)
+    {
         printf("Failed to load library at %s: %s\n",
                path,
                error ? error->localizedDescription()->utf8String() : "unknown error");
@@ -81,26 +92,26 @@ MTL::Library* MTLEngine::loadLibrary(MTL::Device* device, const char* path) {
     return library;
 }
 
-void MTLEngine::initWindow() {
+void MTLEngine::initWindow()
+{
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindow = glfwCreateWindow(800, 600, "Metal Engine", NULL, NULL);
-    if (!glfwWindow) {
+    if (!glfwWindow)
+    {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
 
-     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
-   glfwSetWindowMonitor(glfwWindow, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    glfwSetWindowMonitor(glfwWindow, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow, frameBufferSizeCallback);
     int width, height;
     glfwGetFramebufferSize(glfwWindow, &width, &height);
 
-   
-    
     metalWindow = glfwGetCocoaWindow(glfwWindow);
     metalLayer = [CAMetalLayer layer];
     metalLayer.device = (__bridge id<MTLDevice>)metalDevice;
@@ -108,117 +119,121 @@ void MTLEngine::initWindow() {
     metalLayer.drawableSize = CGSizeMake(width, height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
-    
-    metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
 
+    metalDrawable = (__bridge CA::MetalDrawable *)[metalLayer nextDrawable];
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsLight();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
     float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
-     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
-    style.FontScaleDpi = main_scale;  
+    ImGuiStyle &style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;
 
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
     ImGui_ImplMetal_Init((__bridge id<MTLDevice>)(metalDevice));
-
-    
-
-
-    
 }
 
-void MTLEngine::createSphere() {
+void MTLEngine::createSphere()
+{
 
-   sphere = new Sphere(4,30,30);
+    sphere = new Sphere(4, 30, 30);
 
     std::vector<VertexDataPosition> vertexDataposition;
-    
 
-    for (size_t i = 0; i < sphere->positions.size(); i++) {
+    for (size_t i = 0; i < sphere->positions.size(); i++)
+    {
         glm::vec3 t = sphere->positions[i];
         VertexDataPosition vdp;
 
-        vdp.position = *reinterpret_cast<float3*>(&t);
+        vdp.position = *reinterpret_cast<float3 *>(&t);
         vertexDataposition.emplace_back(vdp);
     }
 
-
-    SphereVertexBuffer = metalDevice->newBuffer(vertexDataposition.data(), vertexDataposition.size() * sizeof(VertexDataPosition), MTL::ResourceStorageModeShared);
-    SphereIndexedBuffer = metalDevice->newBuffer(sphere->indices.data(), 
-                                                       sphere->indices.size()* sizeof(unsigned int),
-                                                       MTL::ResourceStorageModeShared);
-
-
     std::vector<VertexDataUV> vertexDataUV;
 
-    for (size_t i = 0; i < sphere->uv.size(); i++) {
+    for (size_t i = 0; i < sphere->uv.size(); i++)
+    {
         glm::vec2 t = sphere->uv[i];
         VertexDataUV vduv;
-        vduv.textureCoordinate = *reinterpret_cast<float2*>(&t);
+        vduv.textureCoordinate = *reinterpret_cast<float2 *>(&t);
         vertexDataUV.emplace_back(vduv);
     }
 
-    SphereUVBuffer = metalDevice->newBuffer(vertexDataUV.data(), 
-    vertexDataUV.size() * sizeof(VertexDataUV),
-     MTL::ResourceStorageModeShared);
-
     std::vector<VertexDataNormal> vertexDataNormal;
 
-    for (size_t i = 0; i < sphere->normals.size(); i++) {
+    for (size_t i = 0; i < sphere->normals.size(); i++)
+    {
         glm::vec3 t = sphere->normals[i];
         VertexDataNormal vdn;
-        vdn.normal = *reinterpret_cast<float3*>(&t);
+        vdn.normal = *reinterpret_cast<float3 *>(&t);
         vertexDataNormal.emplace_back(vdn);
     }
 
-    SphereNormalBuffer = metalDevice->newBuffer(vertexDataNormal.data(), 
-    vertexDataNormal.size() * sizeof(VertexDataNormal),
-    MTL::ResourceStorageModeShared);
-
-
     grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+
+    for (size_t i = 0; i < kMaxDrawsPerFrame; i++)
+    {
+        SphereVertexBuffer[i] = metalDevice->newBuffer(vertexDataposition.data(), vertexDataposition.size() * sizeof(VertexDataPosition), MTL::ResourceStorageModeShared);
+        SphereIndexedBuffer[i] = metalDevice->newBuffer(sphere->indices.data(),
+                                                        sphere->indices.size() * sizeof(unsigned int),
+                                                        MTL::ResourceStorageModeShared);
+        ;
+
+        SphereUVBuffer[i] = metalDevice->newBuffer(vertexDataUV.data(),
+                                                   vertexDataUV.size() * sizeof(VertexDataUV),
+                                                   MTL::ResourceStorageModeShared);
+        SphereNormalBuffer[i] = metalDevice->newBuffer(vertexDataNormal.data(),
+                                                       vertexDataNormal.size() * sizeof(VertexDataNormal),
+                                                       MTL::ResourceStorageModeShared);
+
+        uniformsBuffer[i] = metalDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
+        ;
+        transformationBuffer[i] = metalDevice->newBuffer(sizeof(TransformationData), MTL::ResourceStorageModeShared);
+    }
 }
 
-void MTLEngine::createBuffers() {
-    transformationBuffer = metalDevice->newBuffer(sizeof(TransformationData), MTL::ResourceStorageModeShared);
+void MTLEngine::createBuffers()
+{
+    
 }
 
-void MTLEngine::createDefaultLibrary() {
+void MTLEngine::createDefaultLibrary()
+{
 
-       Shader sh ;
-       std::filesystem::path exeDir = sh.executableDirectory();
+    Shader sh;
+    std::filesystem::path exeDir = sh.executableDirectory();
 
+    std::string dirStr = exeDir.string();
 
-        std::string dirStr = exeDir.string();
+    dirStr.append("/default.metallib");
 
-        dirStr.append("/default.metallib");
+    const char *dirCStr = dirStr.c_str();
+    metalDefaultLibrary = loadLibrary(metalDevice, dirCStr);
 
-
-       const char* dirCStr = dirStr.c_str();
-       metalDefaultLibrary = loadLibrary(metalDevice, dirCStr );
-
-
-    if(!metalDefaultLibrary){
+    if (!metalDefaultLibrary)
+    {
         std::cerr << "Failed to load default library.";
         std::exit(-1);
     }
 }
 
-void MTLEngine::createCommandQueue() {
+void MTLEngine::createCommandQueue()
+{
     metalCommandQueue = metalDevice->newCommandQueue();
 }
 
-void MTLEngine::createRenderPipeline() {
-    MTL::Function* vertexShader = metalDefaultLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
+void MTLEngine::createRenderPipeline()
+{
+    MTL::Function *vertexShader = metalDefaultLibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
     assert(vertexShader);
-    MTL::Function* fragmentShader = metalDefaultLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
+    MTL::Function *fragmentShader = metalDefaultLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
     assert(fragmentShader);
-    
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+
+    MTL::RenderPipelineDescriptor *renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
     assert(renderPipelineDescriptor);
@@ -226,27 +241,29 @@ void MTLEngine::createRenderPipeline() {
     renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
     renderPipelineDescriptor->setSampleCount(sampleCount);
     renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    
-    NS::Error* error;
+
+    NS::Error *error;
     metalRenderPSO = metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    
-    if (metalRenderPSO == nil) {
+
+    if (metalRenderPSO == nil)
+    {
         std::cout << "Error creating render pipeline state: " << error << std::endl;
         std::exit(0);
     }
-    
-    MTL::DepthStencilDescriptor* depthStencilDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
+
+    MTL::DepthStencilDescriptor *depthStencilDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
     depthStencilDescriptor->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
     depthStencilDescriptor->setDepthWriteEnabled(true);
     depthStencilState = metalDevice->newDepthStencilState(depthStencilDescriptor);
-    
+
     renderPipelineDescriptor->release();
     vertexShader->release();
     fragmentShader->release();
 }
 
-void MTLEngine::createDepthAndMSAATextures() {
-    MTL::TextureDescriptor* msaaTextureDescriptor = MTL::TextureDescriptor::alloc()->init();
+void MTLEngine::createDepthAndMSAATextures()
+{
+    MTL::TextureDescriptor *msaaTextureDescriptor = MTL::TextureDescriptor::alloc()->init();
     msaaTextureDescriptor->setTextureType(MTL::TextureType2DMultisample);
     msaaTextureDescriptor->setPixelFormat(MTL::PixelFormatBGRA8Unorm);
     msaaTextureDescriptor->setWidth(metalLayer.drawableSize.width);
@@ -256,7 +273,7 @@ void MTLEngine::createDepthAndMSAATextures() {
 
     msaaRenderTargetTexture = metalDevice->newTexture(msaaTextureDescriptor);
 
-    MTL::TextureDescriptor* depthTextureDescriptor = MTL::TextureDescriptor::alloc()->init();
+    MTL::TextureDescriptor *depthTextureDescriptor = MTL::TextureDescriptor::alloc()->init();
     depthTextureDescriptor->setTextureType(MTL::TextureType2DMultisample);
     depthTextureDescriptor->setPixelFormat(MTL::PixelFormatDepth32Float);
     depthTextureDescriptor->setWidth(metalLayer.drawableSize.width);
@@ -270,119 +287,178 @@ void MTLEngine::createDepthAndMSAATextures() {
     depthTextureDescriptor->release();
 }
 
-void MTLEngine::createRenderPassDescriptor() {
+void MTLEngine::createRenderPassDescriptor()
+{
     renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
-    
-    MTL::RenderPassColorAttachmentDescriptor* colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
-    MTL::RenderPassDepthAttachmentDescriptor* depthAttachment = renderPassDescriptor->depthAttachment();
+
+    MTL::RenderPassColorAttachmentDescriptor *colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
+    MTL::RenderPassDepthAttachmentDescriptor *depthAttachment = renderPassDescriptor->depthAttachment();
 
     colorAttachment->setTexture(msaaRenderTargetTexture);
     colorAttachment->setResolveTexture(metalDrawable->texture());
     colorAttachment->setLoadAction(MTL::LoadActionClear);
-    colorAttachment->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
+    colorAttachment->setClearColor(MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
     colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
-    
+
     depthAttachment->setTexture(depthTexture);
     depthAttachment->setLoadAction(MTL::LoadActionClear);
     depthAttachment->setStoreAction(MTL::StoreActionDontCare);
     depthAttachment->setClearDepth(1.0);
 }
 
-void MTLEngine::updateRenderPassDescriptor() {
+void MTLEngine::updateRenderPassDescriptor()
+{
     renderPassDescriptor->colorAttachments()->object(0)->setTexture(msaaRenderTargetTexture);
     renderPassDescriptor->colorAttachments()->object(0)->setResolveTexture(metalDrawable->texture());
     renderPassDescriptor->depthAttachment()->setTexture(depthTexture);
 }
 
-void MTLEngine::draw() {
+void MTLEngine::draw()
+{
     sendRenderCommand();
-
-
-    
 }
 
-void MTLEngine::sendRenderCommand() {
-    metalCommandBuffer = metalCommandQueue->commandBuffer();
+void MTLEngine::sendRenderCommand()
+{
+
     
+
+    metalCommandBuffer = metalCommandQueue->commandBuffer();
+
     updateRenderPassDescriptor();
-    MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
+    MTL::RenderCommandEncoder *renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
     encodeRenderCommand(renderCommandEncoder);
     renderCommandEncoder->endEncoding();
 
-    ImGui_ImplMetal_NewFrame((__bridge MTLRenderPassDescriptor*)renderPassDescriptor);
+    ImGui_ImplMetal_NewFrame((__bridge MTLRenderPassDescriptor *)renderPassDescriptor);
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
 
-    if (show_demo_window)
-                ImGui::ShowDemoWindow(&show_demo_window);
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoMove;
+    
+    
+    ImGui::Begin("PBR Values", nullptr, window_flags);
+
+
+    ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 2000);
+    ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
+    ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
+    ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
+    ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
+    ImGui::SliderFloat("AO", &ao, 0, 1.0f);
+
+    ImGui::End();
+    
 
     ImGui::Render();
     ImGui_ImplMetal_RenderDrawData(ImGui::GetDrawData(), (__bridge id<MTLCommandBuffer>)metalCommandBuffer,
-     (__bridge id <MTLRenderCommandEncoder>)renderCommandEncoder);
-
-
-
+                                   (__bridge id<MTLRenderCommandEncoder>)renderCommandEncoder);
 
     metalCommandBuffer->presentDrawable(metalDrawable);
     metalCommandBuffer->commit();
     metalCommandBuffer->waitUntilCompleted();
 }
 
-void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
-    // Moves the Cube 1 unit down the negative Z-axis
-    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-10.0);
-    
-    float angleInDegrees = glfwGetTime()/2.0 * 45;
-    float angleInRadians = angleInDegrees * M_PI / 180.0f;
-    matrix_float4x4 rotationMatrix = matrix4x4_rotation(angleInRadians, 0.0, 1.0, 0.0);
+void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEncoder)
+{
+    index = (index + 1) % kMaxDrawsPerFrame;
 
-    matrix_float4x4 modelMatrix = simd_mul(translationMatrix, rotationMatrix);
-    
-    float time = glfwGetTime();
-    float oscillation = sin(time);  // oscillates between -1 and 1
-    float zPosition = 1.5 + 1.5 * oscillation;  // maps oscillation to range [0, 3]
+    // Moves the sphere 10 units down the negative Z-axis
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
 
-    simd::float3 R = simd::float3 {1, 0, 0}; // Unit-Right
-    simd::float3 U = simd::float3 {0, 1, 0}; // Unit-Up
-    simd::float3 F = simd::float3 {0, 0,-1}; // Unit-Forward
-    simd::float3 P = simd::float3 {0, 0, 1}; // Camera Position in World Space
-    
-    matrix_float4x4 viewMatrix = matrix_make_rows(R.x, R.y, R.z, dot(-R, P),
-                                                  U.x, U.y, U.z, dot(-U, P),
-                                                 -F.x,-F.y,-F.z, dot( F, P),
-                                                  0, 0, 0, 1);
-    
-    float aspectRatio = (metalLayer.frame.size.width / metalLayer.frame.size.height);
-    float fov = 90 * (M_PI / 180.0f);
+    float angleInDegrees = static_cast<float>(glfwGetTime()) / 2.0f * 45.0f;
+    float angleInRadians = glm::radians(angleInDegrees);
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
+
+    float time = static_cast<float>(glfwGetTime());
+    float oscillation = sin(time);             // oscillates between -1 and 1
+    float zPosition = 1.5f + 1.5f * oscillation; // maps oscillation to range [0, 3]
+
+    glm::vec3 cameraPos    = glm::vec3(0.0f, 0.0f, 1.0f);  // Camera Position in World Space
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);  // P + F, where F = (0,0,-1)
+    glm::vec3 upVector     = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::mat4 viewMatrix = glm::lookAtRH(cameraPos, cameraTarget, upVector);
+
+    float aspectRatio = static_cast<float>(metalLayer.frame.size.width / metalLayer.frame.size.height);
+    float fov = glm::radians(90.0f);
     float nearZ = 0.1f;
-    float farZ = 100.0f;
-    
-    matrix_float4x4 perspectiveMatrix = matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
-    TransformationData transformationData = { modelMatrix, viewMatrix, perspectiveMatrix };
-    memcpy(transformationBuffer->contents(), &transformationData, sizeof(transformationData));
-    
+    float farZ = 1000.0f;
+
+    // RH + zero-to-one depth range, matching Metal's clip space (not OpenGL's -1..1)
+    glm::mat4 perspectiveMatrix = glm::perspectiveRH_ZO(fov, aspectRatio, nearZ, farZ);
+
+    glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelMatrix));
+
+    // Convert to simd only here, at the boundary with the GPU-facing struct
+    TransformationData transformationData = {
+        toSimd(modelMatrix),
+        toSimd(viewMatrix),
+        toSimd(perspectiveMatrix),
+        toSimd(normalMatrix)
+    };
+    memcpy(transformationBuffer[index]->contents(), &transformationData, sizeof(transformationData));
+
+    glm::mat4 inverseView = glm::inverse(viewMatrix);
+    glm::vec3 cameraPosition = glm::vec3(inverseView[3]);
+
+    Uniforms uniforms;
+    uniforms.cameraPosition = toSimd(cameraPosition);
+    uniforms.lightPosition = simd::float3{LightPosition[0],LightPosition[1],LightPosition[2]};
+    uniforms.lightColor = simd::float3{1.0f * lightintensity, 1.0f * lightintensity, 1.0f * lightintensity};
+
+    uniforms.albedo = simd::float3{AlbedoColor[0], AlbedoColor[1], AlbedoColor[2]};
+    uniforms.metallic = metallic;
+    uniforms.roughness = roughness;
+    uniforms.ao = ao;
+
+    memcpy(uniformsBuffer[index]->contents(), &uniforms, sizeof(Uniforms));
+
     renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
     renderCommandEncoder->setCullMode(MTL::CullModeBack);
-//    renderCommandEncoder->setTriangleFillMode(MTL::TriangleFillModeLines);
+    
     renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
     renderCommandEncoder->setDepthStencilState(depthStencilState);
-    
 
-    renderCommandEncoder->setVertexBuffer(SphereVertexBuffer, 0, 0);
-    renderCommandEncoder->setVertexBuffer(SphereUVBuffer, 0, 1);
-    renderCommandEncoder->setVertexBuffer(transformationBuffer, 0, 2);
+    renderCommandEncoder->setVertexBuffer(SphereVertexBuffer[index], 0, 0);
+    renderCommandEncoder->setVertexBuffer(SphereUVBuffer[index], 0, 1);
+    renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
+    renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
+    renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
-    NS::UInteger vertexStart = 0;
-    NS::UInteger vertexCount = 36;
-    
-
 
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
-                                    sphere->indexCount,
-                                    MTL::IndexTypeUInt32,
-                                    SphereIndexedBuffer,
-                                    0);
+                                                sphere->indexCount,
+                                                MTL::IndexTypeUInt32,
+                                                SphereIndexedBuffer[index],
+                                                0);
+}
 
 
+inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
+{
+    // glm::mat4 and matrix_float4x4 are both column-major float4x4 with
+    // identical memory layout, so this is a straight reinterpret, not a copy loop.
+    matrix_float4x4 result;
+    memcpy(&result, glm::value_ptr(m), sizeof(matrix_float4x4));
+    return result;
+}
+
+inline matrix_float3x3 MTLEngine::toSimd(const glm::mat3 &m)
+{
+    // glm::mat3 is tightly packed (3 floats/column) but matrix_float3x3 pads
+    // each column to a float4, so this must be built column-by-column.
+    return matrix_float3x3{
+        simd::float3{m[0].x, m[0].y, m[0].z},
+        simd::float3{m[1].x, m[1].y, m[1].z},
+        simd::float3{m[2].x, m[2].y, m[2].z}
+    };
+}
+
+inline simd::float3 MTLEngine::toSimd(const glm::vec3 &v)
+{
+    return simd::float3{v.x, v.y, v.z};
 }

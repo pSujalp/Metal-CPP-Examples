@@ -23,8 +23,22 @@
 #include "AAPLMathUtilities.h"
 #include "Shader.h"
 
+
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/ext/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale
+#include <glm/ext/matrix_clip_space.hpp> // glm::perspective
+#include <glm/ext/scalar_constants.hpp> // glm::pi
+#include <glm/glm.hpp>
+
+#include <glm/gtc/matrix_inverse.hpp>
+
+
 #include <iostream>
 #include <filesystem>
+
+
 
 
 
@@ -66,6 +80,9 @@ private:
     
     static void frameBufferSizeCallback(GLFWwindow *window, int width, int height);
     void resizeFrameBuffer(int width, int height);
+    static inline matrix_float4x4 toSimd(const glm::mat4 &m);
+    static inline matrix_float3x3 toSimd(const glm::mat3 &m);
+    static inline simd::float3 toSimd(const glm::vec3 &v);
     
     MTL::Device* metalDevice;
     GLFWwindow* glfwWindow;
@@ -75,9 +92,9 @@ private:
     
     MTL::Library* metalDefaultLibrary;
     MTL::CommandQueue* metalCommandQueue;
-    MTL::CommandBuffer* metalCommandBuffer;
+    
     MTL::RenderPipelineState* metalRenderPSO;
-    MTL::Buffer* transformationBuffer;
+    
     MTL::DepthStencilState* depthStencilState;
     MTL::RenderPassDescriptor* renderPassDescriptor;
     MTL::Texture* msaaRenderTargetTexture = nullptr;
@@ -91,8 +108,33 @@ private:
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
     Sphere * sphere;
-    MTL::Buffer* SphereVertexBuffer;
-    MTL::Buffer* SphereIndexedBuffer;
-    MTL::Buffer* SphereUVBuffer;
-    MTL::Buffer* SphereNormalBuffer;
+    
+
+
+    static const int kMaxDrawsPerFrame = 10;
+    MTL::CommandBuffer* metalCommandBuffer;
+
+    MTL::Buffer* SphereVertexBuffer[kMaxDrawsPerFrame];
+    MTL::Buffer* SphereIndexedBuffer[kMaxDrawsPerFrame];
+    MTL::Buffer* SphereUVBuffer[kMaxDrawsPerFrame];
+    MTL::Buffer* SphereNormalBuffer[kMaxDrawsPerFrame];
+    MTL::Buffer* uniformsBuffer[kMaxDrawsPerFrame];
+    MTL::Buffer* transformationBuffer[kMaxDrawsPerFrame];
+    uint8_t index = 0;
+
+
+    // IMGUI
+
+    int lightintensity = 500;
+    float AlbedoColor[3] = {0.5f, 0.0f , 0.0f};
+    float LightPosition[3] = {3.0f, 0.0f, 5.0f};
+    float metallic = 0.5 ;
+    float roughness = 0;
+    float ao = 0 ;
+
+
+
+
+    
+    
 };

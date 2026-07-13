@@ -133,7 +133,7 @@ $(BUILD_DIR):
 
 
 
-build/default.air: include/shaders.metal | $(BUILD_DIR)
+build/default.air: include/PBR.metal | $(BUILD_DIR)
 	xcrun -sdk macosx metal -c $< -o $@
 
 
@@ -141,17 +141,8 @@ build/default.metallib: build/default.air
 	xcrun -sdk macosx metallib $< -o $@
 
 
-
-
-
-
-
 $(TARGET): $(OBJ) build/default.metallib
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
-
-
-
-
 
 
 
