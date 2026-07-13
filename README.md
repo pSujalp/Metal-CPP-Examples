@@ -11,7 +11,7 @@ A collection of **Metal C++** examples demonstrating graphics programming concep
 Switch to the branch you want to explore and run:
 
 ```bash
-make && make run
+ make clean && make && make run
 ```
 
 ### Prerequisites
