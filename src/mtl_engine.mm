@@ -342,11 +342,19 @@ void MTLEngine::sendRenderCommand()
 
 
     ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 2000);
-    ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
+    // ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
     ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
     ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
     ImGui::SliderFloat("AO", &ao, 0, 1.0f);
+
+    ImGui::Spacing();
+
+    
+    ImGuiColorEditFlags wheelFlags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
+    ImGui::ColorPicker4("##WheelPicker", myColor, wheelFlags);
+    
+
 
     ImGui::End();
     
@@ -410,7 +418,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     uniforms.lightPosition = simd::float3{LightPosition[0],LightPosition[1],LightPosition[2]};
     uniforms.lightColor = simd::float3{1.0f * lightintensity, 1.0f * lightintensity, 1.0f * lightintensity};
 
-    uniforms.albedo = simd::float3{AlbedoColor[0], AlbedoColor[1], AlbedoColor[2]};
+    uniforms.albedo = simd::float3{myColor[0], myColor[1], myColor[2]};
     uniforms.metallic = metallic;
     uniforms.roughness = roughness;
     uniforms.ao = ao;
