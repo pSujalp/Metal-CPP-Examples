@@ -357,17 +357,10 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
     
     
     glm::mat4 viewMatrix = camera->GetViewMatrix();
-
-    
-    
-    
-    float aspectRatio = static_cast<float>(metalLayer.drawableSize.width) /
-                         static_cast<float>(metalLayer.drawableSize.height);
-    float fov = glm::radians(90.0f);
     float nearZ = 0.1f;
     float farZ = 100.0f;
 
-    glm::mat4 perspectiveMatrix = glm::perspective(fov, aspectRatio, nearZ, farZ);
+    glm::mat4 perspectiveMatrix = glm::perspective(glm::radians(camera->Zoom), (float)800 / (float)600, nearZ, farZ);
 
     
     
