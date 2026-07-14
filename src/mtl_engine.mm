@@ -408,7 +408,7 @@ void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action
 {
     MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
     
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
         
             engine->rightMouseButtonPressed = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -422,11 +422,6 @@ void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action
             // keep lastX/lastY in sync so we don't get a jump next move
             engine->lastX = static_cast<float>(xpos);
             engine->lastY = static_cast<float>(ypos);
-    } 
-    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE){
-
-            engine->rightMouseButtonPressed = false;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     } 
 }
 void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
