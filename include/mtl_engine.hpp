@@ -39,6 +39,8 @@ public:
     void run();
     void cleanup();
 
+    Camera * camera;
+
 private:
     void initDevice();
     void initWindow();
@@ -86,7 +88,7 @@ private:
     
     Texture* grassTexture;
 
-    Camera * camera;
+    
 
     float lastX;
     float lastY;

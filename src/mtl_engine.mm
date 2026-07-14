@@ -1,12 +1,6 @@
 #include "mtl_engine.hpp"
 
 
-
-
-
-
-
-
 static inline simd::float4x4 glmToSimd(const glm::mat4& m) {
     return simd::float4x4(
         simd::float4{m[0][0], m[0][1], m[0][2], m[0][3]},
@@ -108,18 +102,6 @@ void MTLEngine::initWindow() {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow, frameBufferSizeCallback);
@@ -353,9 +335,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
 
     glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
 
-    
-    
-    
+
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     float nearZ = 0.1f;
     float farZ = 100.0f;
@@ -410,16 +390,16 @@ void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action
     
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
         
-            engine->rightMouseButtonPressed = true;
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            
 
             int width, height;
             glfwGetWindowSize(window, &width, &height);
             double xpos = width / 2.0;
             double ypos = height / 2.0;
             glfwSetCursorPos(window, xpos, ypos);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-            // keep lastX/lastY in sync so we don't get a jump next move
+            
             engine->lastX = static_cast<float>(xpos);
             engine->lastY = static_cast<float>(ypos);
     } 
@@ -449,7 +429,7 @@ void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     engine->lastX = xpos;
     engine->lastY = ypos;
 
-    if(engine->rightMouseButtonPressed) engine->camera->ProcessMouseMovement(xoffset, yoffset);
+     engine->camera->ProcessMouseMovement(xoffset, yoffset);
 }
 
 void MTLEngine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
