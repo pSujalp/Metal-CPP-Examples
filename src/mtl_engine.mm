@@ -403,6 +403,11 @@ void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action
             engine->lastX = static_cast<float>(xpos);
             engine->lastY = static_cast<float>(ypos);
     } 
+    else{
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    }
 }
 void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
