@@ -1,4 +1,3 @@
-
 #include "mtl_engine.hpp"
 
 void MTLEngine::init()
@@ -6,13 +5,20 @@ void MTLEngine::init()
     initDevice();
     initWindow();
 
+
+     
+
     createSphere();
     createBuffers();
     createDefaultLibrary();
+
+    buildSkyBoxShaders();
+    CreateSkyBox();
     createCommandQueue();
     createRenderPipeline();
     createDepthAndMSAATextures();
     createRenderPassDescriptor();
+    
 }
 
 void MTLEngine::run()
@@ -193,6 +199,8 @@ void MTLEngine::createSphere()
         uniformsBuffer[i] = metalDevice->newBuffer(sizeof(Uniforms), MTL::ResourceStorageModeShared);
         ;
         transformationBuffer[i] = metalDevice->newBuffer(sizeof(TransformationData), MTL::ResourceStorageModeShared);
+
+
     }
 }
 
@@ -219,6 +227,21 @@ void MTLEngine::createDefaultLibrary()
         std::cerr << "Failed to load default library.";
         std::exit(-1);
     }
+
+    dirStr= "";
+    exeDir = sh.executableDirectory();
+    dirStr = exeDir.string();
+    dirStr.append("/skybox.metallib");
+    dirCStr = dirStr.c_str();
+    std::cout<< dirCStr;
+    metalSkyBoxlibrary = loadLibrary(metalDevice, dirCStr);
+
+    if (!metalSkyBoxlibrary)
+    {
+        std::cerr << "Failed to load default library.";
+        std::exit(-1);
+    }
+
 }
 
 void MTLEngine::createCommandQueue()
@@ -256,9 +279,52 @@ void MTLEngine::createRenderPipeline()
     depthStencilDescriptor->setDepthWriteEnabled(true);
     depthStencilState = metalDevice->newDepthStencilState(depthStencilDescriptor);
 
+
+
+
     renderPipelineDescriptor->release();
     vertexShader->release();
     fragmentShader->release();
+}
+void MTLEngine::buildSkyBoxShaders()
+{
+    NS::Error* pError = nullptr;
+
+    MTL::Function* vert = metalSkyBoxlibrary->newFunction(
+        NS::String::string("skyboxVertex", NS::ASCIIStringEncoding));
+    assert(vert && "ERROR: 'skyboxVertex' not found");
+
+    MTL::Function* frag = metalSkyBoxlibrary->newFunction(
+        NS::String::string("skyboxFragment", NS::ASCIIStringEncoding));
+    assert(frag && "ERROR: 'skyboxFragment' not found");
+
+    MTL::RenderPipelineDescriptor* pDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+    pDesc->setVertexFunction(vert);
+    pDesc->setFragmentFunction(frag);
+
+    pDesc->setSampleCount(sampleCount);
+
+   
+    MTL::PixelFormat pixelFormat = (MTL::PixelFormat)metalLayer.pixelFormat;
+    pDesc->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
+
+    pDesc->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
+    MTL::DepthStencilDescriptor* depthDesc = MTL::DepthStencilDescriptor::alloc()->init();
+    depthDesc->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
+    depthDesc->setDepthWriteEnabled(false);
+    SkyBoxDepthStencilState = metalDevice->newDepthStencilState(depthDesc);
+    depthDesc->release();
+
+    _SkyboxPSO = metalDevice->newRenderPipelineState(pDesc, &pError);
+    if (!_SkyboxPSO) {
+        __builtin_printf("%s", pError->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    frag->release();
+    vert->release();
+    pDesc->release();
 }
 
 void MTLEngine::createDepthAndMSAATextures()
@@ -297,7 +363,7 @@ void MTLEngine::createRenderPassDescriptor()
     colorAttachment->setTexture(msaaRenderTargetTexture);
     colorAttachment->setResolveTexture(metalDrawable->texture());
     colorAttachment->setLoadAction(MTL::LoadActionClear);
-    colorAttachment->setClearColor(MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
+    colorAttachment->setClearColor(MTL::ClearColor(0 / 255.0f, 0 / 255.0f, 0.0f / 255.0f, 1.0));
     colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
 
     depthAttachment->setTexture(depthTexture);
@@ -427,9 +493,40 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
 
     memcpy(uniformsBuffer[index]->contents(), &uniforms, sizeof(Uniforms));
 
+    // --- Skybox pass (drawn first, no depth write, matching Renderer.cpp) ---
+    static float skyboxDeg = 0.0f;
+    skyboxDeg += 1.0f;
+
+    glm::mat4 skyboxModel = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+    skyboxModel = glm::rotate(skyboxModel, glm::radians(skyboxDeg), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    
+    glm::mat4 skyboxMVP_GLM =
+    perspectiveMatrix *
+    glm::mat4(glm::mat3(viewMatrix));
+
+    MVP mvpSkybox;
+    mvpSkybox.MVP = matrix_float4x4({
+        simd::float4{ skyboxMVP_GLM[0][0], skyboxMVP_GLM[0][1], skyboxMVP_GLM[0][2], skyboxMVP_GLM[0][3] },
+        simd::float4{ skyboxMVP_GLM[1][0], skyboxMVP_GLM[1][1], skyboxMVP_GLM[1][2], skyboxMVP_GLM[1][3] },
+        simd::float4{ skyboxMVP_GLM[2][0], skyboxMVP_GLM[2][1], skyboxMVP_GLM[2][2], skyboxMVP_GLM[2][3] },
+        simd::float4{ skyboxMVP_GLM[3][0], skyboxMVP_GLM[3][1], skyboxMVP_GLM[3][2], skyboxMVP_GLM[3][3] },
+    });
+    memcpy(MVPSkyBoxBuffer[index]->contents(), &mvpSkybox, sizeof(MVP));
+
+    renderCommandEncoder->setRenderPipelineState(_SkyboxPSO);
+renderCommandEncoder->setDepthStencilState(SkyBoxDepthStencilState);
+renderCommandEncoder->setCullMode(MTL::CullModeNone);
+    renderCommandEncoder->setVertexBuffer(SkyBoxVertexBuffer[index], 0, 0);
+    renderCommandEncoder->setVertexBuffer(MVPSkyBoxBuffer[index],    0, 2);
+    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 0);
+    renderCommandEncoder->drawPrimitives(MTL::PrimitiveTypeTriangle,
+                         NS::UInteger(0), NS::UInteger(36));
+
+    
     renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
     renderCommandEncoder->setCullMode(MTL::CullModeBack);
-    
+
     renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
     renderCommandEncoder->setDepthStencilState(depthStencilState);
 
@@ -447,6 +544,39 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
                                                 0);
 }
 
+
+void MTLEngine::CreateSkyBox()
+{
+    static const simd::float4 skyboxVerts[] = {
+        
+        { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+        { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+        
+        {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+        {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+        
+        {-1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f},
+        { 1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f},
+        
+        {-1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f},
+        { 1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f},
+        
+        {-1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f, -1.0f,  1.0f, 1.0f}, { 1.0f,  1.0f,  1.0f, 1.0f},
+        { 1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f,  1.0f,  1.0f, 1.0f}, {-1.0f, -1.0f,  1.0f, 1.0f},
+        
+        { 1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f, 1.0f}, {-1.0f,  1.0f, -1.0f, 1.0f},
+        {-1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f,  1.0f, -1.0f, 1.0f}, { 1.0f, -1.0f, -1.0f, 1.0f},
+    };
+
+    for(size_t i =0 ; i < kMaxDrawsPerFrame; i++){
+        SkyBoxVertexBuffer[i] = metalDevice->newBuffer(
+        skyboxVerts, sizeof(skyboxVerts), MTL::ResourceStorageModeShared);
+
+        MVPSkyBoxBuffer[i] = metalDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
+    }
+
+    skyboxTexture = new Texture("assets/skybox.png", metalDevice);
+}
 
 inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
 {

@@ -6,7 +6,9 @@
 #include <metal_stdlib>
 using namespace metal;
 
+#include <simd/simd.h>
 
+using namespace simd;
 #include "VertexData.hpp"
 
 

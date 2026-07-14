@@ -128,11 +128,6 @@ $(BUILD_DIR):
 	mkdir -p $@
 
 
-
-
-
-
-
 build/default.air: include/PBR.metal | $(BUILD_DIR)
 	xcrun -sdk macosx metal -c $< -o $@
 
@@ -141,7 +136,16 @@ build/default.metallib: build/default.air
 	xcrun -sdk macosx metallib $< -o $@
 
 
-$(TARGET): $(OBJ) build/default.metallib
+
+build/skybox.air: include/Skybox.metal | $(BUILD_DIR)
+	xcrun -sdk macosx metal -c $< -o $@
+
+
+build/skybox.metallib: build/skybox.air
+	xcrun -sdk macosx metallib $< -o $@
+
+
+$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 
