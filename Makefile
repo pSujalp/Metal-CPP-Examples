@@ -2,6 +2,7 @@ CXX := clang++
 CC := clang
 
 ASSIMP_PREFIX := $(shell brew --prefix assimp)
+GLM_PREFIX := $(shell brew --prefix glm)
 
 # External libraries
 EXTERNAL := external
@@ -9,7 +10,8 @@ CPPFLAGS := \
     -I./include \
     -I$(EXTERNAL)/metal-cpp \
     -I$(EXTERNAL)/metal-cpp-extensions \
-    -I$(ASSIMP_PREFIX)/include
+    -I$(ASSIMP_PREFIX)/include \
+	-I$(GLM_PREFIX)/include
 
 CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
 CFLAGS := -Wall -std=c11 -O2

@@ -23,8 +23,13 @@
 #include "AAPLMathUtilities.h"
 #include "Shader.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <iostream>
 #include <filesystem>
+
+#include "Camera.h"
 
 class MTLEngine {
 public:
@@ -51,8 +56,12 @@ private:
     void encodeRenderCommand(MTL::RenderCommandEncoder* renderEncoder);
     void sendRenderCommand();
     void draw();
+    void processInput(GLFWwindow *window);
     
-    static void frameBufferSizeCallback(GLFWwindow *window, int width, int height);
+    static  void frameBufferSizeCallback(GLFWwindow *window, int width, int height);
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
     void resizeFrameBuffer(int width, int height);
     
     MTL::Device* metalDevice;
@@ -74,4 +83,12 @@ private:
     int sampleCount = 4;
     
     Texture* grassTexture;
+
+    Camera * camera;
+
+    float lastX;
+    float lastY;
+    bool firstMouse = true;
+    float deltaTime = 0.0f;	// time between current frame and last frame
+    float lastFrame = 0.0f;
 };

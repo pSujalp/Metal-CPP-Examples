@@ -1,10 +1,29 @@
-
 #include "mtl_engine.hpp"
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_LEFT_HANDED
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
+
+
+
+
+static inline simd::float4x4 glmToSimd(const glm::mat4& m) {
+    return simd::float4x4(
+        simd::float4{m[0][0], m[0][1], m[0][2], m[0][3]},
+        simd::float4{m[1][0], m[1][1], m[1][2], m[1][3]},
+        simd::float4{m[2][0], m[2][1], m[2][2], m[2][3]},
+        simd::float4{m[3][0], m[3][1], m[3][2], m[3][3]}
+    );
+}
 
 void MTLEngine::init() {
     initDevice();
     initWindow();
-    
+
     createCube();
     createBuffers();
     createDefaultLibrary();
@@ -25,13 +44,22 @@ void MTLEngine::run() {
 }
 
 void MTLEngine::cleanup() {
-    glfwTerminate();
+    
+    
+    cubeVertexBuffer->release();
     transformationBuffer->release();
     msaaRenderTargetTexture->release();
     depthTexture->release();
     renderPassDescriptor->release();
+    depthStencilState->release();
+    metalRenderPSO->release();
+    metalDefaultLibrary->release();
+    metalCommandQueue->release();
     metalDevice->release();
     delete grassTexture;
+    delete camera;
+
+    glfwTerminate();
 }
 
 void MTLEngine::initDevice() {
@@ -44,7 +72,7 @@ void MTLEngine::frameBufferSizeCallback(GLFWwindow *window, int width, int heigh
 }
 void MTLEngine::resizeFrameBuffer(int width, int height) {
     metalLayer.drawableSize = CGSizeMake(width, height);
-    // Deallocate the textures if they have been created
+    
     if (msaaRenderTargetTexture) {
         msaaRenderTargetTexture->release();
         msaaRenderTargetTexture = nullptr;
@@ -85,17 +113,30 @@ void MTLEngine::initWindow() {
         exit(EXIT_FAILURE);
     }
 
-     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
-   glfwSetWindowMonitor(glfwWindow, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     glfwSetWindowUserPointer(glfwWindow, this);
     glfwSetFramebufferSizeCallback(glfwWindow, frameBufferSizeCallback);
+    glfwSetCursorPosCallback(glfwWindow, mouse_callback);
+    glfwSetScrollCallback(glfwWindow, scroll_callback);
+    glfwSetMouseButtonCallback(glfwWindow, mouse_button_callback);
+
     int width, height;
     glfwGetFramebufferSize(glfwWindow, &width, &height);
+    camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    lastX = width / 2.0f;
+    lastY = height / 2.0f;
 
-   
-    
     metalWindow = glfwGetCocoaWindow(glfwWindow);
     metalLayer = [CAMetalLayer layer];
     metalLayer.device = (__bridge id<MTLDevice>)metalDevice;
@@ -103,21 +144,21 @@ void MTLEngine::initWindow() {
     metalLayer.drawableSize = CGSizeMake(width, height);
     metalWindow.contentView.layer = metalLayer;
     metalWindow.contentView.wantsLayer = YES;
-    
+
     metalDrawable = (__bridge CA::MetalDrawable*)[metalLayer nextDrawable];
 }
 
 void MTLEngine::createCube() {
     VertexData cubeVertices[] = {
-        // Front face
+        
         {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
         {{0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
         {{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
         {{0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
+
         
-        // Back face
         {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{-0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
@@ -125,7 +166,7 @@ void MTLEngine::createCube() {
         {{0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
 
-        // Top face
+        
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
         {{0.5, 0.5, 0.5, 1.0}, {1.0, 0.0}},
         {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
@@ -133,7 +174,7 @@ void MTLEngine::createCube() {
         {{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0}},
 
-        // Bottom face
+        
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{0.5, -0.5, 0.5, 1.0}, {1.0, 1.0}},
@@ -141,7 +182,7 @@ void MTLEngine::createCube() {
         {{-0.5, -0.5, 0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
 
-        // Left face
+        
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
         {{-0.5, -0.5, 0.5, 1.0}, {1.0, 0.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {1.0, 1.0}},
@@ -149,7 +190,7 @@ void MTLEngine::createCube() {
         {{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0}},
         {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0}},
 
-        // Right face
+        
         {{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
         {{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0}},
         {{0.5, 0.5, -0.5, 1.0}, {1.0, 1.0}},
@@ -158,11 +199,10 @@ void MTLEngine::createCube() {
         {{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0}},
     };
 
-    
     cubeVertexBuffer = metalDevice->newBuffer(&cubeVertices, sizeof(cubeVertices), MTL::ResourceStorageModeShared);
 
-    // Make sure to change working directory to Metal-Tutorial root
-    // directory via Product -> Scheme -> Edit Scheme -> Run -> Options
+    
+    
     grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
 }
 
@@ -171,21 +211,16 @@ void MTLEngine::createBuffers() {
 }
 
 void MTLEngine::createDefaultLibrary() {
+    Shader sh;
+    std::filesystem::path exeDir = sh.executableDirectory();
 
-       Shader sh ;
-       std::filesystem::path exeDir = sh.executableDirectory();
+    std::string dirStr = exeDir.string();
+    dirStr.append("/default.metallib");
 
+    const char* dirCStr = dirStr.c_str();
+    metalDefaultLibrary = loadLibrary(metalDevice, dirCStr);
 
-        std::string dirStr = exeDir.string();
-
-        dirStr.append("/default.metallib");
-
-
-       const char* dirCStr = dirStr.c_str();
-       metalDefaultLibrary = loadLibrary(metalDevice, dirCStr );
-
-
-    if(!metalDefaultLibrary){
+    if (!metalDefaultLibrary) {
         std::cerr << "Failed to load default library.";
         std::exit(-1);
     }
@@ -200,7 +235,7 @@ void MTLEngine::createRenderPipeline() {
     assert(vertexShader);
     MTL::Function* fragmentShader = metalDefaultLibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
     assert(fragmentShader);
-    
+
     MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
@@ -209,21 +244,22 @@ void MTLEngine::createRenderPipeline() {
     renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(pixelFormat);
     renderPipelineDescriptor->setSampleCount(sampleCount);
     renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
-    
+
     NS::Error* error;
     metalRenderPSO = metalDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
-    
+
     if (metalRenderPSO == nil) {
         std::cout << "Error creating render pipeline state: " << error << std::endl;
         std::exit(0);
     }
-    
+
     MTL::DepthStencilDescriptor* depthStencilDescriptor = MTL::DepthStencilDescriptor::alloc()->init();
     depthStencilDescriptor->setDepthCompareFunction(MTL::CompareFunctionLessEqual);
     depthStencilDescriptor->setDepthWriteEnabled(true);
     depthStencilState = metalDevice->newDepthStencilState(depthStencilDescriptor);
-    
+
     renderPipelineDescriptor->release();
+    depthStencilDescriptor->release();
     vertexShader->release();
     fragmentShader->release();
 }
@@ -255,16 +291,16 @@ void MTLEngine::createDepthAndMSAATextures() {
 
 void MTLEngine::createRenderPassDescriptor() {
     renderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
-    
+
     MTL::RenderPassColorAttachmentDescriptor* colorAttachment = renderPassDescriptor->colorAttachments()->object(0);
     MTL::RenderPassDepthAttachmentDescriptor* depthAttachment = renderPassDescriptor->depthAttachment();
 
     colorAttachment->setTexture(msaaRenderTargetTexture);
     colorAttachment->setResolveTexture(metalDrawable->texture());
     colorAttachment->setLoadAction(MTL::LoadActionClear);
-    colorAttachment->setClearColor(MTL::ClearColor(41.0f/255.0f, 42.0f/255.0f, 48.0f/255.0f, 1.0));
+    colorAttachment->setClearColor(MTL::ClearColor(41.0f / 255.0f, 42.0f / 255.0f, 48.0f / 255.0f, 1.0));
     colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
-    
+
     depthAttachment->setTexture(depthTexture);
     depthAttachment->setLoadAction(MTL::LoadActionClear);
     depthAttachment->setStoreAction(MTL::StoreActionDontCare);
@@ -278,12 +314,20 @@ void MTLEngine::updateRenderPassDescriptor() {
 }
 
 void MTLEngine::draw() {
+    
+    
+    processInput(glfwWindow);
+
+    float currentFrame = static_cast<float>(glfwGetTime());
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     sendRenderCommand();
 }
 
 void MTLEngine::sendRenderCommand() {
     metalCommandBuffer = metalCommandQueue->commandBuffer();
-    
+
     updateRenderPassDescriptor();
     MTL::RenderCommandEncoder* renderCommandEncoder = metalCommandBuffer->renderCommandEncoder(renderPassDescriptor);
     encodeRenderCommand(renderCommandEncoder);
@@ -291,45 +335,56 @@ void MTLEngine::sendRenderCommand() {
 
     metalCommandBuffer->presentDrawable(metalDrawable);
     metalCommandBuffer->commit();
-    metalCommandBuffer->waitUntilCompleted();
+    
+    
+    
+    
+    
+    
 }
 
 void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEncoder) {
-    // Moves the Cube 1 unit down the negative Z-axis
-    matrix_float4x4 translationMatrix = matrix4x4_translation(0, 0.0,-1.0);
     
-    float angleInDegrees = glfwGetTime()/2.0 * 45;
-    float angleInRadians = angleInDegrees * M_PI / 180.0f;
-    matrix_float4x4 rotationMatrix = matrix4x4_rotation(angleInRadians, 0.0, 1.0, 0.0);
+    
+    
 
-    matrix_float4x4 modelMatrix = simd_mul(translationMatrix, rotationMatrix);
     
-    float time = glfwGetTime();
-    float oscillation = sin(time);  // oscillates between -1 and 1
-    float zPosition = 1.5 + 1.5 * oscillation;  // maps oscillation to range [0, 3]
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 
-    simd::float3 R = simd::float3 {1, 0, 0}; // Unit-Right
-    simd::float3 U = simd::float3 {0, 1, 0}; // Unit-Up
-    simd::float3 F = simd::float3 {0, 0,-1}; // Unit-Forward
-    simd::float3 P = simd::float3 {0, 0, 1}; // Camera Position in World Space
+    float angleInDegrees = static_cast<float>(glfwGetTime()) / 2.0f * 45.0f;
+    float angleInRadians = glm::radians(angleInDegrees);
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
+
     
-    matrix_float4x4 viewMatrix = matrix_make_rows(R.x, R.y, R.z, dot(-R, P),
-                                                  U.x, U.y, U.z, dot(-U, P),
-                                                 -F.x,-F.y,-F.z, dot( F, P),
-                                                  0, 0, 0, 1);
     
-    float aspectRatio = (metalLayer.frame.size.width / metalLayer.frame.size.height);
-    float fov = 90 * (M_PI / 180.0f);
+    
+    glm::mat4 viewMatrix = camera->GetViewMatrix();
+
+    
+    
+    
+    float aspectRatio = static_cast<float>(metalLayer.drawableSize.width) /
+                         static_cast<float>(metalLayer.drawableSize.height);
+    float fov = glm::radians(90.0f);
     float nearZ = 0.1f;
     float farZ = 100.0f;
+
+    glm::mat4 perspectiveMatrix = glm::perspective(fov, aspectRatio, nearZ, farZ);
+
     
-    matrix_float4x4 perspectiveMatrix = matrix_perspective_right_hand(fov, aspectRatio, nearZ, farZ);
-    TransformationData transformationData = { modelMatrix, viewMatrix, perspectiveMatrix };
+    
+    
+    TransformationData transformationData = {
+        glmToSimd(modelMatrix),
+        glmToSimd(viewMatrix),
+        glmToSimd(perspectiveMatrix)
+    };
     memcpy(transformationBuffer->contents(), &transformationData, sizeof(transformationData));
-    
+
     renderCommandEncoder->setFrontFacingWinding(MTL::WindingCounterClockwise);
     renderCommandEncoder->setCullMode(MTL::CullModeBack);
-//    renderCommandEncoder->setTriangleFillMode(MTL::TriangleFillModeLines);
     renderCommandEncoder->setRenderPipelineState(metalRenderPSO);
     renderCommandEncoder->setDepthStencilState(depthStencilState);
     renderCommandEncoder->setVertexBuffer(cubeVertexBuffer, 0, 0);
@@ -339,4 +394,69 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder* renderCommandEnco
     NS::UInteger vertexCount = 36;
     renderCommandEncoder->setFragmentTexture(grassTexture->texture, 0);
     renderCommandEncoder->drawPrimitives(typeTriangle, vertexStart, vertexCount);
+}
+
+void MTLEngine::processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera->ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera->ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera->ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera->ProcessKeyboard(RIGHT, deltaTime);
+
+    
+}
+
+
+
+void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        double xpos = 800/2;
+        double ypos = 600/2;
+        glfwSetCursorPos(window, xpos, ypos);
+
+    } 
+}
+void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    
+    
+    
+    
+    MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
+    if (!engine) return;
+
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (engine->firstMouse)
+    {
+        engine->lastX = xpos;
+        engine->lastY = ypos;
+        engine->firstMouse = false;
+    }
+
+    float xoffset = xpos - engine->lastX;
+    float yoffset = engine->lastY - ypos; 
+
+    engine->lastX = xpos;
+    engine->lastY = ypos;
+
+    engine->camera->ProcessMouseMovement(xoffset, yoffset);
+}
+
+void MTLEngine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
+    if (!engine) return;
+    engine->camera->ProcessMouseScroll(static_cast<float>(yoffset));
 }
