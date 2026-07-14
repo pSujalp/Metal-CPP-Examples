@@ -417,13 +417,27 @@ void MTLEngine::processInput(GLFWwindow *window)
 
 void MTLEngine::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+    MTLEngine* engine = (MTLEngine*)glfwGetWindowUserPointer(window);
+    
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+        
+            engine->rightMouseButtonPressed = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-        double xpos = 800/2;
-        double ypos = 600/2;
-        glfwSetCursorPos(window, xpos, ypos);
+            int width, height;
+            glfwGetWindowSize(window, &width, &height);
+            double xpos = width / 2.0;
+            double ypos = height / 2.0;
+            glfwSetCursorPos(window, xpos, ypos);
 
+            // keep lastX/lastY in sync so we don't get a jump next move
+            engine->lastX = static_cast<float>(xpos);
+            engine->lastY = static_cast<float>(ypos);
+    } 
+    else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE){
+
+            engine->rightMouseButtonPressed = false;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     } 
 }
 void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
@@ -451,7 +465,7 @@ void MTLEngine::mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     engine->lastX = xpos;
     engine->lastY = ypos;
 
-    engine->camera->ProcessMouseMovement(xoffset, yoffset);
+    if(engine->rightMouseButtonPressed) engine->camera->ProcessMouseMovement(xoffset, yoffset);
 }
 
 void MTLEngine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
