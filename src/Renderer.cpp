@@ -292,7 +292,7 @@ void Renderer::draw(MTK::View *pView)
     
     {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
         model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 
         static float accumulatedDegrees = 0.0f;
@@ -340,7 +340,7 @@ void Renderer::draw(MTK::View *pView)
 
         glm::mat3 normalMatrix = glm::transpose(inverse(glm::mat3(model)));
         N_Uniforms uniforms;
-        uniforms.lightPos = float3{0.0f, 0.0f, 1.0f};
+        uniforms.lightPos = float3{0.0f, 0.0f, 2.0f};
         uniforms.viewPos = mslVec1;
         uniforms.normalMatrix = float3x3{
             simd::float3{normalMatrix[0][0], normalMatrix[0][1], normalMatrix[0][2]},
