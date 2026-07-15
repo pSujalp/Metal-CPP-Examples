@@ -87,7 +87,7 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
 
     constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
     float4 Original = colorTex.sample(textureSampler, in.textureCoordinate);
-    float weight[5] = {0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162};
+    float weight[5] = {0.2670270270, 0.1985945946, 0.1816216216, 0.0840540541, 0.0192162162};
     const float blurSize = 6.0;
     float2 tex_offset = blurSize * float2(1.0 / maskTex.get_width(), 1.0 / maskTex.get_height());
     float3 centerSample = maskTex.sample(textureSampler, in.textureCoordinate).rgb;
@@ -109,7 +109,7 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     }
     float3 bloom = float3(result, result, result);
     float3 hdrColor = Original.rgb + bloom;
-    float3 mapped = float3(1.0f) - exp(-hdrColor * 17.5f);
+    float3 mapped = float3(1.0f) - exp(-hdrColor * 6.5f);
 
     return float4(mapped, 1.0f);
 }
