@@ -70,6 +70,12 @@ struct AAPLOut {
 };
 
 
+struct LightFragmentOut {
+    float4 color [[color(0)]];
+    float4 mask  [[color(1)]];
+};
+
+
 
 
 vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
@@ -161,12 +167,12 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     // float3 reflectDir = reflect(-lightDir, normal);
     float3 halfwayDir = normalize(lightDir + viewDir);  
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
-    float3 specular = float3(0.2) * spec;
+    float3 specular = float3(0.2) * spec ;
 
     // return float4(color, 1.0);
      
 
-    return float4(ambient + diffuse + specular, 1.0);
+    return float4(ambient + diffuse + specular, 1.0) ;
 }
 
 

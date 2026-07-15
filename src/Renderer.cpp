@@ -249,6 +249,8 @@ void Renderer::buildShaders()
     pDesc2->setVertexFunction(vertexRPFn);
     pDesc2->setFragmentFunction(fragmentRPFn);
     pDesc2->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
+    
+    // pDesc2->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float);
     _renderToTexturePipelineState = _pDevice->newRenderPipelineState(pDesc2, &pError);
     if (!_renderToTexturePipelineState)
         __builtin_printf("PSO2 FAILED: %s\n", pError->localizedDescription()->utf8String());

@@ -29,6 +29,6 @@ vertex LightVertexData lightVertexShader(uint vertexID [[vertex_id]],
 fragment LightFragmentOut lightFragmentShader(LightVertexData in [[stage_in]]) {
     LightFragmentOut out;
     out.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    out.mask  = float4(1.0f, 0.0f, 0.0f, 1.0f); // also feeds the bloom pass
+    out.mask  = float4(1.0f, 0.0f, 0.0f, 1.0f);
     return out;
 }
