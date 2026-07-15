@@ -69,6 +69,9 @@ struct AAPLOut {
     float2 textureCoordinate;
 };
 
+
+
+
 vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
                                 constant AAPLVertex* vertexData [[buffer(0)]]) {
     AAPLOut out;
@@ -78,15 +81,42 @@ vertex AAPLOut vertexRenderPass(uint vertexID [[vertex_id]],
     return out;
 }
 
-
 fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
-                                   texture2d<float> colorTexture [[texture(0)]]) {
-    constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
+                                   texture2d<float> colorTex [[texture(0)]],
+                                   texture2d<float> maskTex [[texture(1)]]) {
 
-    float3 hdrColor = colorTexture.sample(textureSampler, in.textureCoordinate).rgb;
-    float3 result = float3(1.0f) - exp(-hdrColor * 5.5f);
+    constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
+    float4 Original = colorTex.sample(textureSampler, in.textureCoordinate);
+
+    float weight[5] = {0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162};
+
+    float2 tex_offset = float2(1.0 / maskTex.get_width(), 1.0 / maskTex.get_height());
+
     
-    return float4(result, 1.0f);
+    float3 centerSample = maskTex.sample(textureSampler, in.textureCoordinate).rgb;
+    float centerGray = (centerSample.r + centerSample.g + centerSample.b) / 3.0;
+
+    float result = centerGray * weight[0];
+
+    for (int i = 1; i < 5; ++i) {
+        float3 samplePos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, 0.0)).rgb;
+        float3 sampleNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(tex_offset.x * i, 0.0)).rgb;
+
+        float grayPos = (samplePos.r + samplePos.g + samplePos.b) / 3.0;
+        float grayNeg = (sampleNeg.r + sampleNeg.g + sampleNeg.b) / 3.0;
+
+        result += grayPos * weight[i];
+        result += grayNeg * weight[i];
+    }
+
+    float4 result1 = float4(result, result, result, 1.0) ;
+
+    float3 hdrColor = Original.rgb;
+    float3 result2 = float3(1.0f) - exp(-hdrColor * 7.5f);
+
+
+
+    return float4(result2,1.0f) + Original;
 }
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],

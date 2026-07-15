@@ -14,6 +14,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
+
+
+
 class Renderer
 {
     public:
@@ -24,6 +27,7 @@ class Renderer
         void createSquare();
         void buildShaders();
         void createDefaultLibrary(MTL::Device* pDevice );
+        void createLightSourceRenderPipeline();
         void CreateCube();
 
 
@@ -31,21 +35,23 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* _pPSO;
+        MTL::RenderPipelineState* metalLightSourceRenderPSO;
         Texture* D_Texture;
         Texture* N_Texture;
         MTL::Buffer* squareVertexBuffer;
         MTL::Buffer* UniformBuffer;
         MTL::Buffer* transformationBuffer;
         MTL::Buffer* transformationCubeBuffer;
+        MTL::Buffer * lightVertexBuffer;
         MTL::Buffer * cubeVertexBuffer;
         MTL::Library * metallibrary;
         MTL::DepthStencilState* depthStencilState;
-
-
         MTL::Buffer * planeVertexBuffer;
-
-
         MTL::Texture * _renderTexture;
+        MTL::Texture *_MaskTexture;
+        MTL::Buffer *lightTransformationBuffer;
+
+        
         MTL::RenderPassDescriptor* _renderToTextureRenderPassDescriptor;
         float _aspectRatio;
         MTL::Texture * _offscreenDepthTexture;

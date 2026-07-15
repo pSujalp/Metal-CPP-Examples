@@ -6,6 +6,7 @@ Renderer::Renderer(MTL::Device *pDevice)
     : _pDevice(pDevice->retain())
 {
     _pCommandQueue = _pDevice->newCommandQueue();
+    createLightSourceRenderPipeline();
     createDefaultLibrary(pDevice);
     buildShaders();
     CreateCube();
@@ -13,12 +14,16 @@ Renderer::Renderer(MTL::Device *pDevice)
 
 Renderer::~Renderer()
 {
+    lightVertexBuffer->release();
+    lightTransformationBuffer->release();
+    metalLightSourceRenderPSO->release();
     planeVertexBuffer->release();
     delete D_Texture;
     delete N_Texture;
     _pPSO->release();
     _renderToTexturePipelineState->release();
     _renderTexture->release();
+    _MaskTexture->release();
     _offscreenDepthTexture->release();
     _renderToTextureRenderPassDescriptor->release();
     depthStencilState->release();
@@ -105,6 +110,60 @@ void Renderer::CreateCube()
         sizeof(NVertexData) * vertexData.size(),
         MTL::ResourceStorageModeShared);
 
+    VertexData lightSource[] = {
+        // Front face            // Normals
+        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{ 0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        
+        // Back face
+        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{-0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+
+        // Top face
+        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+
+        // Bottom face
+        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{ 0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{-0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+
+        // Left face
+        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5,-0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5, 0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+
+        // Right face
+        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{ 0.5,-0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{ 0.5, 0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+    };
+    
+    lightVertexBuffer = _pDevice->newBuffer(&lightSource, sizeof(lightSource), MTL::ResourceStorageModeShared);
+    lightTransformationBuffer = _pDevice->newBuffer(sizeof(N_MVP), MTL::ResourceStorageModeShared);
+
+
     D_Texture = new Texture("assets/diffuse.png", _pDevice);
     N_Texture = new Texture("assets/normal.png", _pDevice);
 }
@@ -116,28 +175,37 @@ void Renderer::buildShaders()
     
     MTL::TextureDescriptor *colorDesc = MTL::TextureDescriptor::alloc()->init();
     colorDesc->setPixelFormat(MTL::PixelFormatRGBA16Float);   
-    colorDesc->setWidth(512 * 4);
-    colorDesc->setHeight(512 * 4);
+    colorDesc->setWidth(1920);
+    colorDesc->setHeight(1080);
     colorDesc->setStorageMode(MTL::StorageModePrivate);
     colorDesc->setUsage(MTL::TextureUsageRenderTarget | MTL::TextureUsageShaderRead);
     _renderTexture = _pDevice->newTexture(colorDesc);
+
+
+    _MaskTexture = _pDevice->newTexture(colorDesc);
     colorDesc->release();
 
     
     MTL::TextureDescriptor *depthDesc = MTL::TextureDescriptor::alloc()->init();
     depthDesc->setPixelFormat(MTL::PixelFormatDepth32Float);
-    depthDesc->setWidth(512 * 4);
-    depthDesc->setHeight(512 * 4);
+    depthDesc->setWidth(1920);
+    depthDesc->setHeight(1080);
     depthDesc->setStorageMode(MTL::StorageModePrivate);
     depthDesc->setUsage(MTL::TextureUsageRenderTarget);
+
     _offscreenDepthTexture = _pDevice->newTexture(depthDesc);
     depthDesc->release();
-
     _renderToTextureRenderPassDescriptor = MTL::RenderPassDescriptor::alloc()->init();
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setTexture(_renderTexture);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setStoreAction(MTL::StoreActionStore);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
+   
+    _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setTexture(_MaskTexture);
+    _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setLoadAction(MTL::LoadActionClear);
+    _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setStoreAction(MTL::StoreActionStore);
+    _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
+
     _renderToTextureRenderPassDescriptor->depthAttachment()->setTexture(_offscreenDepthTexture);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setStoreAction(MTL::StoreActionDontCare);
@@ -195,6 +263,32 @@ void Renderer::draw(MTK::View *pView)
     NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
     MTL::CommandBuffer *pCmd = _pCommandQueue->commandBuffer();
 
+
+
+
+     {
+        MTL::RenderPassDescriptor *pRpd2 = pView->currentRenderPassDescriptor();
+        MTL::RenderCommandEncoder *pEnc2 = pCmd->renderCommandEncoder(pRpd2);
+
+
+        pEnc2->setRenderPipelineState(_renderToTexturePipelineState);
+
+        static const AAPLVertex quadVertices[] = {
+            {{-1.0, -1.0}, {0.0, 0.0, 0.0, 1.0}, {0.0, 1.0}},
+            {{1.0, -1.0}, {1.0, 0.0, 0.0, 1.0}, {1.0, 1.0}},
+            {{1.0, 1.0}, {1.0, 1.0, 0.0, 1.0}, {1.0, 0.0}},
+            {{1.0, 1.0}, {1.0, 1.0, 0.0, 1.0}, {1.0, 0.0}},
+            {{-1.0, 1.0}, {0.0, 1.0, 0.0, 1.0}, {0.0, 0.0}},
+            {{-1.0, -1.0}, {0.0, 0.0, 0.0, 1.0}, {0.0, 1.0}},
+        };
+
+        pEnc2->setVertexBytes(quadVertices, sizeof(quadVertices), 0);
+        pEnc2->setFragmentTexture(_renderTexture, 0);
+        pEnc2->setFragmentTexture(_MaskTexture, 1);
+        pEnc2->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
+        pEnc2->endEncoding();
+    }
+
     
     {
         glm::mat4 model = glm::mat4(1.0f);
@@ -246,7 +340,7 @@ void Renderer::draw(MTK::View *pView)
 
         glm::mat3 normalMatrix = glm::transpose(inverse(glm::mat3(model)));
         N_Uniforms uniforms;
-        uniforms.lightPos = float3{1.5f, 1.5f, 2.0f};
+        uniforms.lightPos = float3{0.0f, 0.0f, 1.0f};
         uniforms.viewPos = mslVec1;
         uniforms.normalMatrix = float3x3{
             simd::float3{normalMatrix[0][0], normalMatrix[0][1], normalMatrix[0][2]},
@@ -254,7 +348,11 @@ void Renderer::draw(MTK::View *pView)
             simd::float3{normalMatrix[2][0], normalMatrix[2][1], normalMatrix[2][2]}};
         memcpy(UniformBuffer->contents(), &uniforms, sizeof(N_Uniforms));
 
+
+
         MTL::RenderCommandEncoder *pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
+
+
         pEnc1->setRenderPipelineState(_pPSO);
         pEnc1->setDepthStencilState(depthStencilState);
         pEnc1->setVertexBuffer(planeVertexBuffer, 0, 0);
@@ -263,30 +361,78 @@ void Renderer::draw(MTK::View *pView)
         pEnc1->setFragmentTexture(D_Texture->texture, 0);
         pEnc1->setFragmentTexture(N_Texture->texture, 1);
         pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
+
+       
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        glm::vec3 lightPosGlm(uniforms.lightPos.x, uniforms.lightPos.y, uniforms.lightPos.z);
+        lightModel = glm::translate(lightModel, lightPosGlm);
+        lightModel = glm::scale(lightModel, glm::vec3(0.2f)); 
+
+        N_MVP lightMvp;
+        lightMvp.M = matrix_float4x4({
+            simd::float4{lightModel[0][0], lightModel[0][1], lightModel[0][2], lightModel[0][3]},
+            simd::float4{lightModel[1][0], lightModel[1][1], lightModel[1][2], lightModel[1][3]},
+            simd::float4{lightModel[2][0], lightModel[2][1], lightModel[2][2], lightModel[2][3]},
+            simd::float4{lightModel[3][0], lightModel[3][1], lightModel[3][2], lightModel[3][3]},
+        });
+        lightMvp.V = mvp1.V; 
+        lightMvp.P = mvp1.P;
+        memcpy(lightTransformationBuffer->contents(), &lightMvp, sizeof(N_MVP));
+
+       
+
+        pEnc1->setRenderPipelineState(metalLightSourceRenderPSO);
+        pEnc1->setDepthStencilState(depthStencilState);
+        pEnc1->setVertexBuffer(lightVertexBuffer, 0, 0);
+        pEnc1->setVertexBuffer(lightTransformationBuffer, 0, 1);
+        // pEnc1->setFragmentBytes(&lightColor, sizeof(lightColor), 0);
+        pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
+
         pEnc1->endEncoding();
+        
+
+
     }
 
    
-    {
-        MTL::RenderPassDescriptor *pRpd2 = pView->currentRenderPassDescriptor();
-        MTL::RenderCommandEncoder *pEnc2 = pCmd->renderCommandEncoder(pRpd2);
-        pEnc2->setRenderPipelineState(_renderToTexturePipelineState);
-
-        static const AAPLVertex quadVertices[] = {
-            {{-1.0, -1.0}, {0.0, 0.0, 0.0, 1.0}, {0.0, 1.0}},
-            {{1.0, -1.0}, {1.0, 0.0, 0.0, 1.0}, {1.0, 1.0}},
-            {{1.0, 1.0}, {1.0, 1.0, 0.0, 1.0}, {1.0, 0.0}},
-            {{1.0, 1.0}, {1.0, 1.0, 0.0, 1.0}, {1.0, 0.0}},
-            {{-1.0, 1.0}, {0.0, 1.0, 0.0, 1.0}, {0.0, 0.0}},
-            {{-1.0, -1.0}, {0.0, 0.0, 0.0, 1.0}, {0.0, 1.0}},
-        };
-        pEnc2->setVertexBytes(quadVertices, sizeof(quadVertices), 0);
-        pEnc2->setFragmentTexture(_renderTexture, 0);
-        pEnc2->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
-        pEnc2->endEncoding();
-    }
+   
 
     pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
     pPool->release();
+}
+
+void Renderer::createLightSourceRenderPipeline() {
+    using NS::StringEncoding::UTF8StringEncoding;
+    Shader sh;
+    NS::Error* pError = nullptr;
+
+    MTL::Library* pLibrary = _pDevice->newLibrary(NS::String::string(sh.GetShader("shaders/light.metal"), UTF8StringEncoding), nullptr, &pError);
+
+    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("lightVertexShader", NS::ASCIIStringEncoding));
+    assert(vertexShader);
+    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("lightFragmentShader", NS::ASCIIStringEncoding));
+    assert(fragmentShader);
+
+    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+    renderPipelineDescriptor->setVertexFunction(vertexShader);
+    renderPipelineDescriptor->setFragmentFunction(fragmentShader);
+
+    // Must match _renderToTextureRenderPassDescriptor, not the drawable
+    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRGBA16Float); // _renderTexture
+    renderPipelineDescriptor->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float); // _MaskTexture
+    renderPipelineDescriptor->setSampleCount(1); // offscreen textures aren't multisampled
+    renderPipelineDescriptor->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
+    renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
+
+    NS::Error* error = nullptr;
+    metalLightSourceRenderPSO = _pDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
+    if (!metalLightSourceRenderPSO)
+        __builtin_printf("Light PSO FAILED: %s\n", error->localizedDescription()->utf8String());
+    assert(metalLightSourceRenderPSO);
+
+    renderPipelineDescriptor->release();
+    vertexShader->release();
+    fragmentShader->release();
+    pLibrary->release();
 }
