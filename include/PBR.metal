@@ -75,7 +75,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant Uniforms& uniforms [[buffer(0)]]
                                ) {
 
-    float3 N = normalize(in.Normal);
+    float3 N = (in.Normal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
 
     float3 F0 = float3(0.04);
@@ -89,7 +89,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float3 radiance = uniforms.lightColor * attenuation;
     float NDF = DistributionGGX(N, H, uniforms.roughness);   
     float G   = GeometrySmith(N, V, L, uniforms.roughness);      
-    float3 F    = fresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
+    float3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
     float3 numerator    = NDF * G * F; 
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
     float3 specular = numerator / denominator;

@@ -575,7 +575,7 @@ void MTLEngine::CreateSkyBox()
         MVPSkyBoxBuffer[i] = metalDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
     }
 
-    skyboxTexture = new Texture("assets/skybox.png", metalDevice);
+    skyboxTexture = new Texture("build/assets/newport_loft.hdr", metalDevice);
 }
 
 inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
