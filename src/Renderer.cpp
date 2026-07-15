@@ -302,7 +302,7 @@ void Renderer::draw(MTK::View *pView)
             accumulatedDegrees -= 360.0f;
 
         float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-        model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 
         glm::mat4 viewMatrix = glm::lookAt(
             glm::vec3(0.0f, 0.0f, 5.0f),
@@ -353,16 +353,7 @@ void Renderer::draw(MTK::View *pView)
         MTL::RenderCommandEncoder *pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
 
 
-        pEnc1->setRenderPipelineState(_pPSO);
-        pEnc1->setDepthStencilState(depthStencilState);
-        pEnc1->setVertexBuffer(planeVertexBuffer, 0, 0);
-        pEnc1->setVertexBuffer(UniformBuffer, 0, 1);
-        pEnc1->setVertexBuffer(transformationBuffer, 0, 2);
-        pEnc1->setFragmentTexture(D_Texture->texture, 0);
-        pEnc1->setFragmentTexture(N_Texture->texture, 1);
-        pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
-       
         glm::mat4 lightModel = glm::mat4(1.0f);
         glm::vec3 lightPosGlm(uniforms.lightPos.x, uniforms.lightPos.y, uniforms.lightPos.z);
         lightModel = glm::translate(lightModel, lightPosGlm);
@@ -389,6 +380,19 @@ void Renderer::draw(MTK::View *pView)
         pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
 
         pEnc1->endEncoding();
+
+
+        pEnc1->setRenderPipelineState(_pPSO);
+        pEnc1->setDepthStencilState(depthStencilState);
+        pEnc1->setVertexBuffer(planeVertexBuffer, 0, 0);
+        pEnc1->setVertexBuffer(UniformBuffer, 0, 1);
+        pEnc1->setVertexBuffer(transformationBuffer, 0, 2);
+        pEnc1->setFragmentTexture(D_Texture->texture, 0);
+        pEnc1->setFragmentTexture(N_Texture->texture, 1);
+        pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
+
+       
+        
         
 
 
