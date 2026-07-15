@@ -111,7 +111,7 @@ void Renderer::CreateCube()
         MTL::ResourceStorageModeShared);
 
     VertexData lightSource[] = {
-        // Front face            // Normals
+        
         {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
         {{ 0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
         {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
@@ -119,7 +119,7 @@ void Renderer::CreateCube()
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
         {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
         
-        // Back face
+        
         {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
         {{-0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
         {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
@@ -127,7 +127,7 @@ void Renderer::CreateCube()
         {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
         {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
 
-        // Top face
+        
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
         {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
         {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
@@ -135,7 +135,7 @@ void Renderer::CreateCube()
         {{-0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
 
-        // Bottom face
+        
         {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
         {{ 0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
         {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
@@ -143,7 +143,7 @@ void Renderer::CreateCube()
         {{-0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
         {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
 
-        // Left face
+        
         {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
         {{-0.5,-0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
@@ -151,7 +151,7 @@ void Renderer::CreateCube()
         {{-0.5, 0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
         {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
 
-        // Right face
+        
         {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
         {{ 0.5,-0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
         {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
@@ -302,7 +302,7 @@ void Renderer::draw(MTK::View *pView)
             accumulatedDegrees -= 360.0f;
 
         float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-        // model = glm::rotate(model, angleInRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+        
 
         glm::mat4 viewMatrix = glm::lookAt(
             glm::vec3(0.0f, 0.0f, 5.0f),
@@ -376,7 +376,7 @@ void Renderer::draw(MTK::View *pView)
         pEnc1->setDepthStencilState(depthStencilState);
         pEnc1->setVertexBuffer(lightVertexBuffer, 0, 0);
         pEnc1->setVertexBuffer(lightTransformationBuffer, 0, 1);
-        // pEnc1->setFragmentBytes(&lightColor, sizeof(lightColor), 0);
+        
         pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
 
         pEnc1->endEncoding();
@@ -422,10 +422,10 @@ void Renderer::createLightSourceRenderPipeline() {
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
 
-    // Must match _renderToTextureRenderPassDescriptor, not the drawable
-    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRGBA16Float); // _renderTexture
-    renderPipelineDescriptor->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float); // _MaskTexture
-    renderPipelineDescriptor->setSampleCount(1); // offscreen textures aren't multisampled
+    
+    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRGBA16Float); 
+    renderPipelineDescriptor->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float); 
+    renderPipelineDescriptor->setSampleCount(1); 
     renderPipelineDescriptor->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
     renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
 
