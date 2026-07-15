@@ -1,20 +1,40 @@
 
 
-
-
-
 #include <simd/simd.h>
 #include "Texture.hpp"
 
-
-Texture::Texture(const char* filepath, MTL::Device* metalDevice) {
+Texture::Texture(const char *filepath, MTL::Device *metalDevice)
+{
     device = metalDevice;
 
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
+
+    std::string str(filepath);
+    std::string last_four = str.substr(str.length() - 4);
+
+    if (str.length() >= 4 and last_four == ".hdr")
+    {
+            float *image = stbi_loadf(filepath, &width, &height, &channels, STBI_rgb_alpha);
+            assert(image != NULL);
+
+            MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
+            desc->setPixelFormat(MTL::PixelFormatRGBA32Float);
+            desc->setWidth(width);
+            desc->setHeight(height);
+            desc->setUsage(MTL::TextureUsageShaderRead);
+            desc->setStorageMode(MTL::StorageModeShared);
+
+            texture = device->newTexture(desc);
+            texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * sizeof(float) * width);
+            desc->release();
+            stbi_image_free(image);
+        
+    }
+    else{
+    unsigned char *image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
     assert(image != NULL);
 
-    MTL::TextureDescriptor* desc = MTL::TextureDescriptor::alloc()->init();
+    MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
     desc->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
     desc->setWidth(width);
     desc->setHeight(height);
@@ -25,36 +45,41 @@ Texture::Texture(const char* filepath, MTL::Device* metalDevice) {
     texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * width);
     desc->release();
     stbi_image_free(image);
+    }
 }
 
-Texture::~Texture() {
+Texture::~Texture()
+{
     texture->release();
 }
 
-
-CubeTexture::CubeTexture(const char* facePaths[6], MTL::Device* metalDevice) {
+CubeTexture::CubeTexture(const char *facePaths[6], MTL::Device *metalDevice)
+{
     device = metalDevice;
 
-   
     stbi_set_flip_vertically_on_load(false);
 
     int faceSize = 0;
-    unsigned char* faces[6] = {};
+    unsigned char *faces[6] = {};
 
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < 6; ++i)
+    {
         int w, h, ch;
         faces[i] = stbi_load(facePaths[i], &w, &h, &ch, STBI_rgb_alpha);
         assert(faces[i] && "CubeTexture: failed to load face image");
-        assert(w == h   && "CubeTexture: face image must be square");
+        assert(w == h && "CubeTexture: face image must be square");
 
-        if (i == 0) {
+        if (i == 0)
+        {
             faceSize = w;
-        } else {
+        }
+        else
+        {
             assert(w == faceSize && "CubeTexture: all faces must be the same size");
         }
     }
 
-    MTL::TextureDescriptor* desc = MTL::TextureDescriptor::alloc()->init();
+    MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
     desc->setTextureType(MTL::TextureTypeCube);
     desc->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
     desc->setWidth(faceSize);
@@ -67,22 +92,23 @@ CubeTexture::CubeTexture(const char* facePaths[6], MTL::Device* metalDevice) {
     assert(texture && "CubeTexture: newTexture returned nil");
     desc->release();
 
-    NS::UInteger bytesPerRow   = 4 * faceSize;
+    NS::UInteger bytesPerRow = 4 * faceSize;
     NS::UInteger bytesPerImage = bytesPerRow * faceSize;
 
-    for (int slice = 0; slice < 6; ++slice) {
+    for (int slice = 0; slice < 6; ++slice)
+    {
         texture->replaceRegion(
             MTL::Region(0, 0, 0, faceSize, faceSize, 1),
-           0,
-           slice,
+            0,
+            slice,
             faces[slice],
             bytesPerRow,
-            bytesPerImage
-        );
+            bytesPerImage);
         stbi_image_free(faces[slice]);
     }
 }
 
-CubeTexture::~CubeTexture() {
+CubeTexture::~CubeTexture()
+{
     texture->release();
 }

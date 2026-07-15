@@ -6,6 +6,7 @@
 #pragma once
 #include <Metal/Metal.hpp>
 #include <stb_image.h>
+#include <string>
 
 // ── 2-D texture (unchanged) ──────────────────────────────────────────────────
 class Texture {
