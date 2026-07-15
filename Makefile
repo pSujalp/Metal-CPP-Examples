@@ -144,8 +144,14 @@ build/skybox.air: include/Skybox.metal | $(BUILD_DIR)
 build/skybox.metallib: build/skybox.air
 	xcrun -sdk macosx metallib $< -o $@
 
+build/assets/%: assets/%
+	mkdir -p $(dir $@)
+	cp $< $@
 
-$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib
+copy-assets2 : build/assets/newport_loft.hdr
+
+
+$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 
@@ -173,7 +179,6 @@ $(BUILD_DIR)/%.cpp.o: src/%.cpp
 $(BUILD_DIR)/%.mm.o: src/%.mm
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(OBJCXXFLAGS) -c $< -o $@
-
 
 
 
