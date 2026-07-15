@@ -253,7 +253,7 @@ void Renderer::CreateSkyBox()
     );
     MVPSkyBoxBuffer = _pDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
 
-    skyboxTexture = new Texture("assets/skybox.png", _pDevice);
+    skyboxTexture = new Texture("assets/newport_loft.hdr", _pDevice);
 }
 
 
