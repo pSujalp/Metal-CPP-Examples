@@ -352,8 +352,7 @@ void Renderer::draw(MTK::View *pView)
 
         MTL::RenderCommandEncoder *pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
 
-
-
+        
         glm::mat4 lightModel = glm::mat4(1.0f);
         glm::vec3 lightPosGlm(uniforms.lightPos.x, uniforms.lightPos.y, uniforms.lightPos.z);
         lightModel = glm::translate(lightModel, lightPosGlm);
