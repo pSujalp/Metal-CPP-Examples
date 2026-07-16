@@ -146,7 +146,7 @@ void MTLEngine::initWindow()
 void MTLEngine::createSphere()
 {
 
-    sphere = new Sphere(4, 30, 30);
+    sphere = new Sphere(5, 60, 60);
 
     std::vector<VertexDataPosition> vertexDataposition;
 
@@ -412,12 +412,12 @@ void MTLEngine::sendRenderCommand()
     ImGui::Begin("PBR Values", nullptr, window_flags);
 
 
-    ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 200000);
+    ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 200);
     // ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
-    ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
-    ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
-    ImGui::SliderFloat("AO", &ao, 0, 1.0f);
+    // ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
+    // ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
+    // ImGui::SliderFloat("AO", &ao, 0, 1.0f);
 
     ImGui::Spacing();
 
