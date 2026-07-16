@@ -117,19 +117,23 @@ private:
 
     MTL::Buffer *SkyBoxVertexBuffer[kMaxDrawsPerFrame];
     MTL::Buffer *MVPSkyBoxBuffer[kMaxDrawsPerFrame];
-    Texture *skyboxTexture;
+    CubeTexture *skyboxTexture;
+    MTL::Buffer *SamplerBuffer;
+    MTL::SamplerState* samplerState;
+
+    
     MTL::RenderPipelineState *_SkyboxPSO;
     MTL::DepthStencilState *SkyBoxDepthStencilState;
     MTL::Library *metalSkyBoxlibrary;
 
     // IMGUI
 
-    int lightintensity = 500;
+    int lightintensity = 800;
     float AlbedoColor[3] = {0.5f, 0.0f, 0.0f};
     float LightPosition[3] = {3.0f, 0.0f, 5.0f};
     float metallic = 0.5;
     float roughness = 0;
-    float ao = 0;
+    float ao = 1.0f;
 
     float myColor[4] = {0.5f, 0.0f, 0.0f, 1.0f};
 };

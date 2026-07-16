@@ -72,35 +72,51 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
 }
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
-                               constant Uniforms& uniforms [[buffer(0)]]
+                               constant Uniforms& uniforms [[buffer(0)]],
+                               texturecube<float> irradianceMap [[texture(0)]],
+                               sampler cubeSampler           [[sampler(0)]]
                                ) {
 
-    float3 N = (in.Normal);
+    float3 N = normalize(in.Normal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
+    float3 R = reflect(-V, N);
+
+
+
 
     float3 F0 = float3(0.04);
     F0 = mix(F0, uniforms.albedo, uniforms.metallic);
     float3 Lo = float3(0.0);
+
+
 
     float3 L = normalize(uniforms.lightPosition - in.WorldPos);
     float3 H = normalize(V + L);
     float distance = length(uniforms.lightPosition - in.WorldPos);
     float attenuation = 1.0 / (distance * distance);
     float3 radiance = uniforms.lightColor * attenuation;
-    float NDF = DistributionGGX(N, H, uniforms.roughness);   
-    float G   = GeometrySmith(N, V, L, uniforms.roughness);      
+
+    float NDF = DistributionGGX(N, H, uniforms.roughness);
+    float G   = GeometrySmith(N, V, L, uniforms.roughness);
     float3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
-    float3 numerator    = NDF * G * F; 
+    float3 numerator    = NDF * G * F;
     float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
     float3 specular = numerator / denominator;
-    float3 kS = F;
+    float3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
     float3 kD = float3(1.0) - kS;
     kD *= 1.0 - uniforms.metallic;
-    float NdotL = max(dot(N, L), 0.0);         
-    Lo += (kD * uniforms.albedo / 3.14159265359 + specular) *   radiance * NdotL;
 
 
-    float3 ambient = float3(0.03) * uniforms.albedo * uniforms.ao;
+    float NdotL = max(dot(N, L), 0.0);
+    Lo += (kD * uniforms.albedo / 3.14159265359 + specular) * radiance * NdotL;
+
+
+   float3 irradiance = irradianceMap.sample(cubeSampler , N).rgb;
+
+    float3 diffuse      = irradiance * uniforms.albedo;
+    float3 ambient = (kD * diffuse) * uniforms.ao;
+
+
     float3 color = ambient + Lo;
     color = color / (color + float3(1.0));
     color = pow(color, float3(1.0/2.2));

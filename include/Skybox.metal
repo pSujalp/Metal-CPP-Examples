@@ -32,14 +32,15 @@ vertex SkyboxVOut skyboxVertex(
 
 fragment float4 skyboxFragment(
     SkyboxVOut             in       [[stage_in]],
-    texture2d<float>       skyTex   [[texture(0)]])
+    texturecube<half>       skyTex   [[texture(0)]],
+    sampler cubeSampler           [[sampler(0)]]
+    )
 {
-    constexpr sampler s(filter::linear, address::repeat);
+    float3 texCoords = float3(in.direction.x, in.direction.y, -in.direction.z);
+    
+    return float4(skyTex.sample(cubeSampler, texCoords));
 
-    float3 d = normalize(in.direction);
 
-    float u = atan2(d.z, d.x) / (2.0 * M_PI_F) + 0.5;
-    float v = asin(clamp(d.y, -1.0f, 1.0f)) / M_PI_F + 0.5;
 
-    return skyTex.sample(s, float2(u, v));
+    
 }

@@ -535,6 +535,8 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
+    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 0);
+    renderCommandEncoder->setFragmentSamplerState(samplerState, 0);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
 
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
@@ -575,7 +577,29 @@ void MTLEngine::CreateSkyBox()
         MVPSkyBoxBuffer[i] = metalDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
     }
 
-    skyboxTexture = new Texture("build/assets/newport_loft.hdr", metalDevice);
+    const char *facePaths[6] = {
+        "assets/Standard-Cube-Map/right.jpg",
+        "assets/Standard-Cube-Map/left.jpg",
+        "assets/Standard-Cube-Map/top.jpg",
+        "assets/Standard-Cube-Map/bottom.jpg",
+        "assets/Standard-Cube-Map/front.jpg",
+        "assets/Standard-Cube-Map/back.jpg"};
+    skyboxTexture = new CubeTexture(facePaths, metalDevice);
+
+
+    MTL::SamplerDescriptor *samplerDescriptor = MTL::SamplerDescriptor::alloc()->init();
+    samplerDescriptor->setMinFilter(MTL::SamplerMinMagFilterLinear);
+    samplerDescriptor->setMagFilter(MTL::SamplerMinMagFilterLinear);
+    samplerDescriptor->setMipFilter(MTL::SamplerMipFilterLinear);
+    samplerDescriptor->setSAddressMode(MTL::SamplerAddressModeClampToEdge);
+    samplerDescriptor->setTAddressMode(MTL::SamplerAddressModeClampToEdge);
+    samplerDescriptor->setRAddressMode(MTL::SamplerAddressModeClampToEdge);
+    samplerState = metalDevice->newSamplerState(samplerDescriptor);
+    samplerDescriptor->release();
+
+    SamplerBuffer = metalDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
+
+    memcpy(SamplerBuffer->contents(), &samplerState, sizeof(MTL::SamplerState *));
 }
 
 inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
