@@ -136,4 +136,10 @@ private:
     float ao = 1.0f;
 
     float myColor[4] = {0.5f, 0.0f, 0.0f, 1.0f};
+
+    Texture * Albedo;
+    Texture * AO;
+    Texture * Metallic;
+    Texture * Normal;
+    Texture * Roughness;
 };

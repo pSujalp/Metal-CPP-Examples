@@ -202,6 +202,11 @@ void MTLEngine::createSphere()
 
 
     }
+    Albedo = new Texture("assets/RUST/albedo.png", metalDevice);
+    AO = new Texture("assets/RUST/ao.png", metalDevice);
+    Metallic = new Texture("assets/RUST/metallic.png", metalDevice);
+    Normal = new Texture("assets/RUST/normal.png", metalDevice);
+    Roughness = new Texture("assets/RUST/roughness.png", metalDevice);
 }
 
 void MTLEngine::createBuffers()
@@ -407,7 +412,7 @@ void MTLEngine::sendRenderCommand()
     ImGui::Begin("PBR Values", nullptr, window_flags);
 
 
-    ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 2000);
+    ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 200000);
     // ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
     ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
@@ -419,8 +424,8 @@ void MTLEngine::sendRenderCommand()
     ImGui::Spacing();
 
 
-    ImGuiColorEditFlags wheelFlags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
-    ImGui::ColorPicker4("##WheelPicker", myColor, wheelFlags);
+    // ImGuiColorEditFlags wheelFlags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
+    // ImGui::ColorPicker4("##WheelPicker", myColor, wheelFlags);
     
 
 
@@ -535,8 +540,13 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
-    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 0);
+    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 6);
     renderCommandEncoder->setFragmentSamplerState(samplerState, 0);
+    renderCommandEncoder->setFragmentTexture(Albedo->texture,0);
+    renderCommandEncoder->setFragmentTexture(Normal->texture,1);
+    renderCommandEncoder->setFragmentTexture(Metallic->texture,2);
+    renderCommandEncoder->setFragmentTexture(Roughness->texture,3);
+    renderCommandEncoder->setFragmentTexture(AO->texture,4);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
 
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,

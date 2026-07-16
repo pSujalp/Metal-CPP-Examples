@@ -149,9 +149,14 @@ build/assets/%: assets/%
 	cp $< $@
 
 copy-assets2 : build/assets/newport_loft.hdr
+copy-assets3 : build/assets/RUST/albedo.png
+copy-assets4 : build/assets/RUST/ao.png
+copy-assets5 : build/assets/RUST/metallic.png
+copy-assets6 : build/assets/RUST/normal.png
+copy-assets7 : build/assets/RUST/roughness.png
 
 
-$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2
+$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2 copy-assets3 copy-assets4 copy-assets5 copy-assets6 copy-assets7
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 

@@ -39,8 +39,5 @@ fragment float4 skyboxFragment(
     float3 texCoords = float3(in.direction.x, in.direction.y, -in.direction.z);
     
     return float4(skyTex.sample(cubeSampler, texCoords));
-
-
-
     
 }

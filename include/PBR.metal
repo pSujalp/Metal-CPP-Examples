@@ -73,22 +73,33 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
 
 fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                constant Uniforms& uniforms [[buffer(0)]],
-                               texturecube<float> irradianceMap [[texture(0)]],
-                               sampler cubeSampler           [[sampler(0)]]
+                               texturecube<float> irradianceMap [[texture(6)]],
+                               sampler cubeSampler           [[sampler(0)]],
+                               texture2d<float> albedoTex [[texture(0)]],
+                               texture2d<float> normalTex [[texture(1)]],
+                               texture2d<float> metallicTex [[texture(2)]],
+                               texture2d<float> roughnessTex [[texture(3)]],
+                               texture2d<float> aoTex [[texture(4)]]
                                ) {
+
+   
+    constexpr sampler texSampler(mip_filter::linear,
+                                  mag_filter::linear,
+                                  min_filter::linear,
+                                  address::repeat);
+
+    float3 albedo    = albedoTex.sample(texSampler, in.TexCoords).rgb;
+    float  metallic  = metallicTex.sample(texSampler, in.TexCoords).r;
+    float  roughness = roughnessTex.sample(texSampler, in.TexCoords).r;
+    float  ao        = aoTex.sample(texSampler, in.TexCoords).r;
 
     float3 N = normalize(in.Normal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
     float3 R = reflect(-V, N);
 
-
-
-
     float3 F0 = float3(0.04);
-    F0 = mix(F0, uniforms.albedo, uniforms.metallic);
+    F0 = mix(F0, albedo, metallic);
     float3 Lo = float3(0.0);
-
-
 
     float3 L = normalize(uniforms.lightPosition - in.WorldPos);
     float3 H = normalize(V + L);
@@ -96,26 +107,22 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float attenuation = 1.0 / (distance * distance);
     float3 radiance = uniforms.lightColor * attenuation;
 
-    float NDF = DistributionGGX(N, H, uniforms.roughness);
-    float G   = GeometrySmith(N, V, L, uniforms.roughness);
+    float NDF = DistributionGGX(N, H, roughness);
+    float G   = GeometrySmith(N, V, L, roughness);
     float3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);
     float3 numerator    = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; // + 0.0001 to prevent divide by zero
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     float3 specular = numerator / denominator;
     float3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
     float3 kD = float3(1.0) - kS;
-    kD *= 1.0 - uniforms.metallic;
-
+    kD *= 1.0 - metallic;
 
     float NdotL = max(dot(N, L), 0.0);
-    Lo += (kD * uniforms.albedo / 3.14159265359 + specular) * radiance * NdotL;
+    Lo += (kD * albedo / 3.14159265359 + specular) * radiance * NdotL;
 
-
-   float3 irradiance = irradianceMap.sample(cubeSampler , N).rgb;
-
-    float3 diffuse      = irradiance * uniforms.albedo;
-    float3 ambient = (kD * diffuse) * uniforms.ao;
-
+    float3 irradiance = irradianceMap.sample(cubeSampler, N).rgb;
+    float3 diffuse = irradiance * albedo;
+    float3 ambient = (kD * diffuse) * ao;
 
     float3 color = ambient + Lo;
     color = color / (color + float3(1.0));
