@@ -93,9 +93,20 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float  roughness = roughnessTex.sample(texSampler, in.TexCoords).r;
     float  ao        = aoTex.sample(texSampler, in.TexCoords).r;
 
-    float3 N = normalize(in.Normal);
+    float3 tangentNormal = normalTex.sample(texSampler, in.TexCoords).xyz * 2.0 - 1.0;
+
+    float3 Q1  = dfdx(in.WorldPos);
+    float3 Q2  = dfdy(in.WorldPos);
+    float2 st1 = dfdx(in.TexCoords);
+    float2 st2 = dfdy(in.TexCoords);
+
+    float3 geomNormal = normalize(in.Normal);
+    float3 T  = normalize(Q1*st2.y - Q2*st1.y);
+    float3 B  = -normalize(cross(geomNormal, T));
+    float3x3 TBN = float3x3(T, B, geomNormal);
+
+    float3 N = normalize(TBN * tangentNormal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
-    float3 R = reflect(-V, N);
 
     float3 F0 = float3(0.04);
     F0 = mix(F0, albedo, metallic);
