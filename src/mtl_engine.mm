@@ -4,10 +4,6 @@ void MTLEngine::init()
 {
     initDevice();
     initWindow();
-
-
-     
-
     createSphere();
     createBuffers();
     createDefaultLibrary();
@@ -415,6 +411,8 @@ void MTLEngine::sendRenderCommand()
     ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 200);
     // ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
+
+    ImGui::SliderFloat3("3D Position Location", Location, 10.0f , -10);
     // ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
     // ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
     // ImGui::SliderFloat("AO", &ao, 0, 1.0f);
@@ -446,7 +444,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     index = (index + 1) % kMaxDrawsPerFrame;
 
     // Moves the sphere 10 units down the negative Z-axis
-    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(Location[0], Location[1], Location[2]));
 
     float angleInDegrees = static_cast<float>(glfwGetTime()) / 2.0f * 45.0f;
     float angleInRadians = glm::radians(angleInDegrees);

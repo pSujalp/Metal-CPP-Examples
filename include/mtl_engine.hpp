@@ -130,7 +130,7 @@ private:
     // IMGUI
 
     int lightintensity = 150;
-    float AlbedoColor[3] = {0.5f, 0.0f, 0.0f};
+    float Location[3] = {0.0f, 0.0f, 0.0f};
     float LightPosition[3] = {3.0f, 0.0f, 5.0f};
     float metallic = 0.5;
     float roughness = 0;

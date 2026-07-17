@@ -154,9 +154,11 @@ copy-assets4 : build/assets/RUST/ao.png
 copy-assets5 : build/assets/RUST/metallic.png
 copy-assets6 : build/assets/RUST/normal.png
 copy-assets7 : build/assets/RUST/roughness.png
+copy-assets8 : build/assets/gun/Untitled.mtl
+copy-assets9 : build/assets/gun/Untitled.obj
 
 
-$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2 copy-assets3 copy-assets4 copy-assets5 copy-assets6 copy-assets7
+$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2 copy-assets3 copy-assets4 copy-assets5 copy-assets6 copy-assets7 copy-assets8 copy-assets9
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 
