@@ -41,6 +41,7 @@
 #include <stdio.h>
 
 #include "Sphere.h"
+#include "SingleMesh.h"
 
 class MTLEngine
 {
@@ -102,7 +103,7 @@ private:
 
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
-    Sphere *sphere;
+    Mesh *sphere;
 
     static const int kMaxDrawsPerFrame = 10;
     MTL::CommandBuffer *metalCommandBuffer;

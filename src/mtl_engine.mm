@@ -146,7 +146,7 @@ void MTLEngine::initWindow()
 void MTLEngine::createSphere()
 {
 
-    sphere = new Sphere(5, 60, 60);
+    sphere = new Mesh("assets/gun/Untitled.obj");
 
     std::vector<VertexDataPosition> vertexDataposition;
 
@@ -446,7 +446,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     index = (index + 1) % kMaxDrawsPerFrame;
 
     // Moves the sphere 10 units down the negative Z-axis
-    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f));
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
     float angleInDegrees = static_cast<float>(glfwGetTime()) / 2.0f * 45.0f;
     float angleInRadians = glm::radians(angleInDegrees);
