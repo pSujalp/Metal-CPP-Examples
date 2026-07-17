@@ -198,11 +198,12 @@ void MTLEngine::createSphere()
 
 
     }
-    Albedo = new Texture("assets/gun/Albedo_Map.png", metalDevice);
-    AO = new Texture("assets/gun/AO_Map.png", metalDevice);
-    Metallic = new Texture("assets/gun/Metalness_Map.png", metalDevice);
-    Normal = new Texture("assets/gun/Normal_Map.png", metalDevice);
+    Albedo = new Texture("assets/Helmet/Material_MR.png", metalDevice);
+    AO = new Texture("assets/Helmet/ambientMap1.png", metalDevice);
+    Metallic = new Texture("assets/Helmet/metalnessMap1.png", metalDevice);
+    Normal = new Texture("assets/Helmet/normalMap1.png", metalDevice);
     Roughness = new Texture("assets/gun/Roughness_Map.png", metalDevice);
+    Emissive = new Texture("assets/Helmet/emissiveMap1.png", metalDevice);
 }
 
 void MTLEngine::createBuffers()
@@ -548,6 +549,7 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setFragmentTexture(Metallic->texture,2);
     renderCommandEncoder->setFragmentTexture(Roughness->texture,3);
     renderCommandEncoder->setFragmentTexture(AO->texture,4);
+    renderCommandEncoder->setFragmentTexture(Emissive->texture,5);
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
                                                 sphere->indexCount,

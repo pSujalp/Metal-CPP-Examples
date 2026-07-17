@@ -79,7 +79,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
                                texture2d<float> normalTex [[texture(1)]],
                                texture2d<float> metallicTex [[texture(2)]],
                                texture2d<float> roughnessTex [[texture(3)]],
-                               texture2d<float> aoTex [[texture(4)]]
+                               texture2d<float> aoTex [[texture(4)]],
+                               texture2d<float> eTex [[texture(5)]]
                                ) {
 
    
@@ -92,6 +93,9 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float  metallic  = metallicTex.sample(texSampler, in.TexCoords).r;
     float  roughness = roughnessTex.sample(texSampler, in.TexCoords).r;
     float  ao        = aoTex.sample(texSampler, in.TexCoords).r;
+    float3 emissive = eTex.sample(texSampler, in.TexCoords).rgb; 
+
+
 
     float3 N = normalize(in.Normal);
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
@@ -120,7 +124,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float NdotL = max(dot(N, L), 0.0);
     Lo += (kD * albedo / 3.14159265359 + specular) * radiance * NdotL;
 
-    float3 irradiance = irradianceMap.sample(cubeSampler, N).rgb;
+    float3 irradiance = irradianceMap.sample(cubeSampler, N).rgb  + emissive * 30.0f ;
     float3 diffuse = irradiance * albedo;
     float3 ambient = (kD * diffuse) * ao;
 

@@ -1,17 +1,19 @@
-# Blender 4.5.7 LTS MTL File: 'Untitled.blend'
-# www.blender.org
+# MTL file - created by a modified js OBJExporter
 
-newmtl 08_-_Default
-Ks 0.000000 0.000000 0.000000
-Ke 0.000000 0.000000 0.000000
-Ni 1.500000
-d 1.000000
+newmtl Material_MR
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
 illum 1
-Ps 0.000000
-Pc 0.000000
-Pcr 0.030000
-aniso 0.000000
-anisor 0.000000
-map_Kd Cerberus_A.tga
-map_Pm Cerberus_M.tga
-map_Pr Cerberus_R.tga
+Pm 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 1 1 1
+map_Kd Material_MR.png
+map_Ke emissiveMap1.png
+map_Pm metalnessMap1.png
+map_Pr metalnessMap1.png
+norm normalMap1.png
+map_Ka ambientMap1.png
