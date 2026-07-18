@@ -1,9 +1,10 @@
+
+
 # Metal C++ Examples
 
 ⚠️ Note :- **These examples are kind of mixed with c++ and objective-c and some use apple NS::Window and most of them have glfw usage ,there could be some confusions in the various examples and some examples might be not working/looking as per it seems.This repo can be used for reference , understanding , learning etc. You are free to point out the problems,fixing,contributing,way of approaching a new solution etc .**
 
-<img width="230" height="254" alt="Image" src="https://github.com/user-attachments/assets/5e3207a3-8e29-4ceb-8800-708b8f37c18c" />
-
+<img width="230" height="254" alt="Image" src="https://github.com/user-attachments/assets/5e3207a3-8e29-4ceb-8800-708b8f37c18c" /><img width="230" height="254" alt="ScreenRecording2026-07-11at1 49 41PM-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/1ce81cea-88bb-4d24-a160-4089ba95c79d" /><img width="230" height="254" alt="Screen Recording 2026-07-17 at 6 36 37 PM" src="https://github.com/user-attachments/assets/d5fc6938-f0ce-4ff1-a017-c88400cd1ae9" />
 
 
 ### Getting Started
