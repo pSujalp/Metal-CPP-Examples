@@ -8,7 +8,11 @@
 #include <stb_image.h>
 #include <string>
 
-// ── 2-D texture (unchanged) ──────────────────────────────────────────────────
+#include "tinyddsloader.h"
+using namespace tinyddsloader;
+
+
+
 class Texture {
 public:
     Texture(const char* filepath, MTL::Device* metalDevice);

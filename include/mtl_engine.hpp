@@ -144,4 +144,7 @@ private:
     Texture * Normal;
     Texture * Roughness;
     Texture * Emissive; 
+
+
+    Texture * Cubemap_dds; 
 };

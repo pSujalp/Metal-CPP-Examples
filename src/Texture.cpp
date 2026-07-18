@@ -14,37 +14,62 @@ Texture::Texture(const char *filepath, MTL::Device *metalDevice)
 
     if (str.length() >= 4 and last_four == ".hdr")
     {
-            float *image = stbi_loadf(filepath, &width, &height, &channels, STBI_rgb_alpha);
-            assert(image != NULL);
+        float *image = stbi_loadf(filepath, &width, &height, &channels, STBI_rgb_alpha);
+        assert(image != NULL);
+
+        MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
+        desc->setPixelFormat(MTL::PixelFormatRGBA32Float);
+        desc->setWidth(width);
+        desc->setHeight(height);
+        desc->setUsage(MTL::TextureUsageShaderRead);
+        desc->setStorageMode(MTL::StorageModeShared);
+
+        texture = device->newTexture(desc);
+        texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * sizeof(float) * width);
+        desc->release();
+        stbi_image_free(image);
+    }
+
+    else if (str.length() >= 4 and last_four == ".dds")
+    {
+        DDSFile dds;
+        auto ret = dds.Load(filepath);
+        if (ret == Result::Success)
+        {
+            auto imgData = dds.GetImageData(0, 0);
+            width  = dds.GetWidth();
+            height = dds.GetHeight();
+
+            assert(imgData != NULL);
 
             MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
-            desc->setPixelFormat(MTL::PixelFormatRGBA32Float);
+            desc->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
             desc->setWidth(width);
             desc->setHeight(height);
             desc->setUsage(MTL::TextureUsageShaderRead);
             desc->setStorageMode(MTL::StorageModeShared);
 
             texture = device->newTexture(desc);
-            texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * sizeof(float) * width);
+            texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, imgData, 4 * width);
             desc->release();
-            stbi_image_free(image);
-        
+        }
     }
-    else{
-    unsigned char *image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
-    assert(image != NULL);
+    else
+    {
+        unsigned char *image = stbi_load(filepath, &width, &height, &channels, STBI_rgb_alpha);
+        assert(image != NULL);
 
-    MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
-    desc->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
-    desc->setWidth(width);
-    desc->setHeight(height);
-    desc->setUsage(MTL::TextureUsageShaderRead);
-    desc->setStorageMode(MTL::StorageModeShared);
+        MTL::TextureDescriptor *desc = MTL::TextureDescriptor::alloc()->init();
+        desc->setPixelFormat(MTL::PixelFormatRGBA8Unorm_sRGB);
+        desc->setWidth(width);
+        desc->setHeight(height);
+        desc->setUsage(MTL::TextureUsageShaderRead);
+        desc->setStorageMode(MTL::StorageModeShared);
 
-    texture = device->newTexture(desc);
-    texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * width);
-    desc->release();
-    stbi_image_free(image);
+        texture = device->newTexture(desc);
+        texture->replaceRegion(MTL::Region(0, 0, 0, width, height, 1), 0, image, 4 * width);
+        desc->release();
+        stbi_image_free(image);
     }
 }
 

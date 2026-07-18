@@ -204,6 +204,8 @@ void MTLEngine::createSphere()
     Normal = new Texture("assets/Helmet/normalMap1.png", metalDevice);
     Roughness = new Texture("assets/gun/Roughness_Map.png", metalDevice);
     Emissive = new Texture("assets/Helmet/emissiveMap1.png", metalDevice);
+
+    Cubemap_dds = new Texture("assets/ibl_irradiance_cube.dds", metalDevice);
 }
 
 void MTLEngine::createBuffers()
@@ -539,7 +541,7 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
-    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 6);
+    renderCommandEncoder->setFragmentTexture(Cubemap_dds->texture, 6);
     renderCommandEncoder->setFragmentSamplerState(samplerState, 0);
 
 
@@ -590,12 +592,12 @@ void MTLEngine::CreateSkyBox()
     }
 
     const char *facePaths[6] = {
-        "assets/Standard-Cube-Map/right.jpg",
-        "assets/Standard-Cube-Map/left.jpg",
-        "assets/Standard-Cube-Map/top.jpg",
-        "assets/Standard-Cube-Map/bottom.jpg",
-        "assets/Standard-Cube-Map/front.jpg",
-        "assets/Standard-Cube-Map/back.jpg"};
+        "assets/skybox1/right.png",
+        "assets/skybox1/left.png",
+        "assets/skybox1/top.png",
+        "assets/skybox1/bottom.png",
+        "assets/skybox1/front.png",
+        "assets/skybox1/back.png"};
     skyboxTexture = new CubeTexture(facePaths, metalDevice);
 
 
