@@ -204,6 +204,8 @@ void MTLEngine::createSphere()
     Emissive = new Texture("assets/Helmet/emissiveMap1.png", metalDevice);
 
     Cubemap_dds_irridance = new Texture("assets/ibl_irradiance_cube.dds", metalDevice);
+    
+    // Texture * temp  = new Texture("assets/skybox1/brdf_look_up_table.dds",metalDevice);
     brdf_LUT = generateBRDFLUT(metalDevice,metalBRDFLibrary,metalCommandQueue);
     
 }
