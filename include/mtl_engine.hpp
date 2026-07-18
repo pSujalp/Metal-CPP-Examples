@@ -129,8 +129,8 @@ private:
 
     // IMGUI
 
-    int lightintensity = 0;
-    float Location[3] = {0.0f, 0.0f, 0.0f};
+    int lightintensity = 10;
+    float Location[3] = {0.0f, 0.0f, -2.5f};
     float LightPosition[3] = {3.0f, 0.0f, 5.0f};
     float metallic = 0.5;
     float roughness = 0;
@@ -146,5 +146,5 @@ private:
     Texture * Emissive; 
 
 
-    Texture * Cubemap_dds; 
+    Texture * Cubemap_dds_irridance; 
 };

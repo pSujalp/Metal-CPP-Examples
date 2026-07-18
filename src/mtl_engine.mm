@@ -205,7 +205,7 @@ void MTLEngine::createSphere()
     Roughness = new Texture("assets/gun/Roughness_Map.png", metalDevice);
     Emissive = new Texture("assets/Helmet/emissiveMap1.png", metalDevice);
 
-    Cubemap_dds = new Texture("assets/ibl_irradiance_cube.dds", metalDevice);
+    Cubemap_dds_irridance = new Texture("assets/ibl_irradiance_cube.dds", metalDevice);
 }
 
 void MTLEngine::createBuffers()
@@ -541,7 +541,7 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
-    renderCommandEncoder->setFragmentTexture(Cubemap_dds->texture, 6);
+    renderCommandEncoder->setFragmentTexture(Cubemap_dds_irridance->texture, 6);
     renderCommandEncoder->setFragmentSamplerState(samplerState, 0);
 
 
