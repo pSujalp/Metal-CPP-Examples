@@ -201,7 +201,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float3x3 TBN = float3x3(T, B, Ngeom);
 
     float3 tangentNormal = normalTex.sample(texSampler, in.TexCoords).rgb * 2.0 - 1.0;
-    float3 N = normalize(TBN * tangentNormal);
+    float3 N = normalize(in.Normal);
 
     float3 V = normalize(uniforms.cameraPosition - in.WorldPos);
     float3 R = reflect(-V, N);
