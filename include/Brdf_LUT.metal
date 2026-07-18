@@ -99,7 +99,7 @@ struct BRDFVertexOut {
     float2 texCoords;
 };
 
-// Fullscreen triangle, no vertex buffer needed.
+
 vertex BRDFVertexOut brdfLUTVertexShader(uint vertexID [[vertex_id]])
 {
     BRDFVertexOut out;
