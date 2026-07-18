@@ -4,17 +4,15 @@ void MTLEngine::init()
 {
     initDevice();
     initWindow();
-    createSphere();
+    createDefaultLibrary();   
+    createCommandQueue();   
+    createSphere();          
     createBuffers();
-    createDefaultLibrary();
-
     buildSkyBoxShaders();
     CreateSkyBox();
-    createCommandQueue();
     createRenderPipeline();
     createDepthAndMSAATextures();
     createRenderPassDescriptor();
-    
 }
 
 void MTLEngine::run()
@@ -33,7 +31,7 @@ void MTLEngine::run()
 void MTLEngine::cleanup()
 {
     glfwTerminate();
-    // transformationBuffer->release();
+    
     msaaRenderTargetTexture->release();
     depthTexture->release();
     renderPassDescriptor->release();
@@ -58,7 +56,7 @@ void MTLEngine::frameBufferSizeCallback(GLFWwindow *window, int width, int heigh
 void MTLEngine::resizeFrameBuffer(int width, int height)
 {
     metalLayer.drawableSize = CGSizeMake(width, height);
-    // Deallocate the textures if they have been created
+    
     if (msaaRenderTargetTexture)
     {
         msaaRenderTargetTexture->release();
@@ -132,7 +130,7 @@ void MTLEngine::initWindow()
     float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
     ImGuiStyle &style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.ScaleAllSizes(main_scale); 
     style.FontScaleDpi = main_scale;
 
     ImGui_ImplGlfw_InitForOpenGL(glfwWindow, true);
@@ -175,7 +173,7 @@ void MTLEngine::createSphere()
         vertexDataNormal.emplace_back(vdn);
     }
 
-    // grassTexture = new Texture("assets/mc_grass.jpeg", metalDevice);
+    
 
     for (size_t i = 0; i < kMaxDrawsPerFrame; i++)
     {
@@ -206,6 +204,8 @@ void MTLEngine::createSphere()
     Emissive = new Texture("assets/Helmet/emissiveMap1.png", metalDevice);
 
     Cubemap_dds_irridance = new Texture("assets/ibl_irradiance_cube.dds", metalDevice);
+    brdf_LUT = generateBRDFLUT(metalDevice,metalBRDFLibrary,metalCommandQueue);
+    
 }
 
 void MTLEngine::createBuffers()
@@ -241,6 +241,20 @@ void MTLEngine::createDefaultLibrary()
     metalSkyBoxlibrary = loadLibrary(metalDevice, dirCStr);
 
     if (!metalSkyBoxlibrary)
+    {
+        std::cerr << "Failed to load default library.";
+        std::exit(-1);
+    }
+
+    dirStr= "";
+    exeDir = sh.executableDirectory();
+    dirStr = exeDir.string();
+    dirStr.append("/Brdf_LUT.metallib");
+    dirCStr = dirStr.c_str();
+    std::cout<< dirCStr;
+    metalBRDFLibrary = loadLibrary(metalDevice, dirCStr);
+
+    if (!metalBRDFLibrary)
     {
         std::cerr << "Failed to load default library.";
         std::exit(-1);
@@ -412,21 +426,21 @@ void MTLEngine::sendRenderCommand()
 
 
     ImGui::SliderInt("Adjust Light Intensity", &lightintensity, 0, 200);
-    // ImGui::SliderFloat3("ALBEDO_COLOR", AlbedoColor, 0.0f , 1.0f);
+    
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
 
     ImGui::SliderFloat3("3D Position Location", Location, 10.0f , -10);
-    // ImGui::SliderFloat("METALLIC", &metallic, 0, 1.0f);
-    // ImGui::SliderFloat("ROUGNESS", &roughness, 0, 1.0f);
-    // ImGui::SliderFloat("AO", &ao, 0, 1.0f);
+    
+    
+    
 
     ImGui::Spacing();
 
     ImGui::Spacing();
 
 
-    // ImGuiColorEditFlags wheelFlags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
-    // ImGui::ColorPicker4("##WheelPicker", myColor, wheelFlags);
+    
+    
     
 
 
@@ -446,7 +460,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
 {
     index = (index + 1) % kMaxDrawsPerFrame;
 
-    // Moves the sphere 10 units down the negative Z-axis
+    
     glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(Location[0], Location[1], Location[2]));
 
     float angleInDegrees = static_cast<float>(glfwGetTime()) / 2.0f * 45.0f;
@@ -456,11 +470,11 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     glm::mat4 modelMatrix = translationMatrix * rotationMatrix;
 
     float time = static_cast<float>(glfwGetTime());
-    float oscillation = sin(time);             // oscillates between -1 and 1
-    float zPosition = 1.5f + 1.5f * oscillation; // maps oscillation to range [0, 3]
+    float oscillation = sin(time);             
+    float zPosition = 1.5f + 1.5f * oscillation; 
 
-    glm::vec3 cameraPos    = glm::vec3(0.0f, 0.0f, 1.0f);  // Camera Position in World Space
-    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);  // P + F, where F = (0,0,-1)
+    glm::vec3 cameraPos    = glm::vec3(0.0f, 0.0f, 1.0f);  
+    glm::vec3 cameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);  
     glm::vec3 upVector     = glm::vec3(0.0f, 1.0f, 0.0f);
 
     glm::mat4 viewMatrix = glm::lookAtRH(cameraPos, cameraTarget, upVector);
@@ -470,12 +484,12 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
     float nearZ = 0.1f;
     float farZ = 1000.0f;
 
-    // RH + zero-to-one depth range, matching Metal's clip space (not OpenGL's -1..1)
+    
     glm::mat4 perspectiveMatrix = glm::perspectiveRH_ZO(fov, aspectRatio, nearZ, farZ);
 
     glm::mat3 normalMatrix = glm::inverseTranspose(glm::mat3(modelMatrix));
 
-    // Convert to simd only here, at the boundary with the GPU-facing struct
+    
     TransformationData transformationData = {
         toSimd(modelMatrix),
         toSimd(viewMatrix),
@@ -499,7 +513,7 @@ void MTLEngine::encodeRenderCommand(MTL::RenderCommandEncoder *renderCommandEnco
 
     memcpy(uniformsBuffer[index]->contents(), &uniforms, sizeof(Uniforms));
 
-    // --- Skybox pass (drawn first, no depth write, matching Renderer.cpp) ---
+    
     static float skyboxDeg = 0.0f;
     skyboxDeg += 1.0f;
 
@@ -540,18 +554,22 @@ renderCommandEncoder->setCullMode(MTL::CullModeNone);
     renderCommandEncoder->setVertexBuffer(SphereUVBuffer[index], 0, 1);
     renderCommandEncoder->setVertexBuffer(SphereNormalBuffer[index], 0, 2);
     renderCommandEncoder->setVertexBuffer(transformationBuffer[index], 0, 3);
+
+
+
     renderCommandEncoder->setFragmentBuffer(uniformsBuffer[index], 0, 0);
-    renderCommandEncoder->setFragmentTexture(Cubemap_dds_irridance->texture, 6);
+    
     renderCommandEncoder->setFragmentSamplerState(samplerState, 0);
-
-
-
     renderCommandEncoder->setFragmentTexture(Albedo->texture,0);
     renderCommandEncoder->setFragmentTexture(Normal->texture,1);
     renderCommandEncoder->setFragmentTexture(Metallic->texture,2);
     renderCommandEncoder->setFragmentTexture(Roughness->texture,3);
     renderCommandEncoder->setFragmentTexture(AO->texture,4);
     renderCommandEncoder->setFragmentTexture(Emissive->texture,5);
+    renderCommandEncoder->setFragmentTexture(Cubemap_dds_irridance->texture, 6);
+    renderCommandEncoder->setFragmentTexture(skyboxTexture->texture, 7);  
+    renderCommandEncoder->setFragmentTexture(brdf_LUT, 8);
+
     MTL::PrimitiveType typeTriangle = MTL::PrimitiveTypeTriangle;
     renderCommandEncoder->drawIndexedPrimitives(typeTriangle,
                                                 sphere->indexCount,
@@ -614,12 +632,14 @@ void MTLEngine::CreateSkyBox()
     SamplerBuffer = metalDevice->newBuffer(sizeof(MVP), MTL::ResourceStorageModeShared);
 
     memcpy(SamplerBuffer->contents(), &samplerState, sizeof(MTL::SamplerState *));
+
+    
 }
 
 inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
 {
-    // glm::mat4 and matrix_float4x4 are both column-major float4x4 with
-    // identical memory layout, so this is a straight reinterpret, not a copy loop.
+    
+    
     matrix_float4x4 result;
     memcpy(&result, glm::value_ptr(m), sizeof(matrix_float4x4));
     return result;
@@ -627,8 +647,8 @@ inline matrix_float4x4 MTLEngine::toSimd(const glm::mat4 &m)
 
 inline matrix_float3x3 MTLEngine::toSimd(const glm::mat3 &m)
 {
-    // glm::mat3 is tightly packed (3 floats/column) but matrix_float3x3 pads
-    // each column to a float4, so this must be built column-by-column.
+    
+    
     return matrix_float3x3{
         simd::float3{m[0].x, m[0].y, m[0].z},
         simd::float3{m[1].x, m[1].y, m[1].z},
@@ -639,4 +659,72 @@ inline matrix_float3x3 MTLEngine::toSimd(const glm::mat3 &m)
 inline simd::float3 MTLEngine::toSimd(const glm::vec3 &v)
 {
     return simd::float3{v.x, v.y, v.z};
+}
+
+
+MTL::Texture* MTLEngine::generateBRDFLUT(MTL::Device* device,
+                               MTL::Library* library,
+                               MTL::CommandQueue* commandQueue)
+{
+    const int size = 512;
+
+    
+    MTL::TextureDescriptor* texDesc = MTL::TextureDescriptor::texture2DDescriptor(
+        MTL::PixelFormatRG16Float,
+        size,
+        size,
+        false 
+    );
+    texDesc->setUsage(MTL::TextureUsageShaderRead | MTL::TextureUsageRenderTarget);
+    texDesc->setStorageMode(MTL::StorageModePrivate);
+
+    MTL::Texture* brdfLUT = device->newTexture(texDesc);
+    texDesc->release();
+
+    
+    NS::Error* error = nullptr;
+
+    MTL::Function* vertexFunc = library->newFunction(
+        NS::String::string("brdfLUTVertexShader", NS::UTF8StringEncoding));
+    MTL::Function* fragmentFunc = library->newFunction(
+        NS::String::string("brdfLUTFragmentShader", NS::UTF8StringEncoding));
+
+    MTL::RenderPipelineDescriptor* pipelineDesc = MTL::RenderPipelineDescriptor::alloc()->init();
+    pipelineDesc->setVertexFunction(vertexFunc);
+    pipelineDesc->setFragmentFunction(fragmentFunc);
+    pipelineDesc->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRG16Float);
+
+    MTL::RenderPipelineState* pipelineState = device->newRenderPipelineState(pipelineDesc, &error);
+    if (!pipelineState) {
+        printf("Failed to create BRDF LUT pipeline state: %s\n",
+               error->localizedDescription()->utf8String());
+        assert(false);
+    }
+
+    vertexFunc->release();
+    fragmentFunc->release();
+    pipelineDesc->release();
+
+    
+    MTL::RenderPassDescriptor* passDesc = MTL::RenderPassDescriptor::alloc()->init();
+    MTL::RenderPassColorAttachmentDescriptor* colorAttachment = passDesc->colorAttachments()->object(0);
+    colorAttachment->setTexture(brdfLUT);
+    colorAttachment->setLoadAction(MTL::LoadActionClear);
+    colorAttachment->setStoreAction(MTL::StoreActionStore);
+    colorAttachment->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
+
+    MTL::CommandBuffer* commandBuffer = commandQueue->commandBuffer();
+    MTL::RenderCommandEncoder* encoder = commandBuffer->renderCommandEncoder(passDesc);
+
+    encoder->setRenderPipelineState(pipelineState);
+    encoder->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3));
+    encoder->endEncoding();
+
+    commandBuffer->commit();
+    commandBuffer->waitUntilCompleted();
+
+    passDesc->release();
+    pipelineState->release();
+
+    return brdfLUT; 
 }

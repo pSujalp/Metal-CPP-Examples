@@ -144,6 +144,14 @@ build/skybox.air: include/Skybox.metal | $(BUILD_DIR)
 build/skybox.metallib: build/skybox.air
 	xcrun -sdk macosx metallib $< -o $@
 
+
+build/Brdf_LUT.air: include/Brdf_LUT.metal | $(BUILD_DIR)
+	xcrun -sdk macosx metal -c $< -o $@
+
+
+build/Brdf_LUT.metallib: build/Brdf_LUT.air
+	xcrun -sdk macosx metallib $< -o $@
+
 build/assets/%: assets/%
 	mkdir -p $(dir $@)
 	cp $< $@
@@ -158,7 +166,7 @@ copy-assets8 : build/assets/gun/Untitled.mtl
 copy-assets9 : build/assets/gun/Untitled.obj
 
 
-$(TARGET): $(OBJ) build/default.metallib build/skybox.metallib copy-assets2 copy-assets3 copy-assets4 copy-assets5 copy-assets6 copy-assets7 copy-assets8 copy-assets9
+$(TARGET): $(OBJ) build/Brdf_LUT.metallib build/default.metallib build/skybox.metallib copy-assets2 copy-assets3 copy-assets4 copy-assets5 copy-assets6 copy-assets7 copy-assets8 copy-assets9
 	$(CXX) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
 
 

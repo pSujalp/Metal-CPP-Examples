@@ -68,6 +68,9 @@ private:
     void buildSkyBoxShaders();
 
     void encodeRenderCommand(MTL::RenderCommandEncoder *renderEncoder);
+    MTL::Texture * generateBRDFLUT(MTL::Device* device,
+                               MTL::Library* library,
+                               MTL::CommandQueue* commandQueue);
     void sendRenderCommand();
     void draw();
     void CreateSkyBox();
@@ -86,6 +89,8 @@ private:
 
     MTL::Library *metalDefaultLibrary;
 
+    MTL::Library *metalBRDFLibrary;
+
     MTL::CommandQueue *metalCommandQueue;
 
     MTL::RenderPipelineState *metalRenderPSO;
@@ -103,7 +108,7 @@ private:
 
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
 
-    Mesh *sphere;
+    Sphere *sphere;
 
     static const int kMaxDrawsPerFrame = 10;
     MTL::CommandBuffer *metalCommandBuffer;
@@ -147,4 +152,6 @@ private:
 
 
     Texture * Cubemap_dds_irridance; 
+    MTL::Texture * brdf_LUT; 
+    Texture * prefilter_Map;
 };
