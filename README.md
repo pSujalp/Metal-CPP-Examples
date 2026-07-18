@@ -1,5 +1,9 @@
 # Metal C++ Examples
 
+⚠️ Note :- **These examples are kind of mixed with c++ and objective-c and some use apple NS::Window and most of them have glfw usage ,there could be some examples where it might be not working/looking as per it seems.This repo can be used for reference , understanding , learning etc. You are free to point out the problems,fixing,contributing,way of approaching a new solution etc .**
+
+  
+
 <table>
 <tr>
 <td width="58%">
