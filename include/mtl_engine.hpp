@@ -135,7 +135,7 @@ private:
     // IMGUI
 
     int lightintensity = 10;
-    float Location[3] = {0.0f, 0.0f, -2.5f};
+    float Location[3] = {0.0f, 0.0f, -18.0f};
     float LightPosition[3] = {3.0f, 0.0f, 5.0f};
     float metallic = 0.5;
     float roughness = 0;

@@ -28,6 +28,7 @@ void MTLEngine::run()
     }
 }
 
+
 void MTLEngine::cleanup()
 {
     glfwTerminate();
@@ -140,7 +141,7 @@ void MTLEngine::initWindow()
 void MTLEngine::createSphere()
 {
 
-    sphere = new Mesh("assets/gun/Untitled.obj");
+   sphere = new Sphere(4, 30, 30);
 
     std::vector<VertexDataPosition> vertexDataposition;
 
@@ -152,7 +153,6 @@ void MTLEngine::createSphere()
         vdp.position = *reinterpret_cast<float3 *>(&t);
         vertexDataposition.emplace_back(vdp);
     }
-
     std::vector<VertexDataUV> vertexDataUV;
 
     for (size_t i = 0; i < sphere->uv.size(); i++)
