@@ -207,7 +207,7 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float3 R = reflect(-V, N);
 
     float3 F0 = float3(0.04);
-    F0 = mix(F0, albedo, metallic);
+    F0 = mix(F0, uniforms.albedo, uniforms.metallic);
     float3 Lo = float3(0.0);
 
     float3 L = normalize(uniforms.lightPosition - in.WorldPos);
@@ -216,8 +216,8 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
     float attenuation = 1.0 / (distance * distance);
     float3 radiance = uniforms.lightColor * attenuation;
 
-    float NDF = DistributionGGX(N, H, roughness);
-    float G   = GeometrySmith(N, V, L, roughness);
+    float NDF = DistributionGGX(N, H, uniforms.roughness);
+    float G   = GeometrySmith(N, V, L, uniforms.roughness);
     float3 F  = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
     float3 numerator   = NDF * G * F;
@@ -226,28 +226,28 @@ fragment float4 fragmentShader(VertexOut in [[stage_in]],
 
     float3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
     float3 kD = float3(1.0) - kS;
-    kD *= 1.0 - metallic;
+    kD *= 1.0 - uniforms.metallic;
 
     float NdotL = max(dot(N, L), 0.0);
-    Lo += (kD * albedo / 3.14159265359 + specular) * radiance * NdotL;
+    Lo += (kD * uniforms.albedo / 3.14159265359 + specular) * radiance * NdotL;
 
    
     float NdotV = max(dot(N, V), 0.0);
-    float3 kSAmbient = fresnelSchlickRoughness(NdotV, F0, roughness);
-    float3 kDAmbient = (1.0 - kSAmbient) * (1.0 - metallic);
+    float3 kSAmbient = fresnelSchlickRoughness(NdotV, F0, uniforms.roughness);
+    float3 kDAmbient = (1.0 - kSAmbient) * (1.0 - uniforms.metallic);
 
     float3 irradiance = irradianceMap.sample(envSampler, N).rgb;
-    float3 diffuse = irradiance * albedo;
+    float3 diffuse = irradiance * uniforms.albedo;
 
    
-    float3 prefilteredColor = PrefilterEnvMap(CubeMap, envSampler, R, roughness);
+    float3 prefilteredColor = PrefilterEnvMap(CubeMap, envSampler, R, uniforms.roughness);
 
-    float2 brdf = BRD_FLUT_Tex.sample(lutSampler, float2(NdotV, roughness)).rg;
+    float2 brdf = BRD_FLUT_Tex.sample(lutSampler, float2(NdotV, uniforms.roughness)).rg;
     float3 specular1 = prefilteredColor * (kSAmbient * brdf.x + brdf.y);
 
-    float3 ambient = (kDAmbient * diffuse + specular1) * ao;
+    float3 ambient = (kDAmbient * diffuse + specular1) * uniforms.ao;
 
-    float3 color = ambient + Lo + emissive * 30.0;
+    float3 color = ambient + Lo ;
 
     color = color / (color + float3(1.0));
     color = pow(color, float3(1.0 / 2.2));

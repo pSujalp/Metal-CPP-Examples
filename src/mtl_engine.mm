@@ -430,6 +430,11 @@ void MTLEngine::sendRenderCommand()
     ImGui::SliderFloat3("LIGHT Position", LightPosition, 0.0f , 10);
 
     ImGui::SliderFloat3("3D Position Location", Location, 10.0f , -10);
+
+    ImGui::SliderFloat("Metallic", &metallic, 0, 1);
+    ImGui::SliderFloat("Rougness", &roughness , 0, 1);
+    ImGui::SliderFloat("AO", &ao , 0, 1);
+
     
     
     
