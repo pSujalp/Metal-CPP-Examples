@@ -6,6 +6,14 @@
 
 A collection of **Metal C++** examples demonstrating graphics programming concepts ranging from rendering a simple triangle to advanced rendering techniques such as render passes, instancing, HDR, MSAA, and model loading .
 
+
+### Useful links
+
+
+Image based lighting for cubemaps [Cubemap preview , BRDF_LUT , irradiance specular cubemap downloads etc](https://image-based.lighting/ )
+
+PBR material maker [PBR Material](https://unrealmatter.net/pbr) 
+
 ### Getting Started
 
 Switch to the branch you want to explore and run:
