@@ -50,7 +50,7 @@ build/shaders/%: shaders/%
 
 build/assets/%: assets/%
 	mkdir -p $(dir $@)
-	cp $< $@
+	cp -R $< $@
 
 $(TARGET): $(OBJ) $(SHADERS) $(ASSETS)
 	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) $(LDLIBS) -o $@
