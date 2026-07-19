@@ -13,7 +13,7 @@
 
 ### Getting Started
 
-Switch to the branch you want to explore and run:
+**Switch to the branch you want to explore and run:**
 
 ```bash
  make clean && make && make run
