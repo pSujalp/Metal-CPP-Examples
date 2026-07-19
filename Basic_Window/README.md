@@ -1,2 +1,0 @@
-# Metal C++ Examples
-
