@@ -5,7 +5,8 @@
 
 ⚠️ Note :- **These examples are kind of mixed with c++ and objective-c and some use apple NS::Window and most of them have glfw usage ,there could be some confusions in the various examples and some examples might be not working/looking as per it seems.This repo can be used for reference , understanding , learning etc. You are free to point out the problems,fixing,contributing,way of approaching a new solution etc .**
 
-<img width="230" height="254" alt="Image" src="https://github.com/user-attachments/assets/5e3207a3-8e29-4ceb-8800-708b8f37c18c" /><img width="230" height="254" alt="Pi7_Gif (1)" src="https://github.com/user-attachments/assets/860ed9d6-725d-4a8d-89bf-65d210d22fdd" /><img width="230" height="254" alt="Pi7_Gif" src="https://github.com/user-attachments/assets/a994fd84-6b73-4707-ab6c-880957e8b3de" /> <img width="254" height="254" alt="ScreenRecording2026-07-11at1 49 41PM-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/fc3d0372-677f-4fb1-b535-2bc06b3c2dd7" />
+<img width="230" height="254" alt="Image" src="https://github.com/user-attachments/assets/5e3207a3-8e29-4ceb-8800-708b8f37c18c" /><img width="230" height="254" alt="Pi7_Gif (1)" src="https://github.com/user-attachments/assets/860ed9d6-725d-4a8d-89bf-65d210d22fdd" /><img width="230" height="254" alt="Pi7_Gif" src="https://github.com/user-attachments/assets/a994fd84-6b73-4707-ab6c-880957e8b3de" /> <img width="254" height="254" alt="ScreenRecording2026-07-11at1 49 41PM-ezgif com-video-to-gif-converter" src="https://github.com/user-attachments/assets/fc3d0372-677f-4fb1-b535-2bc06b3c2dd7" /><img width=35%" alt="Metal C++ Examples" src="https://github.com/user-attachments/assets/a1376055-25dd-4fff-a97e-7d1a064c5261"/>
+
 
 
 
@@ -77,7 +78,6 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 
 <td width="42%" align="right" valign="top">
 
-<img width="100%" alt="Metal C++ Examples" src="https://github.com/user-attachments/assets/a1376055-25dd-4fff-a97e-7d1a064c5261"/>
 
 </td>
 </tr>
