@@ -13,6 +13,10 @@
 
 ### Getting Started
 
+**Download everything all at once**
+
+**OR**
+
 **Switch to the branch you want to explore and run or download a specific example subfolder using :** [DownGit](https://downgit.github.io/#/home) 
 
 **There more than 30+ code sample**
