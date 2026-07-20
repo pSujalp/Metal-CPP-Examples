@@ -13,9 +13,9 @@
 
 ### Getting Started
 
-**Switch to the branch you want to explore and run:**
+**Switch to the branch you want to explore and run or download a specific example subfolder using :** [DownGit](https://downgit.github.io/#/home) 
 
-** There more than 30 code sample
+**There more than 30+ code sample**
 
 ```bash
  make clean && make && make run
