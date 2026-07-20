@@ -36,7 +36,7 @@ A collection of **Metal C++** examples demonstrating graphics programming concep
 ### Useful links
 
 
-Image based lighting for cubemaps [Cubemap preview , BRDF_LUT , irradiance specular cubemap downloads etc](https://image-based.lighting/ )
+Image based lighting for Prebaked cubemaps [Cubemap preview , BRDF_LUT , irradiance specular cubemap downloads etc](https://image-based.lighting/ )
 
 PBR material maker [PBR Material](https://unrealmatter.net/pbr) 
 
