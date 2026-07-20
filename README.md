@@ -86,6 +86,9 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 * Metal by Example
   https://github.com/metal-by-example
 
+* Metal cpp examples
+  https://github.com/metal-by-example/learn-metal-cpp-ios
+
 </td>
 
 <td width="42%" align="right" valign="top">
