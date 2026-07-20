@@ -77,6 +77,15 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 * Learn Metal Tutorial
   https://metaltutorial.com/
 
+* Bloom James Buck
+  https://weblog.jamisbuck.org/2016/2/27/bloom-effect-in-metal.html
+
+* Metal by Code
+  https://www.kodeco.com/books/metal-by-tutorials/v5.0
+
+* Metal by Example
+  https://github.com/metal-by-example
+
 </td>
 
 <td width="42%" align="right" valign="top">
