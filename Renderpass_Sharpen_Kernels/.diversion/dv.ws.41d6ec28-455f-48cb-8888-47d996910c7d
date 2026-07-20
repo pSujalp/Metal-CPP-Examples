@@ -1,0 +1,15 @@
+{
+  "WorkspaceID": "dv.ws.41d6ec28-455f-48cb-8888-47d996910c7d",
+  "RepoID": "dv.repo.a584ced4-7cde-406d-855a-be1e11e122a2",
+  "Path": "/Users/sujal/Documents/Metal_CPP",
+  "AccountID": "Google_105342387640539991943",
+  "BranchID": "dv.branch.10",
+  "BranchName": "LIGHT",
+  "CommitID": "dv.commit.22",
+  "Paused": false,
+  "ShouldDownload": false,
+  "RepoName": "Metal_CPP",
+  "ReadOnly": false,
+  "DigestMethod": "sha1",
+  "OrganizationTier": "INDIE"
+}

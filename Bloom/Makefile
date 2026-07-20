@@ -1,0 +1,61 @@
+
+
+CXX := clang++
+CC := clang
+CPPFLAGS := -I./metal-cpp -I./metal-cpp-extensions -I./include
+CXXFLAGS := -Wall -std=c++23 -O2 -fno-objc-arc
+CFLAGS := -Wall -std=c11 -O2
+LDFLAGS := -framework Metal -framework Foundation -framework Cocoa -framework CoreGraphics -framework MetalKit
+
+TARGET := build/metal
+
+SRC_C := $(wildcard src/*.c)
+SRC_CPP := $(wildcard src/*.cpp)
+SRC_MM := $(wildcard src/*.mm)
+OBJ := $(patsubst src/%.c,build/%.c.o,$(SRC_C)) $(patsubst src/%.cpp,build/%.cpp.o,$(SRC_CPP)) $(patsubst src/%.mm,build/%.mm.o,$(SRC_MM))
+
+.DEFAULT_GOAL := all
+
+.PHONY: all clean run copy-shaders copy-assets
+.SECONDARY:
+
+all: $(TARGET)
+
+build/shaders/%: shaders/%
+	mkdir -p $(dir $@)
+	cp $< $@
+
+build/assets/%: assets/%
+	mkdir -p $(dir $@)
+	cp $< $@
+
+copy-shaders: build/shaders/square.metal
+copy-shaders1: build/shaders/light.metal
+copy-assets: build/assets/mc_grass.jpeg
+copy-assets1: build/assets/brickwall.jpg
+copy-assets2: build/assets/brickwall_normal.jpg
+copy-assets3: build/assets/diffuse.png
+copy-assets4: build/assets/normal.png
+
+$(TARGET): $(OBJ) copy-shaders copy-shaders1 copy-assets copy-assets1 copy-assets2 copy-assets3 copy-assets4
+	$(CXX) $(CXXFLAGS) $(OBJ) $(LDFLAGS) -o $@
+
+build/%.c.o: src/%.c
+	mkdir -p $(dir $@)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+build/%.cpp.o: src/%.cpp
+	mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+build/%.mm.o: src/%.mm
+	mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+run: $(TARGET)
+	cd build && ./metal
+
+clean:
+	rm -rf build
+
+
