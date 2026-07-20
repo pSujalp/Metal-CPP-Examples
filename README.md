@@ -15,6 +15,8 @@
 
 **Switch to the branch you want to explore and run:**
 
+** There more than 30 code sample
+
 ```bash
  make clean && make && make run
 ```
