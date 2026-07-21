@@ -43,7 +43,7 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 ### Prerequisites
 
 * macOS
-* Apple Silicon or Intel Mac with Metal support
+* Apple Silicon or Intel Mac with Metal support _(**Metal 4 examples will only work for Apple Silicon** )_
 * Apple Command Line Tools
 * Metal Toolchain
 * Make
