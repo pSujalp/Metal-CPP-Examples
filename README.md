@@ -12,6 +12,7 @@
 
 
 ### Getting Started
+---
 
 **Download everything all at once**
 
@@ -20,6 +21,7 @@
 **Switch to the branch you want to explore and run or download a specific example subfolder using :** [DownGit](https://downgit.github.io/#/home) 
 
 **There more than 30+ code sample**
+---
 
 ```bash
  make clean && make && make run
@@ -34,6 +36,7 @@ A collection of **Metal C++** examples demonstrating graphics programming concep
 
 
 ### Useful links
+---
 
 
 Image based lighting for Prebaked cubemaps [Cubemap preview , BRDF_LUT , irradiance specular cubemap downloads etc](https://image-based.lighting/ )
@@ -41,6 +44,7 @@ Image based lighting for Prebaked cubemaps [Cubemap preview , BRDF_LUT , irradia
 PBR material maker [PBR Material](https://unrealmatter.net/pbr) 
 
 ### Prerequisites
+---
 
 * macOS
 * Apple Silicon or Intel Mac with Metal support _(**Metal 4 examples will only work for Apple Silicon** )_
@@ -49,6 +53,7 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 * Make
 
 ### Required Brew Libraries 
+---
 
 * **Assimp**
 ```bash
@@ -61,6 +66,7 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 ```
 
 ### Credits & References
+---
 
 * Apple Metal Documentation
   https://developer.apple.com/documentation/metal
@@ -86,12 +92,12 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 * Metal by Example
   https://github.com/metal-by-example
 
-* Metal cpp examples
-  https://github.com/metal-by-example/learn-metal-cpp-ios
+* Victor Gordon OpenGL Repo
+  [VictorGordan/opengl-tutorials](https://github.com/VictorGordan/opengl-tutorials)
 
 </td>
 
-<td width="42%" align="right" valign="top">
+<td width="4%" align="right" valign="top">
 
 
 </td>
