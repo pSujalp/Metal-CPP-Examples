@@ -97,7 +97,7 @@ PBR material maker [PBR Material](https://unrealmatter.net/pbr)
 
 </td>
 
-<td width="4%" align="right" valign="top">
+<td width="1%" align="right" valign="top">
 
 
 </td>
