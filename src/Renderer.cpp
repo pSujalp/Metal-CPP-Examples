@@ -42,7 +42,7 @@ void Renderer::draw(MTK::View *pView)
     );
 
     simd_float4 lightColor = simd_make_float4(1.0f, 1.0f, 1.0f, 1.0f);
-    simd_float4 lightPosition = simd_make_float4(60.0f, 0.6f, 0.0f, 1.0f);
+    simd_float4 lightPosition = simd_make_float4(0.0f, -0.6f, 0.0f, -1.0f);
     simd_float3 cameraPosition = simd_make_float3(-1.0f, 0.0f, 0.0f);
 
     auto drawableSize = pView->drawableSize();
@@ -59,7 +59,7 @@ void Renderer::draw(MTK::View *pView)
     matrix_float4x4 modelMatrix = matrix4x4_translation(0.0f, -0.5f, -5.0f) * rotationMatrix * scaleMatrix;
 
     matrix_float4x4 smallScaleMatrix = matrix4x4_scale(4.01f, 4.01f, 4.01f);
-    matrix_float4x4 smallModelMatrix = matrix4x4_translation(-1.0f, -0.25f, -3.0f) * rotationMatrix * smallScaleMatrix;
+    matrix_float4x4 smallModelMatrix = matrix4x4_translation(-0.3f, -0.25f, -2.5f) * rotationMatrix * smallScaleMatrix;
 
     
     

@@ -41,14 +41,18 @@ vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
     out.diffuseTextureIndex  = v.diffuseTextureIndex;
     return out;
 }
+
 fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
                                        texture2d_array<float> colorTextures [[texture(3)]],
                                        depth2d<float>         shadowMap     [[texture(4)]])
 {
+    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
     constexpr sampler shadowSampler(coord::normalized,
                                      filter::linear,
                                      address::clamp_to_edge,
                                      compare_func::less_equal);
+
+    float4 colorSample = colorTextures.sample(textureSampler, in.textureCoordinate, in.diffuseTextureIndex);
 
     float3 shadowNDC = in.shadowPosition.xyz / in.shadowPosition.w;
     float2 shadowUV  = shadowNDC.xy * 0.5 + 0.5;
@@ -65,10 +69,10 @@ fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
         lit = shadowMap.sample_compare(shadowSampler, shadowUV, currentDepth);
     }
 
-    // TEMP DEBUG: paint the objects black where shadowed, white where lit.
-    // Delete this return and restore the real texture-sampling code once you're done.
-    return float4(lit, lit, lit, 1.0);
+    float shadowFactor = mix(0.35, 1.0, lit);
+    return float4(colorSample.rgb * shadowFactor, colorSample.a);
 }
+
 vertex float4 vertex_zOnly(uint vertexID [[vertex_id]],
                            constant Vertex *vertexData,
                            constant float4x4 &modelMatrix              [[buffer(1)]],
