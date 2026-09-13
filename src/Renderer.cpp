@@ -111,58 +111,52 @@ void Renderer::CreateCube()
         MTL::ResourceStorageModeShared);
 
     VertexData lightSource[] = {
-        
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+
+        {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{0.5, -0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
+        {{0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
-        
-        
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0, 0.0,-1.0, 1.0}},
+        {{-0.5, -0.5, 0.5, 1.0}, {0.0, 0.0, 1.0, 1.0}},
 
-        
+        {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+        {{-0.5, -0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+        {{-0.5, 0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+        {{-0.5, 0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+        {{0.5, 0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+        {{0.5, -0.5, -0.5, 1.0}, {0.0, 0.0, -1.0, 1.0}},
+
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{0.5, 0.5, -0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{0.5, 0.5, -0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
+        {{-0.5, 0.5, -0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
         {{-0.5, 0.5, 0.5, 1.0}, {0.0, 1.0, 0.0, 1.0}},
 
-        
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {0.0,-1.0, 0.0, 1.0}},
+        {{-0.5, -0.5, -0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
+        {{0.5, -0.5, -0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
+        {{0.5, -0.5, 0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
+        {{0.5, -0.5, 0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
+        {{-0.5, -0.5, 0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
+        {{-0.5, -0.5, -0.5, 1.0}, {0.0, -1.0, 0.0, 1.0}},
 
-        
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5, 0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5, 0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
-        {{-0.5,-0.5,-0.5, 1.0}, {-1.0,0.0, 0.0, 1.0}},
+        {{-0.5, -0.5, -0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
+        {{-0.5, -0.5, 0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
+        {{-0.5, 0.5, 0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
+        {{-0.5, 0.5, -0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
+        {{-0.5, -0.5, -0.5, 1.0}, {-1.0, 0.0, 0.0, 1.0}},
 
-        
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5,-0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5, 0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
-        {{ 0.5,-0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, -0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, -0.5, -0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, 0.5, -0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, 0.5, -0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, 0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
+        {{0.5, -0.5, 0.5, 1.0}, {1.0, 0.0, 0.0, 1.0}},
     };
-    
+
     lightVertexBuffer = _pDevice->newBuffer(&lightSource, sizeof(lightSource), MTL::ResourceStorageModeShared);
     lightTransformationBuffer = _pDevice->newBuffer(sizeof(N_MVP), MTL::ResourceStorageModeShared);
-
 
     D_Texture = new Texture("assets/diffuse.png", _pDevice);
     N_Texture = new Texture("assets/normal.png", _pDevice);
@@ -172,20 +166,17 @@ void Renderer::buildShaders()
 {
     NS::Error *pError = nullptr;
 
-    
     MTL::TextureDescriptor *colorDesc = MTL::TextureDescriptor::alloc()->init();
-    colorDesc->setPixelFormat(MTL::PixelFormatRGBA16Float);   
+    colorDesc->setPixelFormat(MTL::PixelFormatRGBA16Float);
     colorDesc->setWidth(1920);
     colorDesc->setHeight(1080);
     colorDesc->setStorageMode(MTL::StorageModePrivate);
     colorDesc->setUsage(MTL::TextureUsageRenderTarget | MTL::TextureUsageShaderRead);
     _renderTexture = _pDevice->newTexture(colorDesc);
 
-
     _MaskTexture = _pDevice->newTexture(colorDesc);
     colorDesc->release();
 
-    
     MTL::TextureDescriptor *depthDesc = MTL::TextureDescriptor::alloc()->init();
     depthDesc->setPixelFormat(MTL::PixelFormatDepth32Float);
     depthDesc->setWidth(1920);
@@ -200,7 +191,7 @@ void Renderer::buildShaders()
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setStoreAction(MTL::StoreActionStore);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(0)->setClearColor(MTL::ClearColor(0.0, 0.0, 0.0, 1.0));
-   
+
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setTexture(_MaskTexture);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setLoadAction(MTL::LoadActionClear);
     _renderToTextureRenderPassDescriptor->colorAttachments()->object(1)->setStoreAction(MTL::StoreActionStore);
@@ -211,7 +202,6 @@ void Renderer::buildShaders()
     _renderToTextureRenderPassDescriptor->depthAttachment()->setStoreAction(MTL::StoreActionDontCare);
     _renderToTextureRenderPassDescriptor->depthAttachment()->setClearDepth(1.0);
 
-    
     MTL::Function *vertexFn = metallibrary->newFunction(NS::String::string("vertexShader", NS::ASCIIStringEncoding));
     assert(vertexFn);
     MTL::Function *fragmentFn = metallibrary->newFunction(NS::String::string("fragmentShader", NS::ASCIIStringEncoding));
@@ -239,7 +229,6 @@ void Renderer::buildShaders()
     UniformBuffer = _pDevice->newBuffer(sizeof(N_Uniforms), MTL::ResourceStorageModeShared);
     transformationBuffer = _pDevice->newBuffer(sizeof(N_MVP), MTL::ResourceStorageModeShared);
 
-    
     MTL::Function *vertexRPFn = metallibrary->newFunction(NS::String::string("vertexRenderPass", NS::ASCIIStringEncoding));
     assert(vertexRPFn);
     MTL::Function *fragmentRPFn = metallibrary->newFunction(NS::String::string("fragmentRenderPass", NS::ASCIIStringEncoding));
@@ -249,7 +238,7 @@ void Renderer::buildShaders()
     pDesc2->setVertexFunction(vertexRPFn);
     pDesc2->setFragmentFunction(fragmentRPFn);
     pDesc2->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatBGRA8Unorm_sRGB);
-    
+
     // pDesc2->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float);
     _renderToTexturePipelineState = _pDevice->newRenderPipelineState(pDesc2, &pError);
     if (!_renderToTexturePipelineState)
@@ -265,13 +254,9 @@ void Renderer::draw(MTK::View *pView)
     NS::AutoreleasePool *pPool = NS::AutoreleasePool::alloc()->init();
     MTL::CommandBuffer *pCmd = _pCommandQueue->commandBuffer();
 
-
-
-
-     {
+    {
         MTL::RenderPassDescriptor *pRpd2 = pView->currentRenderPassDescriptor();
         MTL::RenderCommandEncoder *pEnc2 = pCmd->renderCommandEncoder(pRpd2);
-
 
         pEnc2->setRenderPipelineState(_renderToTexturePipelineState);
 
@@ -291,7 +276,6 @@ void Renderer::draw(MTK::View *pView)
         pEnc2->endEncoding();
     }
 
-    
     {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 2.0f));
@@ -304,7 +288,6 @@ void Renderer::draw(MTK::View *pView)
             accumulatedDegrees -= 360.0f;
 
         float angleInRadians = accumulatedDegrees * (M_PI / 180.0f);
-        
 
         glm::mat4 viewMatrix = glm::lookAt(
             glm::vec3(0.0f, 0.0f, 5.0f),
@@ -342,7 +325,7 @@ void Renderer::draw(MTK::View *pView)
 
         glm::mat3 normalMatrix = glm::transpose(inverse(glm::mat3(model)));
         N_Uniforms uniforms;
-        uniforms.lightPos = float3{0.0f, 0.0f, 2.0f};
+        uniforms.lightPos = float3{2.0f, 0.0f, 2.0f};
         uniforms.viewPos = mslVec1;
         uniforms.normalMatrix = float3x3{
             simd::float3{normalMatrix[0][0], normalMatrix[0][1], normalMatrix[0][2]},
@@ -350,15 +333,10 @@ void Renderer::draw(MTK::View *pView)
             simd::float3{normalMatrix[2][0], normalMatrix[2][1], normalMatrix[2][2]}};
         memcpy(UniformBuffer->contents(), &uniforms, sizeof(N_Uniforms));
 
-
-
-        
-
-
         glm::mat4 lightModel = glm::mat4(1.0f);
         glm::vec3 lightPosGlm(uniforms.lightPos.x, uniforms.lightPos.y, uniforms.lightPos.z);
         lightModel = glm::translate(lightModel, lightPosGlm);
-        lightModel = glm::scale(lightModel, glm::vec3(0.2f)); 
+        lightModel = glm::scale(lightModel, glm::vec3(0.2f));
 
         N_MVP lightMvp;
         lightMvp.M = matrix_float4x4({
@@ -367,25 +345,17 @@ void Renderer::draw(MTK::View *pView)
             simd::float4{lightModel[2][0], lightModel[2][1], lightModel[2][2], lightModel[2][3]},
             simd::float4{lightModel[3][0], lightModel[3][1], lightModel[3][2], lightModel[3][3]},
         });
-        lightMvp.V = mvp1.V; 
+        lightMvp.V = mvp1.V;
         lightMvp.P = mvp1.P;
         memcpy(lightTransformationBuffer->contents(), &lightMvp, sizeof(N_MVP));
 
-
-
         MTL::RenderCommandEncoder *pEnc1 = pCmd->renderCommandEncoder(_renderToTextureRenderPassDescriptor);
-
-       
 
         pEnc1->setRenderPipelineState(metalLightSourceRenderPSO);
         pEnc1->setDepthStencilState(depthStencilState);
         pEnc1->setVertexBuffer(lightVertexBuffer, 0, 0);
         pEnc1->setVertexBuffer(lightTransformationBuffer, 0, 1);
-        
         pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(36));
-
-        pEnc1->endEncoding();
-
 
         pEnc1->setRenderPipelineState(_pPSO);
         pEnc1->setDepthStencilState(depthStencilState);
@@ -396,45 +366,38 @@ void Renderer::draw(MTK::View *pView)
         pEnc1->setFragmentTexture(N_Texture->texture, 1);
         pEnc1->drawPrimitives(MTL::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(6));
 
-       
-        
-        
-
-
+        pEnc1->endEncoding();
     }
-
-   
-   
 
     pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
     pPool->release();
 }
 
-void Renderer::createLightSourceRenderPipeline() {
+void Renderer::createLightSourceRenderPipeline()
+{
     using NS::StringEncoding::UTF8StringEncoding;
     Shader sh;
-    NS::Error* pError = nullptr;
+    NS::Error *pError = nullptr;
 
-    MTL::Library* pLibrary = _pDevice->newLibrary(NS::String::string(sh.GetShader("shaders/light.metal"), UTF8StringEncoding), nullptr, &pError);
+    MTL::Library *pLibrary = _pDevice->newLibrary(NS::String::string(sh.GetShader("shaders/light.metal"), UTF8StringEncoding), nullptr, &pError);
 
-    MTL::Function* vertexShader = pLibrary->newFunction(NS::String::string("lightVertexShader", NS::ASCIIStringEncoding));
+    MTL::Function *vertexShader = pLibrary->newFunction(NS::String::string("lightVertexShader", NS::ASCIIStringEncoding));
     assert(vertexShader);
-    MTL::Function* fragmentShader = pLibrary->newFunction(NS::String::string("lightFragmentShader", NS::ASCIIStringEncoding));
+    MTL::Function *fragmentShader = pLibrary->newFunction(NS::String::string("lightFragmentShader", NS::ASCIIStringEncoding));
     assert(fragmentShader);
 
-    MTL::RenderPipelineDescriptor* renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
+    MTL::RenderPipelineDescriptor *renderPipelineDescriptor = MTL::RenderPipelineDescriptor::alloc()->init();
     renderPipelineDescriptor->setVertexFunction(vertexShader);
     renderPipelineDescriptor->setFragmentFunction(fragmentShader);
 
-    
-    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRGBA16Float); 
-    renderPipelineDescriptor->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float); 
-    renderPipelineDescriptor->setSampleCount(1); 
+    renderPipelineDescriptor->colorAttachments()->object(0)->setPixelFormat(MTL::PixelFormatRGBA16Float);
+    renderPipelineDescriptor->colorAttachments()->object(1)->setPixelFormat(MTL::PixelFormatRGBA16Float);
+    renderPipelineDescriptor->setSampleCount(1);
     renderPipelineDescriptor->setLabel(NS::String::string("Light Source Render Pipeline", NS::ASCIIStringEncoding));
     renderPipelineDescriptor->setDepthAttachmentPixelFormat(MTL::PixelFormatDepth32Float);
 
-    NS::Error* error = nullptr;
+    NS::Error *error = nullptr;
     metalLightSourceRenderPSO = _pDevice->newRenderPipelineState(renderPipelineDescriptor, &error);
     if (!metalLightSourceRenderPSO)
         __builtin_printf("Light PSO FAILED: %s\n", error->localizedDescription()->utf8String());

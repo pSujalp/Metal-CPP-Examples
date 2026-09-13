@@ -99,7 +99,7 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     float2 tex_offset = blurSize * float2(1.0 / maskTex.get_width(), 1.0 / maskTex.get_height());
 
     float3 centerSample = maskTex.sample(textureSampler, in.textureCoordinate).rgb;
-    float3 result = centerSample * weight[0] * weight[0];
+    float3 result = centerSample * weight[0] * weight[1];
 
     for (int i = 1; i < 5; ++i) {
         float3 hPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, 0.0)).rgb;
