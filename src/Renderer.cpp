@@ -62,9 +62,6 @@ void Renderer::draw(MTK::View *pView)
     matrix_float4x4 smallModelMatrix = matrix4x4_translation(-0.3f, -0.25f, -2.5f) * rotationMatrix * smallScaleMatrix;
 
     
-    
-    
-    
     simd_float3 lightPos3 = simd_make_float3(lightPosition[0], lightPosition[1], lightPosition[2]);
     simd_float3 sceneCenter = simd_make_float3(0.0f, -0.25f, -4.0f);
     matrix_float4x4 lightViewMatrix = matrix_look_at_right_hand(lightPos3, sceneCenter, simd_make_float3(0.0f, 1.0f, 0.0f));
@@ -102,6 +99,8 @@ void Renderer::draw(MTK::View *pView)
                                           0);
     }
     pShadowEnc->endEncoding();
+
+
 
     
     MTL::RenderPassDescriptor *pRpd = pView->currentRenderPassDescriptor();
@@ -172,6 +171,8 @@ void Renderer::draw(MTK::View *pView)
     pEnc->drawPrimitives(typeTriangle, (NS::UInteger)0, (NS::UInteger)(6 * 6));
 
     pEnc->endEncoding();
+
+    
     pCmd->presentDrawable(pView->currentDrawable());
     pCmd->commit();
     pPool->release();
