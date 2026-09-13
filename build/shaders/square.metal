@@ -71,10 +71,8 @@ fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
     shadowUV.y = 1.0 - shadowUV.y;
     float bias = 0.0015;
     float currentDepth = shadowNDC.z - bias;
-
     float3 lightPos   = float3(-0.5, 0.0, 0.0);
     float3 lightColor = float3(1,0,0);
-
     float lit = 1.0;
     if (shadowUV.x >= 0.0 && shadowUV.x <= 1.0 &&
         shadowUV.y >= 0.0 && shadowUV.y <= 1.0 &&
@@ -82,9 +80,7 @@ fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
     {
         lit = shadowMap.sample_compare(shadowSampler, shadowUV, currentDepth);
     }
-
     float3 ambient = 0.3 * lightColor;
-
     float3 lightDir = normalize(lightPos - in.worldPosition);
     float  diff     = max(dot(normal, lightDir), 0.0);
     float3 diffuse  = diff * lightColor;

@@ -80,9 +80,7 @@ fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
     {
         lit = shadowMap.sample_compare(shadowSampler, shadowUV, currentDepth);
     }
-
     float3 ambient = 0.3 * lightColor;
-
     float3 lightDir = normalize(lightPos - in.worldPosition);
     float  diff     = max(dot(normal, lightDir), 0.0);
     float3 diffuse  = diff * lightColor;
