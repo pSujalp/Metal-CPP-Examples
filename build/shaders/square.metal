@@ -1,63 +1,79 @@
-
 #include <metal_stdlib>
 using namespace metal;
-
 #include <simd/simd.h>
-
 using namespace simd;
 
-struct VertexData {
-    float4 position;
+struct Vertex
+{
+    float3 position;
+    float3 normal;
+    float3 tangent;
+    float3 bitangent;
     float2 textureCoordinate;
+    int    diffuseTextureIndex;
+    int    specularTextureIndex;
+    int    normalMapIndex;
+    int    emissiveMapIndex;
 };
 
-struct Uniforms
+struct VertexOut
 {
-    float2 time;
-};
-
-
-struct Uniforms1
-{
-    int intAsBool;
-};
-
-
-
-struct VertexOut {
-    // The [[position]] attribute of this member indicates that this value
-    // is the clip space position of the vertex when this structure is
-    // returned from the vertex function.
     float4 position [[position]];
-
-    // Since this member does not have a special attribute, the rasterizer
-    // interpolates its value with the values of the other triangle vertices
-    // and then passes the interpolated value to the fragment shader for each
-    // fragment in the triangle.
     float2 textureCoordinate;
+    float4 shadowPosition;
+    int    diffuseTextureIndex;
 };
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
-                              constant VertexData* vertexData,
-                              constant Uniforms& uniforms [[buffer(1)]],
-                               constant Uniforms1& uniforms1 [[buffer(2)]]) {
-    
-    
+                               constant Vertex *vertexData,
+                               constant float4x4 &modelMatrix              [[buffer(1)]],
+                               constant float4x4 &viewMatrix                [[buffer(2)]],
+                               constant float4x4 &projectionMatrix          [[buffer(3)]],
+                               constant float4x4 &lightViewProjectionMatrix [[buffer(4)]])
+{
     VertexOut out;
-    if(uniforms1.intAsBool){
-        out.position = vertexData[vertexID].position + float4(uniforms.time,0,0);
-    }
-    else out.position = vertexData[vertexID].position ;
-    
-    out.textureCoordinate = vertexData[vertexID].textureCoordinate;
+    Vertex v = vertexData[vertexID];
+    float4 worldPosition = modelMatrix * float4(v.position, 1.0);
+
+    out.position             = projectionMatrix * viewMatrix * worldPosition;
+    out.textureCoordinate    = v.textureCoordinate;
+    out.shadowPosition       = lightViewProjectionMatrix * worldPosition;
+    out.diffuseTextureIndex  = v.diffuseTextureIndex;
     return out;
 }
+fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
+                                       texture2d_array<float> colorTextures [[texture(3)]],
+                                       depth2d<float>         shadowMap     [[texture(4)]])
+{
+    constexpr sampler shadowSampler(coord::normalized,
+                                     filter::linear,
+                                     address::clamp_to_edge,
+                                     compare_func::less_equal);
 
-fragment float4 fragmentShader(VertexOut in [[stage_in]],
-                               texture2d<float> colorTexture [[texture(0)]]) {
-    constexpr sampler textureSampler (mag_filter::linear,
-                                      min_filter::linear);
-    // Sample the texture to obtain a color
-    const float4 colorSample = colorTexture.sample(textureSampler, in.textureCoordinate);
-    return colorSample;
+    float3 shadowNDC = in.shadowPosition.xyz / in.shadowPosition.w;
+    float2 shadowUV  = shadowNDC.xy * 0.5 + 0.5;
+    shadowUV.y = 1.0 - shadowUV.y;
+
+    float bias = 0.0015;
+    float currentDepth = shadowNDC.z - bias;
+
+    float lit = 1.0;
+    if (shadowUV.x >= 0.0 && shadowUV.x <= 1.0 &&
+        shadowUV.y >= 0.0 && shadowUV.y <= 1.0 &&
+        currentDepth <= 1.0)
+    {
+        lit = shadowMap.sample_compare(shadowSampler, shadowUV, currentDepth);
+    }
+
+    // TEMP DEBUG: paint the objects black where shadowed, white where lit.
+    // Delete this return and restore the real texture-sampling code once you're done.
+    return float4(lit, lit, lit, 1.0);
+}
+vertex float4 vertex_zOnly(uint vertexID [[vertex_id]],
+                           constant Vertex *vertexData,
+                           constant float4x4 &modelMatrix              [[buffer(1)]],
+                           constant float4x4 &lightViewProjectionMatrix [[buffer(2)]])
+{
+    float4 worldPosition = modelMatrix * float4(vertexData[vertexID].position, 1.0);
+    return lightViewProjectionMatrix * worldPosition;
 }

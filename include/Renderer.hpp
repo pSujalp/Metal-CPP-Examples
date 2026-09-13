@@ -25,10 +25,18 @@ class Renderer
         MTL::Device* _pDevice;
         MTL::CommandQueue* _pCommandQueue;
         MTL::RenderPipelineState* metalRenderPSO;
+        MTL::RenderPipelineState* ColorRenderPSO;
         MTL::Buffer* _pVertexPositionsBuffer;
         MTL::Buffer* _pVertexColorsBuffer;
         MTL::Buffer * lightVertexBuffer ;
         Model * model;
         MTL::DepthStencilState* depthStencilState;
         MTL::RenderPipelineState* metalLightSourceRenderPSO;
+
+        MTL::RenderPipelineState* shadowPipelineState;
+        MTL::RenderPassDescriptor* shadowRenderPassDescriptor;
+        MTL::Texture* shadowTexture;
+        MTL::DepthStencilState* shadowDepthStencilState;
+
+        
 };

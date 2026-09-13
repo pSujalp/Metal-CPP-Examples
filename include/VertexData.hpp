@@ -34,3 +34,7 @@ struct TransformationData {
 };
 
 
+struct Constants {
+  float4x4 modelViewProjectionMatrix;
+  float4x4 shadowViewProjectionMatrix;
+};
