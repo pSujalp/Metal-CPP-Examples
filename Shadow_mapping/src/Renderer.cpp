@@ -63,8 +63,6 @@ void Renderer::draw(MTK::View *pView)
 
     
     
-    
-    
     simd_float3 lightPos3 = simd_make_float3(lightPosition[0], lightPosition[1], lightPosition[2]);
     simd_float3 sceneCenter = simd_make_float3(0.0f, -0.25f, -4.0f);
     matrix_float4x4 lightViewMatrix = matrix_look_at_right_hand(lightPos3, sceneCenter, simd_make_float3(0.0f, 1.0f, 0.0f));
@@ -101,6 +99,8 @@ void Renderer::draw(MTK::View *pView)
                                           mesh->indexBuffer,
                                           0);
     }
+
+    
     pShadowEnc->endEncoding();
 
     
