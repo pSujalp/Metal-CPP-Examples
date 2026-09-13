@@ -93,31 +93,35 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
 
     constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
     float4 Original = colorTex.sample(textureSampler, in.textureCoordinate);
+
     float weight[5] = {0.2670270270, 0.1985945946, 0.1816216216, 0.0840540541, 0.0192162162};
     const float blurSize = 6.0;
     float2 tex_offset = blurSize * float2(1.0 / maskTex.get_width(), 1.0 / maskTex.get_height());
+
     float3 centerSample = maskTex.sample(textureSampler, in.textureCoordinate).rgb;
-    float centerGray = (centerSample.r + centerSample.g + centerSample.b) / 3.0;
-    float result = centerGray * weight[0] * weight[0];
+    float3 result = centerSample * weight[0] * weight[0];
+
     for (int i = 1; i < 5; ++i) {
         float3 hPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, 0.0)).rgb;
         float3 hNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(tex_offset.x * i, 0.0)).rgb;
-        result += ((hPos.r + hPos.g + hPos.b) / 3.0) * weight[i] * weight[0];
-        result += ((hNeg.r + hNeg.g + hNeg.b) / 3.0) * weight[i] * weight[0];
+        result += hPos * weight[i] * weight[0];
+        result += hNeg * weight[i] * weight[0];
+
         float3 vPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(0.0, tex_offset.y * i)).rgb;
         float3 vNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(0.0, tex_offset.y * i)).rgb;
-        result += ((vPos.r + vPos.g + vPos.b) / 3.0) * weight[i] * weight[0];
-        result += ((vNeg.r + vNeg.g + vNeg.b) / 3.0) * weight[i] * weight[0];
+        result += vPos * weight[i] * weight[0];
+        result += vNeg * weight[i] * weight[0];
+
         float3 dPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, tex_offset.y * i)).rgb;
         float3 dNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(tex_offset.x * i, tex_offset.y * i)).rgb;
-        result += ((dPos.r + dPos.g + dPos.b) / 3.0) * weight[i] * weight[i];
-        result += ((dNeg.r + dNeg.g + dNeg.b) / 3.0) * weight[i] * weight[i];
+        result += dPos * weight[i] * weight[i];
+        result += dNeg * weight[i] * weight[i];
     }
-    float3 bloom = float3(result, result, result);
-    float3 hdrColor = Original.rgb + bloom;
-    float3 mapped = float3(1.0f) - exp(-hdrColor * 6.5f);
 
-    return float4(mapped, 1.0f);
+    float3 bloom = result;
+    float3 mapped = float3(1.0f) - exp(-bloom * 1.2f);
+
+    return float4(Original.rgb + mapped, 1.0f);
 }
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
