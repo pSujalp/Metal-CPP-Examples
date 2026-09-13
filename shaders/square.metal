@@ -92,36 +92,32 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
                                    texture2d<float> maskTex [[texture(1)]]) {
 
     constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
-    float4 Original = colorTex.sample(textureSampler, in.textureCoordinate);
 
-    float weight[5] = {0.2670270270, 0.1985945946, 0.1816216216, 0.0840540541, 0.0192162162};
-    const float blurSize = 6.0;
-    float2 tex_offset = blurSize * float2(1.0 / maskTex.get_width(), 1.0 / maskTex.get_height());
+    const float2 size = float2(maskTex.get_width(), maskTex.get_height());
+    const float samples = 5.0;
+    const float quality = 2.5 ;
+    const int range = 2; // (samples - 1) / 2
+    const float exposure = 1.0f;
+    const float gamma = 2.2;
 
-    float3 centerSample = maskTex.sample(textureSampler, in.textureCoordinate).rgb;
-    float3 result = centerSample * weight[0] * weight[1];
+    float2 sizeFactor = (1.0 / size) * quality;
 
-    for (int i = 1; i < 5; ++i) {
-        float3 hPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, 0.0)).rgb;
-        float3 hNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(tex_offset.x * i, 0.0)).rgb;
-        result += hPos * weight[i] * weight[0];
-        result += hNeg * weight[i] * weight[0];
+    float4 source = colorTex.sample(textureSampler, in.textureCoordinate);
 
-        float3 vPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(0.0, tex_offset.y * i)).rgb;
-        float3 vNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(0.0, tex_offset.y * i)).rgb;
-        result += vPos * weight[i] * weight[0];
-        result += vNeg * weight[i] * weight[0];
-
-        float3 dPos = maskTex.sample(textureSampler, in.textureCoordinate + float2(tex_offset.x * i, tex_offset.y * i)).rgb;
-        float3 dNeg = maskTex.sample(textureSampler, in.textureCoordinate - float2(tex_offset.x * i, tex_offset.y * i)).rgb;
-        result += dPos * weight[i] * weight[i];
-        result += dNeg * weight[i] * weight[i];
+    float4 sum = float4(0.0);
+    for (int x = -range; x <= range; x++) {
+        for (int y = -range; y <= range; y++) {
+            sum += maskTex.sample(textureSampler, in.textureCoordinate + float2(x, y) * sizeFactor);
+        }
     }
 
-    float3 bloom = result;
-    float3 mapped = float3(1.0f) - exp(-bloom * 1.2f);
+    float3 bloom = sum.rgb / (samples * samples);
+    float3 hdrColor =  bloom;
 
-    return float4(Original.rgb + mapped, 1.0f);
+    float3 mapped = float3(1.0) - exp(-hdrColor * exposure);
+    mapped = pow(mapped, float3(1.0 / gamma));
+
+    return float4(source.rgb + mapped, source.a);
 }
 
 vertex VertexOut vertexShader(uint vertexID [[vertex_id]],
