@@ -42,7 +42,7 @@ void Renderer::draw(MTK::View *pView)
     );
 
     simd_float4 lightColor = simd_make_float4(1.0f, 1.0f, 1.0f, 1.0f);
-    simd_float4 lightPosition = simd_make_float4(0.0f, -0.6f, 0.0f, -1.0f);
+    simd_float4 lightPosition = simd_make_float4(-0.5f, -0.0f, 0.0f, -1.0f);
     simd_float3 cameraPosition = simd_make_float3(-1.0f, 0.0f, 0.0f);
 
     auto drawableSize = pView->drawableSize();
