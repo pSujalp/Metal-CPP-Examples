@@ -61,6 +61,8 @@ void Renderer::draw(MTK::View *pView)
     matrix_float4x4 smallScaleMatrix = matrix4x4_scale(4.01f, 4.01f, 4.01f);
     matrix_float4x4 smallModelMatrix = matrix4x4_translation(-0.3f, -0.25f, -2.5f) * rotationMatrix * smallScaleMatrix;
 
+    float4 viewPos = matrix_inverse_transpose(viewMatrix).columns[3];
+
     
     simd_float3 lightPos3 = simd_make_float3(lightPosition[0], lightPosition[1], lightPosition[2]);
     simd_float3 sceneCenter = simd_make_float3(0.0f, -0.25f, -4.0f);
@@ -126,6 +128,7 @@ void Renderer::draw(MTK::View *pView)
         pEnc->setFragmentTexture(shadowTexture, 4); 
         pEnc->setFragmentBuffer(model->textures->textureInfosBuffer, 0, 4);
         pEnc->setFragmentBytes(&modelMatrix, sizeof(modelMatrix), 5);
+        pEnc->setFragmentBytes(&viewPos,sizeof(viewPos),5);
 
         pEnc->drawIndexedPrimitives(typeTriangle,
                                     mesh->indexCount,
@@ -148,7 +151,7 @@ void Renderer::draw(MTK::View *pView)
         pEnc->setFragmentTexture(shadowTexture, 4);
         pEnc->setFragmentBuffer(model->textures->textureInfosBuffer, 0, 4);
         pEnc->setFragmentBytes(&smallModelMatrix, sizeof(smallModelMatrix), 5);
-
+        pEnc->setFragmentBytes(&viewPos,sizeof(viewPos),5);
         pEnc->drawIndexedPrimitives(typeTriangle,
                                     mesh->indexCount,
                                     MTL::IndexTypeUInt32,
