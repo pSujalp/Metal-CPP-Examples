@@ -57,7 +57,6 @@ fragment float4 TexturefragmentShader(VertexOut in [[stage_in]],
     float3 shadowNDC = in.shadowPosition.xyz / in.shadowPosition.w;
     float2 shadowUV  = shadowNDC.xy * 0.5 + 0.5;
     shadowUV.y = 1.0 - shadowUV.y;
-
     float bias = 0.0015;
     float currentDepth = shadowNDC.z - bias;
 
