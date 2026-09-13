@@ -96,8 +96,8 @@ fragment float4 fragmentRenderPass(AAPLOut in [[stage_in]],
     const float2 size = float2(maskTex.get_width(), maskTex.get_height());
     const float samples = 5.0;
     const float quality = 2.5 ;
-    const int range = 20; // (samples - 1) / 2
-    const float exposure = 1.2;
+    const int range = 2; // (samples - 1) / 2
+    const float exposure = 1.2f;
     const float gamma = 2.2;
 
     float2 sizeFactor = (1.0 / size) * quality;

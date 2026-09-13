@@ -29,6 +29,6 @@ vertex LightVertexData lightVertexShader(uint vertexID [[vertex_id]],
 fragment LightFragmentOut lightFragmentShader(LightVertexData in [[stage_in]]) {
     LightFragmentOut out;
     out.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
-    out.mask  = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    out.mask  = float4(0.8f, 0.7f, 0.85f, 1.0f);
     return out;
 }
